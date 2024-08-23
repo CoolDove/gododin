@@ -1,0 +1,8 @@
+[configuration]
+entry_symbol = "_entry"
+compatibility_minimum = "4.2"
+reloadable = true
+
+[libraries]
+windows.debug.x86_64 = "bin/godlib.windows.debug.x86_64.dll"
+windows.release.x86_64 = "bin/godlib.windows.release.x86_64.dll"

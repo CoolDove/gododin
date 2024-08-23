@@ -1,4 +1,5 @@
 package gdextension
+
 /**************************************************************************/
 /*  gdextension_interface.h                                               */
 /**************************************************************************/
@@ -28,6 +29,31 @@ package gdextension
 /* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
+
+
+import "core:c"
+
+
+int8_t         :: c.int8_t
+uint8_t        :: c.uint8_t
+int16_t        :: c.int16_t
+uint16_t       :: c.uint16_t
+int32_t        :: c.int32_t
+uint32_t       :: c.uint32_t
+int64_t        :: c.int64_t
+uint64_t       :: c.uint64_t
+
+char           :: u8
+char16_t       :: u16
+char32_t       :: u32
+wchar_t        :: c.wchar_t
+
+size_t         :: c.size_t
+float          :: c.float
+double         :: c.double
+
+TRUE  :GDExtensionBool: 1
+FALSE :GDExtensionBool: 0
 
 
 /* VARIANT TYPES */
@@ -141,12 +167,12 @@ GDExtensionVariantOperator :: enum i32 {
 GDExtensionVariantPtr :: rawptr
 GDExtensionConstVariantPtr :: rawptr
 GDExtensionUninitializedVariantPtr :: rawptr
-GDExtensionStringNamePtr :: rawptr
-GDExtensionConstStringNamePtr :: rawptr
-GDExtensionUninitializedStringNamePtr :: rawptr
-GDExtensionStringPtr :: rawptr
-GDExtensionConstStringPtr :: rawptr
-GDExtensionUninitializedStringPtr :: rawptr
+GDExtensionStringNamePtr :: cstring
+GDExtensionConstStringNamePtr :: cstring
+GDExtensionUninitializedStringNamePtr :: cstring
+GDExtensionStringPtr :: cstring
+GDExtensionConstStringPtr :: cstring
+GDExtensionUninitializedStringPtr :: cstring
 GDExtensionObjectPtr :: rawptr
 GDExtensionConstObjectPtr :: rawptr
 GDExtensionUninitializedObjectPtr :: rawptr
@@ -178,26 +204,26 @@ GDExtensionCallError :: struct {
 	expected: int32_t,
 }
 
-GDExtensionVariantFromTypeConstructorFunc :: #type proc "c" (GDExtensionUninitializedVariantPtr, GDExtensionTypePtr) -> void 
-GDExtensionTypeFromVariantConstructorFunc :: #type proc "c" (GDExtensionUninitializedTypePtr, GDExtensionVariantPtr) -> void 
-GDExtensionPtrOperatorEvaluator :: #type proc "c" (GDExtensionConstTypePtr p_left, GDExtensionConstTypePtr p_right, GDExtensionTypePtr r_result) -> void 
-GDExtensionPtrBuiltInMethod :: #type proc "c" (GDExtensionTypePtr p_base, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_return, int p_argument_count) -> void 
-GDExtensionPtrConstructor :: #type proc "c" (GDExtensionUninitializedTypePtr p_base, GDExtensionConstTypePtr *p_args) -> void 
-GDExtensionPtrDestructor :: #type proc "c" (GDExtensionTypePtr p_base) -> void 
-GDExtensionPtrSetter :: #type proc "c" (GDExtensionTypePtr p_base, GDExtensionConstTypePtr p_value) -> void 
-GDExtensionPtrGetter :: #type proc "c" (GDExtensionConstTypePtr p_base, GDExtensionTypePtr r_value) -> void 
-GDExtensionPtrIndexedSetter :: #type proc "c" (GDExtensionTypePtr p_base, GDExtensionInt p_index, GDExtensionConstTypePtr p_value) -> void 
-GDExtensionPtrIndexedGetter :: #type proc "c" (GDExtensionConstTypePtr p_base, GDExtensionInt p_index, GDExtensionTypePtr r_value) -> void 
-GDExtensionPtrKeyedSetter :: #type proc "c" (GDExtensionTypePtr p_base, GDExtensionConstTypePtr p_key, GDExtensionConstTypePtr p_value) -> void 
-GDExtensionPtrKeyedGetter :: #type proc "c" (GDExtensionConstTypePtr p_base, GDExtensionConstTypePtr p_key, GDExtensionTypePtr r_value) -> void 
-GDExtensionPtrKeyedChecker :: #type proc "c" (GDExtensionConstVariantPtr p_base, GDExtensionConstVariantPtr p_key) -> uint32_t 
-GDExtensionPtrUtilityFunction :: #type proc "c" (GDExtensionTypePtr r_return, GDExtensionConstTypePtr *p_args, int p_argument_count) -> void 
+GDExtensionVariantFromTypeConstructorFunc :: #type proc "c" (GDExtensionUninitializedVariantPtr, GDExtensionTypePtr)
+GDExtensionTypeFromVariantConstructorFunc :: #type proc "c" (GDExtensionUninitializedTypePtr, GDExtensionVariantPtr)
+GDExtensionPtrOperatorEvaluator :: #type proc "c" (p_left: GDExtensionConstTypePtr, p_right: GDExtensionConstTypePtr, r_result: GDExtensionTypePtr)
+GDExtensionPtrBuiltInMethod :: #type proc "c" (p_base: GDExtensionTypePtr, p_args: ^GDExtensionConstTypePtr, r_return: GDExtensionTypePtr, p_argument_count: int)
+GDExtensionPtrConstructor :: #type proc "c" (p_base: GDExtensionUninitializedTypePtr, p_args: ^GDExtensionConstTypePtr)
+GDExtensionPtrDestructor :: #type proc "c" (p_base: GDExtensionTypePtr)
+GDExtensionPtrSetter :: #type proc "c" (p_base: GDExtensionTypePtr, p_value: GDExtensionConstTypePtr)
+GDExtensionPtrGetter :: #type proc "c" (p_base: GDExtensionConstTypePtr, r_value: GDExtensionTypePtr)
+GDExtensionPtrIndexedSetter :: #type proc "c" (p_base: GDExtensionTypePtr, p_index: GDExtensionInt, p_value: GDExtensionConstTypePtr)
+GDExtensionPtrIndexedGetter :: #type proc "c" (p_base: GDExtensionConstTypePtr, p_index: GDExtensionInt, r_value: GDExtensionTypePtr)
+GDExtensionPtrKeyedSetter :: #type proc "c" (p_base: GDExtensionTypePtr, p_key: GDExtensionConstTypePtr, p_value: GDExtensionConstTypePtr)
+GDExtensionPtrKeyedGetter :: #type proc "c" (p_base: GDExtensionConstTypePtr, p_key: GDExtensionConstTypePtr, r_value: GDExtensionTypePtr)
+GDExtensionPtrKeyedChecker :: #type proc "c" (p_base: GDExtensionConstVariantPtr, p_key: GDExtensionConstVariantPtr) -> uint32_t 
+GDExtensionPtrUtilityFunction :: #type proc "c" (r_return: GDExtensionTypePtr, p_args: ^GDExtensionConstTypePtr, p_argument_count: int)
 
 GDExtensionClassConstructor :: #type proc "c" () -> GDExtensionObjectPtr 
 
-GDExtensionInstanceBindingCreateCallback :: #type proc "c" (void *p_token, void *p_instance) -> void *
-GDExtensionInstanceBindingFreeCallback :: #type proc "c" (void *p_token, void *p_instance, void *p_binding) -> void 
-GDExtensionInstanceBindingReferenceCallback :: #type proc "c" (void *p_token, void *p_binding, GDExtensionBool p_reference) -> GDExtensionBool 
+GDExtensionInstanceBindingCreateCallback :: #type proc "c" (p_token: rawptr, p_instance: rawptr) -> rawptr
+GDExtensionInstanceBindingFreeCallback :: #type proc "c" (p_token: rawptr, p_instance: rawptr, p_binding: rawptr)
+GDExtensionInstanceBindingReferenceCallback :: #type proc "c" (p_token: rawptr, p_binding: rawptr, p_reference: GDExtensionBool) -> GDExtensionBool 
 
 GDExtensionInstanceBindingCallbacks :: struct {
 	create_callback: GDExtensionInstanceBindingCreateCallback,
@@ -207,11 +233,11 @@ GDExtensionInstanceBindingCallbacks :: struct {
 
 /* EXTENSION CLASSES */
 
-typedef void *GDExtensionClassInstancePtr;
+GDExtensionClassInstancePtr :: rawptr
 
-GDExtensionClassSet :: #type proc "c" (GDExtensionClassInstancePtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionConstVariantPtr p_value) -> GDExtensionBool 
-GDExtensionClassGet :: #type proc "c" (GDExtensionClassInstancePtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionVariantPtr r_ret) -> GDExtensionBool 
-GDExtensionClassGetRID :: #type proc "c" (GDExtensionClassInstancePtr p_instance) -> uint64_t 
+GDExtensionClassSet :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, p_name: GDExtensionConstStringNamePtr, p_value: GDExtensionConstVariantPtr) -> GDExtensionBool 
+GDExtensionClassGet :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, p_name: GDExtensionConstStringNamePtr, r_ret: GDExtensionVariantPtr) -> GDExtensionBool 
+GDExtensionClassGetRID :: #type proc "c" (p_instance: GDExtensionClassInstancePtr) -> uint64_t 
 
 GDExtensionPropertyInfo :: struct {
 	type: GDExtensionVariantType,
@@ -230,30 +256,30 @@ GDExtensionMethodInfo :: struct {
 
 	/* Arguments: `default_arguments` is an array of size `argument_count`. */
 	argument_count: uint32_t,
-	arguments: *GDExtensionPropertyInfo,
+	arguments: ^GDExtensionPropertyInfo,
 
 	/* Default arguments: `default_arguments` is an array of size `default_argument_count`. */
 	default_argument_count: uint32_t,
-	default_arguments: *GDExtensionVariantPtr,
+	default_arguments: ^GDExtensionVariantPtr,
 }
 
-GDExtensionClassGetPropertyList :: #type proc "c" (GDExtensionClassInstancePtr p_instance, uint32_t *r_count) -> GDExtensionPropertyInfo *
-GDExtensionClassFreePropertyList :: #type proc "c" (GDExtensionClassInstancePtr p_instance, GDExtensionPropertyInfo *p_list) -> void 
-GDExtensionClassPropertyCanRevert :: #type proc "c" (GDExtensionClassInstancePtr p_instance, GDExtensionConstStringNamePtr p_name) -> GDExtensionBool 
-GDExtensionClassPropertyGetRevert :: #type proc "c" (GDExtensionClassInstancePtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionVariantPtr r_ret) -> GDExtensionBool 
-GDExtensionClassValidateProperty :: #type proc "c" (GDExtensionClassInstancePtr p_instance, GDExtensionPropertyInfo *p_property) -> GDExtensionBool 
-GDExtensionClassNotification :: #type proc "c" (GDExtensionClassInstancePtr p_instance, int32_t p_what) -> void  // Deprecated. Use GDExtensionClassNotification2 instead.
-GDExtensionClassNotification2 :: #type proc "c" (GDExtensionClassInstancePtr p_instance, int32_t p_what, GDExtensionBool p_reversed) -> void 
-GDExtensionClassToString :: #type proc "c" (GDExtensionClassInstancePtr p_instance, GDExtensionBool *r_is_valid, GDExtensionStringPtr p_out) -> void 
-GDExtensionClassReference :: #type proc "c" (GDExtensionClassInstancePtr p_instance) -> void 
-GDExtensionClassUnreference :: #type proc "c" (GDExtensionClassInstancePtr p_instance) -> void 
-GDExtensionClassCallVirtual :: #type proc "c" (GDExtensionClassInstancePtr p_instance, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret) -> void 
-GDExtensionClassCreateInstance :: #type proc "c" (void *p_class_userdata) -> GDExtensionObjectPtr 
-GDExtensionClassFreeInstance :: #type proc "c" (void *p_class_userdata, GDExtensionClassInstancePtr p_instance) -> void 
-GDExtensionClassRecreateInstance :: #type proc "c" (void *p_class_userdata, GDExtensionObjectPtr p_object) -> GDExtensionClassInstancePtr 
-GDExtensionClassGetVirtual :: #type proc "c" (void *p_class_userdata, GDExtensionConstStringNamePtr p_name) -> GDExtensionClassCallVirtual 
-GDExtensionClassGetVirtualCallData :: #type proc "c" (void *p_class_userdata, GDExtensionConstStringNamePtr p_name) -> void *
-GDExtensionClassCallVirtualWithData :: #type proc "c" (GDExtensionClassInstancePtr p_instance, GDExtensionConstStringNamePtr p_name, void *p_virtual_call_userdata, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret) -> void 
+GDExtensionClassGetPropertyList :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, r_count: ^uint32_t) -> ^GDExtensionPropertyInfo 
+GDExtensionClassFreePropertyList :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, p_list: ^GDExtensionPropertyInfo)
+GDExtensionClassPropertyCanRevert :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, p_name: GDExtensionConstStringNamePtr) -> GDExtensionBool 
+GDExtensionClassPropertyGetRevert :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, p_name: GDExtensionConstStringNamePtr, r_ret: GDExtensionVariantPtr) -> GDExtensionBool 
+GDExtensionClassValidateProperty :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, p_property: ^GDExtensionPropertyInfo) -> GDExtensionBool 
+GDExtensionClassNotification :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, p_what: int32_t) // Deprecated. Use GDExtensionClassNotification2 instead.
+GDExtensionClassNotification2 :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, p_what: int32_t, p_reversed: GDExtensionBool)
+GDExtensionClassToString :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, r_is_valid: ^GDExtensionBool, p_out: GDExtensionStringPtr)
+GDExtensionClassReference :: #type proc "c" (p_instance: GDExtensionClassInstancePtr)
+GDExtensionClassUnreference :: #type proc "c" (p_instance: GDExtensionClassInstancePtr)
+GDExtensionClassCallVirtual :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, p_args: ^GDExtensionConstTypePtr, r_ret: GDExtensionTypePtr)
+GDExtensionClassCreateInstance :: #type proc "c" (p_class_userdata: rawptr) -> GDExtensionObjectPtr 
+GDExtensionClassFreeInstance :: #type proc "c" (p_class_userdata: rawptr, p_instance: GDExtensionClassInstancePtr)
+GDExtensionClassRecreateInstance :: #type proc "c" (p_class_userdata: rawptr, p_object: GDExtensionObjectPtr) -> GDExtensionClassInstancePtr 
+GDExtensionClassGetVirtual :: #type proc "c" (p_class_userdata: rawptr, p_name: GDExtensionConstStringNamePtr) -> GDExtensionClassCallVirtual 
+GDExtensionClassGetVirtualCallData :: #type proc "c" (p_class_userdata: rawptr, p_name: GDExtensionConstStringNamePtr) -> rawptr
+GDExtensionClassCallVirtualWithData :: #type proc "c" (p_instance: GDExtensionClassInstancePtr, p_name: GDExtensionConstStringNamePtr, p_virtual_call_userdata: rawptr, p_args: ^GDExtensionConstTypePtr, r_ret: GDExtensionTypePtr)
 
 GDExtensionClassCreationInfo :: struct {
 	is_virtual: GDExtensionBool,
@@ -272,7 +298,7 @@ GDExtensionClassCreationInfo :: struct {
 	free_instance_func: GDExtensionClassFreeInstance, // Destructor; mandatory.
 	get_virtual_func: GDExtensionClassGetVirtual, // Queries a virtual function by name and returns a callback to invoke the requested virtual function.
 	get_rid_func: GDExtensionClassGetRID,
-	class_userdata: *void, // Per-class user data, later accessible in instance bindings.
+	class_userdata: rawptr, // Per-class user data, later accessible in instance bindings.
 }// Deprecated. Use GDExtensionClassCreationInfo2 instead.
 
 GDExtensionClassCreationInfo2 :: struct {
@@ -305,10 +331,10 @@ GDExtensionClassCreationInfo2 :: struct {
 	// Used to call virtual functions when `get_virtual_call_data_func` is not null.
 	call_virtual_with_data_func: GDExtensionClassCallVirtualWithData,
 	get_rid_func: GDExtensionClassGetRID,
-	class_userdata: *void, // Per-class user data, later accessible in instance bindings.
+	class_userdata: rawptr, // Per-class user data, later accessible in instance bindings.
 }
 
-typedef void *GDExtensionClassLibraryPtr;
+GDExtensionClassLibraryPtr :: rawptr
 
 /* Method */
 
@@ -336,43 +362,43 @@ GDExtensionClassMethodArgumentMetadata :: enum i32 {
 	GDEXTENSION_METHOD_ARGUMENT_METADATA_REAL_IS_DOUBLE
 }
 
-GDExtensionClassMethodCall :: #type proc "c" (void *method_userdata, GDExtensionClassInstancePtr p_instance, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error) -> void 
-GDExtensionClassMethodValidatedCall :: #type proc "c" (void *method_userdata, GDExtensionClassInstancePtr p_instance, GDExtensionConstVariantPtr *p_args, GDExtensionVariantPtr r_return) -> void 
-GDExtensionClassMethodPtrCall :: #type proc "c" (void *method_userdata, GDExtensionClassInstancePtr p_instance, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret) -> void 
+GDExtensionClassMethodCall :: #type proc "c" (method_userdata: rawptr, p_instance: GDExtensionClassInstancePtr, p_args: ^GDExtensionConstVariantPtr, p_argument_count: GDExtensionInt, r_return: GDExtensionVariantPtr, r_error: ^GDExtensionCallError)
+GDExtensionClassMethodValidatedCall :: #type proc "c" (method_userdata: rawptr, p_instance: GDExtensionClassInstancePtr, p_args: ^GDExtensionConstVariantPtr, r_return: GDExtensionVariantPtr)
+GDExtensionClassMethodPtrCall :: #type proc "c" (method_userdata: rawptr, p_instance: GDExtensionClassInstancePtr, p_args: ^GDExtensionConstTypePtr, r_ret: GDExtensionTypePtr)
 
 GDExtensionClassMethodInfo :: struct {
 	name: GDExtensionStringNamePtr,
-	method_userdata: *void,
+	method_userdata: rawptr,
 	call_func: GDExtensionClassMethodCall,
 	ptrcall_func: GDExtensionClassMethodPtrCall,
 	method_flags: uint32_t, // Bitfield of `GDExtensionClassMethodFlags`.
 
 	/* If `has_return_value` is false, `return_value_info` and `return_value_metadata` are ignored. */
 	has_return_value: GDExtensionBool,
-	return_value_info: *GDExtensionPropertyInfo,
+	return_value_info: ^GDExtensionPropertyInfo,
 	return_value_metadata: GDExtensionClassMethodArgumentMetadata,
 
 	/* Arguments: `arguments_info` and `arguments_metadata` are array of size `argument_count`.
 	 * Name and hint information for the argument can be omitted in release builds. Class name should always be present if it applies.
 	 */
 	argument_count: uint32_t,
-	arguments_info: *GDExtensionPropertyInfo,
-	arguments_metadata: *GDExtensionClassMethodArgumentMetadata,
+	arguments_info: ^GDExtensionPropertyInfo,
+	arguments_metadata: ^GDExtensionClassMethodArgumentMetadata,
 
 	/* Default arguments: `default_arguments` is an array of size `default_argument_count`. */
 	default_argument_count: uint32_t,
-	default_arguments: *GDExtensionVariantPtr,
+	default_arguments: ^GDExtensionVariantPtr,
 }
 
-GDExtensionCallableCustomCall :: #type proc "c" (void *callable_userdata, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error) -> void 
-GDExtensionCallableCustomIsValid :: #type proc "c" (void *callable_userdata) -> GDExtensionBool 
-GDExtensionCallableCustomFree :: #type proc "c" (void *callable_userdata) -> void 
+GDExtensionCallableCustomCall :: #type proc "c" (callable_userdata: rawptr, p_args: ^GDExtensionConstVariantPtr, p_argument_count: GDExtensionInt, r_return: GDExtensionVariantPtr, r_error: ^GDExtensionCallError)
+GDExtensionCallableCustomIsValid :: #type proc "c" (callable_userdata: rawptr) -> GDExtensionBool 
+GDExtensionCallableCustomFree :: #type proc "c" (callable_userdata: rawptr)
 
-GDExtensionCallableCustomHash :: #type proc "c" (void *callable_userdata) -> uint32_t 
-GDExtensionCallableCustomEqual :: #type proc "c" (void *callable_userdata_a, void *callable_userdata_b) -> GDExtensionBool 
-GDExtensionCallableCustomLessThan :: #type proc "c" (void *callable_userdata_a, void *callable_userdata_b) -> GDExtensionBool 
+GDExtensionCallableCustomHash :: #type proc "c" (callable_userdata: rawptr) -> uint32_t 
+GDExtensionCallableCustomEqual :: #type proc "c" (callable_userdata_a: rawptr, callable_userdata_b: rawptr) -> GDExtensionBool 
+GDExtensionCallableCustomLessThan :: #type proc "c" (callable_userdata_a: rawptr, callable_userdata_b: rawptr) -> GDExtensionBool 
 
-GDExtensionCallableCustomToString :: #type proc "c" (void *callable_userdata, GDExtensionBool *r_is_valid, GDExtensionStringPtr r_out) -> void 
+GDExtensionCallableCustomToString :: #type proc "c" (callable_userdata: rawptr, r_is_valid: ^GDExtensionBool, r_out: GDExtensionStringPtr)
 
 GDExtensionCallableCustomInfo :: struct {
 	/* Only `call_func` and `token` are strictly required, however, `object_id` should be passed if its not a static method.
@@ -389,8 +415,8 @@ GDExtensionCallableCustomInfo :: struct {
 	 *
 	 * `free_func` is necessary if `callable_userdata` needs to be cleaned up when the callable is freed.
 	 */
-	callable_userdata: *void,
-	token: *void,
+	callable_userdata: rawptr,
+	token: rawptr,
 
 	object_id: GDObjectInstanceID,
 
@@ -407,47 +433,47 @@ GDExtensionCallableCustomInfo :: struct {
 
 /* SCRIPT INSTANCE EXTENSION */
 
-typedef void *GDExtensionScriptInstanceDataPtr; // Pointer to custom ScriptInstance native implementation.
+GDExtensionScriptInstanceDataPtr :: rawptr // Pointer to custom ScriptInstance native implementation.
 
-GDExtensionScriptInstanceSet :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionConstVariantPtr p_value) -> GDExtensionBool 
-GDExtensionScriptInstanceGet :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionVariantPtr r_ret) -> GDExtensionBool 
-GDExtensionScriptInstanceGetPropertyList :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, uint32_t *r_count) -> GDExtensionPropertyInfo *
-GDExtensionScriptInstanceFreePropertyList :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionPropertyInfo *p_list) -> void 
-GDExtensionScriptInstanceGetClassCategory :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionPropertyInfo *p_class_category) -> GDExtensionBool 
+GDExtensionScriptInstanceSet :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_name: GDExtensionConstStringNamePtr, p_value: GDExtensionConstVariantPtr) -> GDExtensionBool 
+GDExtensionScriptInstanceGet :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_name: GDExtensionConstStringNamePtr, r_ret: GDExtensionVariantPtr) -> GDExtensionBool 
+GDExtensionScriptInstanceGetPropertyList :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, r_count: ^uint32_t) -> ^GDExtensionPropertyInfo
+GDExtensionScriptInstanceFreePropertyList :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_list: ^GDExtensionPropertyInfo)
+GDExtensionScriptInstanceGetClassCategory :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_class_category: ^GDExtensionPropertyInfo) -> GDExtensionBool 
 
-GDExtensionScriptInstanceGetPropertyType :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionBool *r_is_valid) -> GDExtensionVariantType 
-GDExtensionScriptInstanceValidateProperty :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionPropertyInfo *p_property) -> GDExtensionBool 
+GDExtensionScriptInstanceGetPropertyType :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_name: GDExtensionConstStringNamePtr, r_is_valid: ^GDExtensionBool) -> GDExtensionVariantType 
+GDExtensionScriptInstanceValidateProperty :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_property: ^GDExtensionPropertyInfo) -> GDExtensionBool 
 
-GDExtensionScriptInstancePropertyCanRevert :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name) -> GDExtensionBool 
-GDExtensionScriptInstancePropertyGetRevert :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionVariantPtr r_ret) -> GDExtensionBool 
+GDExtensionScriptInstancePropertyCanRevert :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_name: GDExtensionConstStringNamePtr) -> GDExtensionBool 
+GDExtensionScriptInstancePropertyGetRevert :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_name: GDExtensionConstStringNamePtr, r_ret: GDExtensionVariantPtr) -> GDExtensionBool 
 
-GDExtensionScriptInstanceGetOwner :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance) -> GDExtensionObjectPtr 
-GDExtensionScriptInstancePropertyStateAdd :: #type proc "c" (GDExtensionConstStringNamePtr p_name, GDExtensionConstVariantPtr p_value, void *p_userdata) -> void 
-GDExtensionScriptInstanceGetPropertyState :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionScriptInstancePropertyStateAdd p_add_func, void *p_userdata) -> void 
+GDExtensionScriptInstanceGetOwner :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr) -> GDExtensionObjectPtr 
+GDExtensionScriptInstancePropertyStateAdd :: #type proc "c" (p_name: GDExtensionConstStringNamePtr, p_value: GDExtensionConstVariantPtr, p_userdata: rawptr)
+GDExtensionScriptInstanceGetPropertyState :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_add_func: GDExtensionScriptInstancePropertyStateAdd, p_userdata: rawptr)
 
-GDExtensionScriptInstanceGetMethodList :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, uint32_t *r_count) -> GDExtensionMethodInfo *
-GDExtensionScriptInstanceFreeMethodList :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionMethodInfo *p_list) -> void 
+GDExtensionScriptInstanceGetMethodList :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, r_count: ^uint32_t) -> ^GDExtensionMethodInfo
+GDExtensionScriptInstanceFreeMethodList :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_list: ^GDExtensionMethodInfo)
 
-GDExtensionScriptInstanceHasMethod :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name) -> GDExtensionBool 
+GDExtensionScriptInstanceHasMethod :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_name: GDExtensionConstStringNamePtr) -> GDExtensionBool 
 
-GDExtensionScriptInstanceCall :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_self, GDExtensionConstStringNamePtr p_method, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error) -> void 
-GDExtensionScriptInstanceNotification :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, int32_t p_what) -> void  // Deprecated. Use GDExtensionScriptInstanceNotification2 instead.
-GDExtensionScriptInstanceNotification2 :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, int32_t p_what, GDExtensionBool p_reversed) -> void 
-GDExtensionScriptInstanceToString :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance, GDExtensionBool *r_is_valid, GDExtensionStringPtr r_out) -> void 
+GDExtensionScriptInstanceCall :: #type proc "c" (p_self: GDExtensionScriptInstanceDataPtr, p_method: GDExtensionConstStringNamePtr, p_args: ^GDExtensionConstVariantPtr, p_argument_count: GDExtensionInt, r_return: GDExtensionVariantPtr, r_error: ^GDExtensionCallError)
+GDExtensionScriptInstanceNotification :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_what: int32_t) // Deprecated. Use GDExtensionScriptInstanceNotification2 instead.
+GDExtensionScriptInstanceNotification2 :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, p_what: int32_t, p_reversed: GDExtensionBool)
+GDExtensionScriptInstanceToString :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr, r_is_valid: ^GDExtensionBool, r_out: GDExtensionStringPtr)
 
-GDExtensionScriptInstanceRefCountIncremented :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance) -> void 
-GDExtensionScriptInstanceRefCountDecremented :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance) -> GDExtensionBool 
+GDExtensionScriptInstanceRefCountIncremented :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr)
+GDExtensionScriptInstanceRefCountDecremented :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr) -> GDExtensionBool 
 
-GDExtensionScriptInstanceGetScript :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance) -> GDExtensionObjectPtr 
-GDExtensionScriptInstanceIsPlaceholder :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance) -> GDExtensionBool 
+GDExtensionScriptInstanceGetScript :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr) -> GDExtensionObjectPtr 
+GDExtensionScriptInstanceIsPlaceholder :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr) -> GDExtensionBool 
 
-typedef void *GDExtensionScriptLanguagePtr;
+GDExtensionScriptLanguagePtr :: rawptr
 
-GDExtensionScriptInstanceGetLanguage :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance) -> GDExtensionScriptLanguagePtr 
+GDExtensionScriptInstanceGetLanguage :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr) -> GDExtensionScriptLanguagePtr 
 
-GDExtensionScriptInstanceFree :: #type proc "c" (GDExtensionScriptInstanceDataPtr p_instance) -> void 
+GDExtensionScriptInstanceFree :: #type proc "c" (p_instance: GDExtensionScriptInstanceDataPtr)
 
-typedef void *GDExtensionScriptInstancePtr; // Pointer to ScriptInstance.
+GDExtensionScriptInstancePtr :: rawptr // Pointer to ScriptInstance.
 
 GDExtensionScriptInstanceInfo :: struct {
 	set_func: GDExtensionScriptInstanceSet,
@@ -543,14 +569,14 @@ GDExtensionInitialization :: struct {
 	 * If Core or Servers, the extension needs editor or game restart to take effect */
 	minimum_initialization_level: GDExtensionInitializationLevel,
 	/* Up to the user to supply when initializing */
-	userdata: *void,
+	userdata: rawptr,
 	/* This function will be called multiple times for each initialization level. */
 	initialize : proc "c" (rawptr, GDExtensionInitializationLevel),
 	deinitialize : proc "c" (rawptr, GDExtensionInitializationLevel),
 }
 
-GDExtensionInterfaceFunctionPtr :: #type proc "c" () -> void 
-GDExtensionInterfaceGetProcAddress :: #type proc "c" (char *p_function_name) -> GDExtensionInterfaceFunctionPtr 
+GDExtensionInterfaceFunctionPtr :: #type proc "c" ()
+GDExtensionInterfaceGetProcAddress :: #type proc "c" (p_function_name: cstring) -> GDExtensionInterfaceFunctionPtr 
 
 /*
  * Each GDExtension should define a C function that matches the signature of GDExtensionInitializationFunction,
@@ -586,15 +612,16 @@ GDExtensionInterfaceGetProcAddress :: #type proc "c" (char *p_function_name) -> 
  * All of these interface functions are described below, together with the name that's used to load it,
  * and the function pointer typedef that shows its signature.
  */
-GDExtensionInitializationFunction :: #type proc "c" (GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization) -> GDExtensionBool 
+GDExtensionInitializationFunction :: #type proc "c" (p_get_proc_address: GDExtensionInterfaceGetProcAddress, p_library: GDExtensionClassLibraryPtr, r_initialization: ^GDExtensionInitialization) -> GDExtensionBool 
 
 /* INTERFACE */
+
 
 GDExtensionGodotVersion :: struct {
 	major: uint32_t,
 	minor: uint32_t,
 	patch: uint32_t,
-	str: *char,
+	str: cstring,
 }
 
 /**
@@ -605,7 +632,7 @@ GDExtensionGodotVersion :: struct {
  *
  * @param r_godot_version A pointer to the structure to write the version information into.
  */
-GDExtensionInterfaceGetGodotVersion :: #type proc "c" (GDExtensionGodotVersion *r_godot_version) -> void 
+GDExtensionInterfaceGetGodotVersion :: #type proc "c" (r_godot_version: ^GDExtensionGodotVersion)
 
 /* INTERFACE: Memory */
 
@@ -619,7 +646,7 @@ GDExtensionInterfaceGetGodotVersion :: #type proc "c" (GDExtensionGodotVersion *
  *
  * @return A pointer to the allocated memory, or NULL if unsuccessful.
  */
-GDExtensionInterfaceMemAlloc :: #type proc "c" (size_t p_bytes) -> void *
+GDExtensionInterfaceMemAlloc :: #type proc "c" (p_bytes: size_t) -> rawptr
 
 /**
  * @name mem_realloc
@@ -632,7 +659,7 @@ GDExtensionInterfaceMemAlloc :: #type proc "c" (size_t p_bytes) -> void *
  *
  * @return A pointer to the allocated memory, or NULL if unsuccessful.
  */
-GDExtensionInterfaceMemRealloc :: #type proc "c" (void *p_ptr, size_t p_bytes) -> void *
+GDExtensionInterfaceMemRealloc :: #type proc "c" (p_ptr: rawptr, p_bytes: size_t) -> rawptr
 
 /**
  * @name mem_free
@@ -642,7 +669,7 @@ GDExtensionInterfaceMemRealloc :: #type proc "c" (void *p_ptr, size_t p_bytes) -
  *
  * @param p_ptr A pointer to the previously allocated memory.
  */
-GDExtensionInterfaceMemFree :: #type proc "c" (void *p_ptr) -> void 
+GDExtensionInterfaceMemFree :: #type proc "c" (p_ptr: rawptr)
 
 /* INTERFACE: Godot Core */
 
@@ -658,7 +685,7 @@ GDExtensionInterfaceMemFree :: #type proc "c" (void *p_ptr) -> void
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-GDExtensionInterfacePrintError :: #type proc "c" (char *p_description, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify) -> void 
+GDExtensionInterfacePrintError :: #type proc "c" (p_description: cstring, p_function: cstring, p_file: cstring, p_line: int32_t, p_editor_notify: GDExtensionBool)
 
 /**
  * @name print_error_with_message
@@ -673,7 +700,7 @@ GDExtensionInterfacePrintError :: #type proc "c" (char *p_description, char *p_f
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-GDExtensionInterfacePrintErrorWithMessage :: #type proc "c" (char *p_description, char *p_message, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify) -> void 
+GDExtensionInterfacePrintErrorWithMessage :: #type proc "c" (p_description: cstring, p_message: cstring, p_function: cstring, p_file: cstring, p_line: int32_t, p_editor_notify: GDExtensionBool)
 
 /**
  * @name print_warning
@@ -687,7 +714,7 @@ GDExtensionInterfacePrintErrorWithMessage :: #type proc "c" (char *p_description
  * @param p_line The line where the warning occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-GDExtensionInterfacePrintWarning :: #type proc "c" (char *p_description, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify) -> void 
+GDExtensionInterfacePrintWarning :: #type proc "c" (p_description: cstring, p_function: cstring, p_file: cstring, p_line: int32_t, p_editor_notify: GDExtensionBool)
 
 /**
  * @name print_warning_with_message
@@ -702,7 +729,7 @@ GDExtensionInterfacePrintWarning :: #type proc "c" (char *p_description, char *p
  * @param p_line The line where the warning occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-GDExtensionInterfacePrintWarningWithMessage :: #type proc "c" (char *p_description, char *p_message, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify) -> void 
+GDExtensionInterfacePrintWarningWithMessage :: #type proc "c" (p_description: cstring, p_message: cstring, p_function: cstring, p_file: cstring, p_line: int32_t, p_editor_notify: GDExtensionBool)
 
 /**
  * @name print_script_error
@@ -716,7 +743,7 @@ GDExtensionInterfacePrintWarningWithMessage :: #type proc "c" (char *p_descripti
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-GDExtensionInterfacePrintScriptError :: #type proc "c" (char *p_description, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify) -> void 
+GDExtensionInterfacePrintScriptError :: #type proc "c" (p_description: cstring, p_function: cstring, p_file: cstring, p_line: int32_t, p_editor_notify: GDExtensionBool)
 
 /**
  * @name print_script_error_with_message
@@ -731,7 +758,7 @@ GDExtensionInterfacePrintScriptError :: #type proc "c" (char *p_description, cha
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-GDExtensionInterfacePrintScriptErrorWithMessage :: #type proc "c" (char *p_description, char *p_message, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify) -> void 
+GDExtensionInterfacePrintScriptErrorWithMessage :: #type proc "c" (p_description: cstring, p_message: cstring, p_function: cstring, p_file: cstring, p_line: int32_t, p_editor_notify: GDExtensionBool)
 
 /**
  * @name get_native_struct_size
@@ -743,7 +770,7 @@ GDExtensionInterfacePrintScriptErrorWithMessage :: #type proc "c" (char *p_descr
  *
  * @return The size in bytes.
  */
-GDExtensionInterfaceGetNativeStructSize :: #type proc "c" (GDExtensionConstStringNamePtr p_name) -> uint64_t 
+GDExtensionInterfaceGetNativeStructSize :: #type proc "c" (p_name: GDExtensionConstStringNamePtr) -> uint64_t 
 
 /* INTERFACE: Variant */
 
@@ -756,7 +783,7 @@ GDExtensionInterfaceGetNativeStructSize :: #type proc "c" (GDExtensionConstStrin
  * @param r_dest A pointer to the destination Variant.
  * @param p_src A pointer to the source Variant.
  */
-GDExtensionInterfaceVariantNewCopy :: #type proc "c" (GDExtensionUninitializedVariantPtr r_dest, GDExtensionConstVariantPtr p_src) -> void 
+GDExtensionInterfaceVariantNewCopy :: #type proc "c" (r_dest: GDExtensionUninitializedVariantPtr, p_src: GDExtensionConstVariantPtr)
 
 /**
  * @name variant_new_nil
@@ -766,7 +793,7 @@ GDExtensionInterfaceVariantNewCopy :: #type proc "c" (GDExtensionUninitializedVa
  *
  * @param r_dest A pointer to the destination Variant.
  */
-GDExtensionInterfaceVariantNewNil :: #type proc "c" (GDExtensionUninitializedVariantPtr r_dest) -> void 
+GDExtensionInterfaceVariantNewNil :: #type proc "c" (r_dest: GDExtensionUninitializedVariantPtr)
 
 /**
  * @name variant_destroy
@@ -776,7 +803,7 @@ GDExtensionInterfaceVariantNewNil :: #type proc "c" (GDExtensionUninitializedVar
  *
  * @param p_self A pointer to the Variant to destroy.
  */
-GDExtensionInterfaceVariantDestroy :: #type proc "c" (GDExtensionVariantPtr p_self) -> void 
+GDExtensionInterfaceVariantDestroy :: #type proc "c" (p_self: GDExtensionVariantPtr)
 
 /**
  * @name variant_call
@@ -793,7 +820,7 @@ GDExtensionInterfaceVariantDestroy :: #type proc "c" (GDExtensionVariantPtr p_se
  *
  * @see Variant::callp()
  */
-GDExtensionInterfaceVariantCall :: #type proc "c" (GDExtensionVariantPtr p_self, GDExtensionConstStringNamePtr p_method, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionUninitializedVariantPtr r_return, GDExtensionCallError *r_error) -> void 
+GDExtensionInterfaceVariantCall :: #type proc "c" (p_self: GDExtensionVariantPtr, p_method: GDExtensionConstStringNamePtr, p_args: ^GDExtensionConstVariantPtr, p_argument_count: GDExtensionInt, r_return: GDExtensionUninitializedVariantPtr, r_error: ^GDExtensionCallError)
 
 /**
  * @name variant_call_static
@@ -810,7 +837,7 @@ GDExtensionInterfaceVariantCall :: #type proc "c" (GDExtensionVariantPtr p_self,
  *
  * @see Variant::call_static()
  */
-GDExtensionInterfaceVariantCallStatic :: #type proc "c" (GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_method, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionUninitializedVariantPtr r_return, GDExtensionCallError *r_error) -> void 
+GDExtensionInterfaceVariantCallStatic :: #type proc "c" (p_type: GDExtensionVariantType, p_method: GDExtensionConstStringNamePtr, p_args: ^GDExtensionConstVariantPtr, p_argument_count: GDExtensionInt, r_return: GDExtensionUninitializedVariantPtr, r_error: ^GDExtensionCallError)
 
 /**
  * @name variant_evaluate
@@ -826,7 +853,7 @@ GDExtensionInterfaceVariantCallStatic :: #type proc "c" (GDExtensionVariantType 
  *
  * @see Variant::evaluate()
  */
-GDExtensionInterfaceVariantEvaluate :: #type proc "c" (GDExtensionVariantOperator p_op, GDExtensionConstVariantPtr p_a, GDExtensionConstVariantPtr p_b, GDExtensionUninitializedVariantPtr r_return, GDExtensionBool *r_valid) -> void 
+GDExtensionInterfaceVariantEvaluate :: #type proc "c" (p_op: GDExtensionVariantOperator, p_a: GDExtensionConstVariantPtr, p_b: GDExtensionConstVariantPtr, r_return: GDExtensionUninitializedVariantPtr, r_valid: ^GDExtensionBool)
 
 /**
  * @name variant_set
@@ -841,7 +868,7 @@ GDExtensionInterfaceVariantEvaluate :: #type proc "c" (GDExtensionVariantOperato
  *
  * @see Variant::set()
  */
-GDExtensionInterfaceVariantSet :: #type proc "c" (GDExtensionVariantPtr p_self, GDExtensionConstVariantPtr p_key, GDExtensionConstVariantPtr p_value, GDExtensionBool *r_valid) -> void 
+GDExtensionInterfaceVariantSet :: #type proc "c" (p_self: GDExtensionVariantPtr, p_key: GDExtensionConstVariantPtr, p_value: GDExtensionConstVariantPtr, r_valid: ^GDExtensionBool)
 
 /**
  * @name variant_set_named
@@ -856,7 +883,7 @@ GDExtensionInterfaceVariantSet :: #type proc "c" (GDExtensionVariantPtr p_self, 
  *
  * @see Variant::set_named()
  */
-GDExtensionInterfaceVariantSetNamed :: #type proc "c" (GDExtensionVariantPtr p_self, GDExtensionConstStringNamePtr p_key, GDExtensionConstVariantPtr p_value, GDExtensionBool *r_valid) -> void 
+GDExtensionInterfaceVariantSetNamed :: #type proc "c" (p_self: GDExtensionVariantPtr, p_key: GDExtensionConstStringNamePtr, p_value: GDExtensionConstVariantPtr, r_valid: ^GDExtensionBool)
 
 /**
  * @name variant_set_keyed
@@ -871,7 +898,7 @@ GDExtensionInterfaceVariantSetNamed :: #type proc "c" (GDExtensionVariantPtr p_s
  *
  * @see Variant::set_keyed()
  */
-GDExtensionInterfaceVariantSetKeyed :: #type proc "c" (GDExtensionVariantPtr p_self, GDExtensionConstVariantPtr p_key, GDExtensionConstVariantPtr p_value, GDExtensionBool *r_valid) -> void 
+GDExtensionInterfaceVariantSetKeyed :: #type proc "c" (p_self: GDExtensionVariantPtr, p_key: GDExtensionConstVariantPtr, p_value: GDExtensionConstVariantPtr, r_valid: ^GDExtensionBool)
 
 /**
  * @name variant_set_indexed
@@ -885,7 +912,7 @@ GDExtensionInterfaceVariantSetKeyed :: #type proc "c" (GDExtensionVariantPtr p_s
  * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  * @param r_oob A pointer to a boolean which will be set to true if the index is out of bounds.
  */
-GDExtensionInterfaceVariantSetIndexed :: #type proc "c" (GDExtensionVariantPtr p_self, GDExtensionInt p_index, GDExtensionConstVariantPtr p_value, GDExtensionBool *r_valid, GDExtensionBool *r_oob) -> void 
+GDExtensionInterfaceVariantSetIndexed :: #type proc "c" (p_self: GDExtensionVariantPtr, p_index: GDExtensionInt, p_value: GDExtensionConstVariantPtr, r_valid: ^GDExtensionBool, r_oob: ^GDExtensionBool)
 
 /**
  * @name variant_get
@@ -898,7 +925,7 @@ GDExtensionInterfaceVariantSetIndexed :: #type proc "c" (GDExtensionVariantPtr p
  * @param r_ret A pointer to a Variant which will be assigned the value.
  * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  */
-GDExtensionInterfaceVariantGet :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionConstVariantPtr p_key, GDExtensionUninitializedVariantPtr r_ret, GDExtensionBool *r_valid) -> void 
+GDExtensionInterfaceVariantGet :: #type proc "c" (p_self: GDExtensionConstVariantPtr, p_key: GDExtensionConstVariantPtr, r_ret: GDExtensionUninitializedVariantPtr, r_valid: ^GDExtensionBool)
 
 /**
  * @name variant_get_named
@@ -911,7 +938,7 @@ GDExtensionInterfaceVariantGet :: #type proc "c" (GDExtensionConstVariantPtr p_s
  * @param r_ret A pointer to a Variant which will be assigned the value.
  * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  */
-GDExtensionInterfaceVariantGetNamed :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionConstStringNamePtr p_key, GDExtensionUninitializedVariantPtr r_ret, GDExtensionBool *r_valid) -> void 
+GDExtensionInterfaceVariantGetNamed :: #type proc "c" (p_self: GDExtensionConstVariantPtr, p_key: GDExtensionConstStringNamePtr, r_ret: GDExtensionUninitializedVariantPtr, r_valid: ^GDExtensionBool)
 
 /**
  * @name variant_get_keyed
@@ -924,7 +951,7 @@ GDExtensionInterfaceVariantGetNamed :: #type proc "c" (GDExtensionConstVariantPt
  * @param r_ret A pointer to a Variant which will be assigned the value.
  * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  */
-GDExtensionInterfaceVariantGetKeyed :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionConstVariantPtr p_key, GDExtensionUninitializedVariantPtr r_ret, GDExtensionBool *r_valid) -> void 
+GDExtensionInterfaceVariantGetKeyed :: #type proc "c" (p_self: GDExtensionConstVariantPtr, p_key: GDExtensionConstVariantPtr, r_ret: GDExtensionUninitializedVariantPtr, r_valid: ^GDExtensionBool)
 
 /**
  * @name variant_get_indexed
@@ -938,7 +965,7 @@ GDExtensionInterfaceVariantGetKeyed :: #type proc "c" (GDExtensionConstVariantPt
  * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  * @param r_oob A pointer to a boolean which will be set to true if the index is out of bounds.
  */
-GDExtensionInterfaceVariantGetIndexed :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionInt p_index, GDExtensionUninitializedVariantPtr r_ret, GDExtensionBool *r_valid, GDExtensionBool *r_oob) -> void 
+GDExtensionInterfaceVariantGetIndexed :: #type proc "c" (p_self: GDExtensionConstVariantPtr, p_index: GDExtensionInt, r_ret: GDExtensionUninitializedVariantPtr, r_valid: ^GDExtensionBool, r_oob: ^GDExtensionBool)
 
 /**
  * @name variant_iter_init
@@ -954,7 +981,7 @@ GDExtensionInterfaceVariantGetIndexed :: #type proc "c" (GDExtensionConstVariant
  *
  * @see Variant::iter_init()
  */
-GDExtensionInterfaceVariantIterInit :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionUninitializedVariantPtr r_iter, GDExtensionBool *r_valid) -> GDExtensionBool 
+GDExtensionInterfaceVariantIterInit :: #type proc "c" (p_self: GDExtensionConstVariantPtr, r_iter: GDExtensionUninitializedVariantPtr, r_valid: ^GDExtensionBool) -> GDExtensionBool 
 
 /**
  * @name variant_iter_next
@@ -970,7 +997,7 @@ GDExtensionInterfaceVariantIterInit :: #type proc "c" (GDExtensionConstVariantPt
  *
  * @see Variant::iter_next()
  */
-GDExtensionInterfaceVariantIterNext :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionVariantPtr r_iter, GDExtensionBool *r_valid) -> GDExtensionBool 
+GDExtensionInterfaceVariantIterNext :: #type proc "c" (p_self: GDExtensionConstVariantPtr, r_iter: GDExtensionVariantPtr, r_valid: ^GDExtensionBool) -> GDExtensionBool 
 
 /**
  * @name variant_iter_get
@@ -985,7 +1012,7 @@ GDExtensionInterfaceVariantIterNext :: #type proc "c" (GDExtensionConstVariantPt
  *
  * @see Variant::iter_get()
  */
-GDExtensionInterfaceVariantIterGet :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionVariantPtr r_iter, GDExtensionUninitializedVariantPtr r_ret, GDExtensionBool *r_valid) -> void 
+GDExtensionInterfaceVariantIterGet :: #type proc "c" (p_self: GDExtensionConstVariantPtr, r_iter: GDExtensionVariantPtr, r_ret: GDExtensionUninitializedVariantPtr, r_valid: ^GDExtensionBool)
 
 /**
  * @name variant_hash
@@ -999,7 +1026,7 @@ GDExtensionInterfaceVariantIterGet :: #type proc "c" (GDExtensionConstVariantPtr
  *
  * @see Variant::hash()
  */
-GDExtensionInterfaceVariantHash :: #type proc "c" (GDExtensionConstVariantPtr p_self) -> GDExtensionInt 
+GDExtensionInterfaceVariantHash :: #type proc "c" (p_self: GDExtensionConstVariantPtr) -> GDExtensionInt 
 
 /**
  * @name variant_recursive_hash
@@ -1014,7 +1041,7 @@ GDExtensionInterfaceVariantHash :: #type proc "c" (GDExtensionConstVariantPtr p_
  *
  * @see Variant::recursive_hash()
  */
-GDExtensionInterfaceVariantRecursiveHash :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionInt p_recursion_count) -> GDExtensionInt 
+GDExtensionInterfaceVariantRecursiveHash :: #type proc "c" (p_self: GDExtensionConstVariantPtr, p_recursion_count: GDExtensionInt) -> GDExtensionInt 
 
 /**
  * @name variant_hash_compare
@@ -1029,7 +1056,7 @@ GDExtensionInterfaceVariantRecursiveHash :: #type proc "c" (GDExtensionConstVari
  *
  * @see Variant::hash_compare()
  */
-GDExtensionInterfaceVariantHashCompare :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionConstVariantPtr p_other) -> GDExtensionBool 
+GDExtensionInterfaceVariantHashCompare :: #type proc "c" (p_self: GDExtensionConstVariantPtr, p_other: GDExtensionConstVariantPtr) -> GDExtensionBool 
 
 /**
  * @name variant_booleanize
@@ -1041,7 +1068,7 @@ GDExtensionInterfaceVariantHashCompare :: #type proc "c" (GDExtensionConstVarian
  *
  * @return The boolean value of the Variant.
  */
-GDExtensionInterfaceVariantBooleanize :: #type proc "c" (GDExtensionConstVariantPtr p_self) -> GDExtensionBool 
+GDExtensionInterfaceVariantBooleanize :: #type proc "c" (p_self: GDExtensionConstVariantPtr) -> GDExtensionBool 
 
 /**
  * @name variant_duplicate
@@ -1053,7 +1080,7 @@ GDExtensionInterfaceVariantBooleanize :: #type proc "c" (GDExtensionConstVariant
  * @param r_ret A pointer to a Variant to store the duplicated value.
  * @param p_deep Whether or not to duplicate deeply (when supported by the Variant type).
  */
-GDExtensionInterfaceVariantDuplicate :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionVariantPtr r_ret, GDExtensionBool p_deep) -> void 
+GDExtensionInterfaceVariantDuplicate :: #type proc "c" (p_self: GDExtensionConstVariantPtr, r_ret: GDExtensionVariantPtr, p_deep: GDExtensionBool)
 
 /**
  * @name variant_stringify
@@ -1064,7 +1091,7 @@ GDExtensionInterfaceVariantDuplicate :: #type proc "c" (GDExtensionConstVariantP
  * @param p_self A pointer to the Variant.
  * @param r_ret A pointer to a String to store the resulting value.
  */
-GDExtensionInterfaceVariantStringify :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionStringPtr r_ret) -> void 
+GDExtensionInterfaceVariantStringify :: #type proc "c" (p_self: GDExtensionConstVariantPtr, r_ret: GDExtensionStringPtr)
 
 /**
  * @name variant_get_type
@@ -1076,7 +1103,7 @@ GDExtensionInterfaceVariantStringify :: #type proc "c" (GDExtensionConstVariantP
  *
  * @return The variant type.
  */
-GDExtensionInterfaceVariantGetType :: #type proc "c" (GDExtensionConstVariantPtr p_self) -> GDExtensionVariantType 
+GDExtensionInterfaceVariantGetType :: #type proc "c" (p_self: GDExtensionConstVariantPtr) -> GDExtensionVariantType 
 
 /**
  * @name variant_has_method
@@ -1089,7 +1116,7 @@ GDExtensionInterfaceVariantGetType :: #type proc "c" (GDExtensionConstVariantPtr
  *
  * @return
  */
-GDExtensionInterfaceVariantHasMethod :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionConstStringNamePtr p_method) -> GDExtensionBool 
+GDExtensionInterfaceVariantHasMethod :: #type proc "c" (p_self: GDExtensionConstVariantPtr, p_method: GDExtensionConstStringNamePtr) -> GDExtensionBool 
 
 /**
  * @name variant_has_member
@@ -1102,7 +1129,7 @@ GDExtensionInterfaceVariantHasMethod :: #type proc "c" (GDExtensionConstVariantP
  *
  * @return
  */
-GDExtensionInterfaceVariantHasMember :: #type proc "c" (GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_member) -> GDExtensionBool 
+GDExtensionInterfaceVariantHasMember :: #type proc "c" (p_type: GDExtensionVariantType, p_member: GDExtensionConstStringNamePtr) -> GDExtensionBool 
 
 /**
  * @name variant_has_key
@@ -1116,7 +1143,7 @@ GDExtensionInterfaceVariantHasMember :: #type proc "c" (GDExtensionVariantType p
  *
  * @return true if the key exists; otherwise false.
  */
-GDExtensionInterfaceVariantHasKey :: #type proc "c" (GDExtensionConstVariantPtr p_self, GDExtensionConstVariantPtr p_key, GDExtensionBool *r_valid) -> GDExtensionBool 
+GDExtensionInterfaceVariantHasKey :: #type proc "c" (p_self: GDExtensionConstVariantPtr, p_key: GDExtensionConstVariantPtr, r_valid: ^GDExtensionBool) -> GDExtensionBool 
 
 /**
  * @name variant_get_type_name
@@ -1127,7 +1154,7 @@ GDExtensionInterfaceVariantHasKey :: #type proc "c" (GDExtensionConstVariantPtr 
  * @param p_type The Variant type.
  * @param r_name A pointer to a String to store the Variant type name.
  */
-GDExtensionInterfaceVariantGetTypeName :: #type proc "c" (GDExtensionVariantType p_type, GDExtensionUninitializedStringPtr r_name) -> void 
+GDExtensionInterfaceVariantGetTypeName :: #type proc "c" (p_type: GDExtensionVariantType, r_name: GDExtensionUninitializedStringPtr)
 
 /**
  * @name variant_can_convert
@@ -1140,7 +1167,7 @@ GDExtensionInterfaceVariantGetTypeName :: #type proc "c" (GDExtensionVariantType
  *
  * @return true if the conversion is possible; otherwise false.
  */
-GDExtensionInterfaceVariantCanConvert :: #type proc "c" (GDExtensionVariantType p_from, GDExtensionVariantType p_to) -> GDExtensionBool 
+GDExtensionInterfaceVariantCanConvert :: #type proc "c" (p_from: GDExtensionVariantType, p_to: GDExtensionVariantType) -> GDExtensionBool 
 
 /**
  * @name variant_can_convert_strict
@@ -1153,7 +1180,7 @@ GDExtensionInterfaceVariantCanConvert :: #type proc "c" (GDExtensionVariantType 
  *
  * @return true if the conversion is possible; otherwise false.
  */
-GDExtensionInterfaceVariantCanConvertStrict :: #type proc "c" (GDExtensionVariantType p_from, GDExtensionVariantType p_to) -> GDExtensionBool 
+GDExtensionInterfaceVariantCanConvertStrict :: #type proc "c" (p_from: GDExtensionVariantType, p_to: GDExtensionVariantType) -> GDExtensionBool 
 
 /**
  * @name get_variant_from_type_constructor
@@ -1165,7 +1192,7 @@ GDExtensionInterfaceVariantCanConvertStrict :: #type proc "c" (GDExtensionVarian
  *
  * @return A pointer to a function that can create a Variant of the given type from a raw value.
  */
-GDExtensionInterfaceGetVariantFromTypeConstructor :: #type proc "c" (GDExtensionVariantType p_type) -> GDExtensionVariantFromTypeConstructorFunc 
+GDExtensionInterfaceGetVariantFromTypeConstructor :: #type proc "c" (p_type: GDExtensionVariantType) -> GDExtensionVariantFromTypeConstructorFunc 
 
 /**
  * @name get_variant_to_type_constructor
@@ -1177,7 +1204,7 @@ GDExtensionInterfaceGetVariantFromTypeConstructor :: #type proc "c" (GDExtension
  *
  * @return A pointer to a function that can get the raw value from a Variant of the given type.
  */
-GDExtensionInterfaceGetVariantToTypeConstructor :: #type proc "c" (GDExtensionVariantType p_type) -> GDExtensionTypeFromVariantConstructorFunc 
+GDExtensionInterfaceGetVariantToTypeConstructor :: #type proc "c" (p_type: GDExtensionVariantType) -> GDExtensionTypeFromVariantConstructorFunc 
 
 /**
  * @name variant_get_ptr_operator_evaluator
@@ -1191,7 +1218,7 @@ GDExtensionInterfaceGetVariantToTypeConstructor :: #type proc "c" (GDExtensionVa
  *
  * @return A pointer to a function that can evaluate the given Variant operator on the given Variant types.
  */
-GDExtensionInterfaceVariantGetPtrOperatorEvaluator :: #type proc "c" (GDExtensionVariantOperator p_operator, GDExtensionVariantType p_type_a, GDExtensionVariantType p_type_b) -> GDExtensionPtrOperatorEvaluator 
+GDExtensionInterfaceVariantGetPtrOperatorEvaluator :: #type proc "c" (p_operator: GDExtensionVariantOperator, p_type_a: GDExtensionVariantType, p_type_b: GDExtensionVariantType) -> GDExtensionPtrOperatorEvaluator 
 
 /**
  * @name variant_get_ptr_builtin_method
@@ -1205,7 +1232,7 @@ GDExtensionInterfaceVariantGetPtrOperatorEvaluator :: #type proc "c" (GDExtensio
  *
  * @return A pointer to a function that can call a builtin method on a type of Variant.
  */
-GDExtensionInterfaceVariantGetPtrBuiltinMethod :: #type proc "c" (GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_method, GDExtensionInt p_hash) -> GDExtensionPtrBuiltInMethod 
+GDExtensionInterfaceVariantGetPtrBuiltinMethod :: #type proc "c" (p_type: GDExtensionVariantType, p_method: GDExtensionConstStringNamePtr, p_hash: GDExtensionInt) -> GDExtensionPtrBuiltInMethod 
 
 /**
  * @name variant_get_ptr_constructor
@@ -1218,7 +1245,7 @@ GDExtensionInterfaceVariantGetPtrBuiltinMethod :: #type proc "c" (GDExtensionVar
  *
  * @return A pointer to a function that can call one of the constructors for a type of Variant.
  */
-GDExtensionInterfaceVariantGetPtrConstructor :: #type proc "c" (GDExtensionVariantType p_type, int32_t p_constructor) -> GDExtensionPtrConstructor 
+GDExtensionInterfaceVariantGetPtrConstructor :: #type proc "c" (p_type: GDExtensionVariantType, p_constructor: int32_t) -> GDExtensionPtrConstructor 
 
 /**
  * @name variant_get_ptr_destructor
@@ -1230,7 +1257,7 @@ GDExtensionInterfaceVariantGetPtrConstructor :: #type proc "c" (GDExtensionVaria
  *
  * @return A pointer to a function than can call the destructor for a type of Variant.
  */
-GDExtensionInterfaceVariantGetPtrDestructor :: #type proc "c" (GDExtensionVariantType p_type) -> GDExtensionPtrDestructor 
+GDExtensionInterfaceVariantGetPtrDestructor :: #type proc "c" (p_type: GDExtensionVariantType) -> GDExtensionPtrDestructor 
 
 /**
  * @name variant_construct
@@ -1244,7 +1271,7 @@ GDExtensionInterfaceVariantGetPtrDestructor :: #type proc "c" (GDExtensionVarian
  * @param p_argument_count The number of arguments to pass to the constructor.
  * @param r_error A pointer the structure which will be updated with error information.
  */
-GDExtensionInterfaceVariantConstruct :: #type proc "c" (GDExtensionVariantType p_type, GDExtensionUninitializedVariantPtr r_base, GDExtensionConstVariantPtr *p_args, int32_t p_argument_count, GDExtensionCallError *r_error) -> void 
+GDExtensionInterfaceVariantConstruct :: #type proc "c" (p_type: GDExtensionVariantType, r_base: GDExtensionUninitializedVariantPtr, p_args: ^GDExtensionConstVariantPtr, p_argument_count: int32_t, r_error: ^GDExtensionCallError)
 
 /**
  * @name variant_get_ptr_setter
@@ -1257,7 +1284,7 @@ GDExtensionInterfaceVariantConstruct :: #type proc "c" (GDExtensionVariantType p
  *
  * @return A pointer to a function that can call a member's setter on the given Variant type.
  */
-GDExtensionInterfaceVariantGetPtrSetter :: #type proc "c" (GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_member) -> GDExtensionPtrSetter 
+GDExtensionInterfaceVariantGetPtrSetter :: #type proc "c" (p_type: GDExtensionVariantType, p_member: GDExtensionConstStringNamePtr) -> GDExtensionPtrSetter 
 
 /**
  * @name variant_get_ptr_getter
@@ -1270,7 +1297,7 @@ GDExtensionInterfaceVariantGetPtrSetter :: #type proc "c" (GDExtensionVariantTyp
  *
  * @return A pointer to a function that can call a member's getter on the given Variant type.
  */
-GDExtensionInterfaceVariantGetPtrGetter :: #type proc "c" (GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_member) -> GDExtensionPtrGetter 
+GDExtensionInterfaceVariantGetPtrGetter :: #type proc "c" (p_type: GDExtensionVariantType, p_member: GDExtensionConstStringNamePtr) -> GDExtensionPtrGetter 
 
 /**
  * @name variant_get_ptr_indexed_setter
@@ -1282,7 +1309,7 @@ GDExtensionInterfaceVariantGetPtrGetter :: #type proc "c" (GDExtensionVariantTyp
  *
  * @return A pointer to a function that can set an index on the given Variant type.
  */
-GDExtensionInterfaceVariantGetPtrIndexedSetter :: #type proc "c" (GDExtensionVariantType p_type) -> GDExtensionPtrIndexedSetter 
+GDExtensionInterfaceVariantGetPtrIndexedSetter :: #type proc "c" (p_type: GDExtensionVariantType) -> GDExtensionPtrIndexedSetter 
 
 /**
  * @name variant_get_ptr_indexed_getter
@@ -1294,7 +1321,7 @@ GDExtensionInterfaceVariantGetPtrIndexedSetter :: #type proc "c" (GDExtensionVar
  *
  * @return A pointer to a function that can get an index on the given Variant type.
  */
-GDExtensionInterfaceVariantGetPtrIndexedGetter :: #type proc "c" (GDExtensionVariantType p_type) -> GDExtensionPtrIndexedGetter 
+GDExtensionInterfaceVariantGetPtrIndexedGetter :: #type proc "c" (p_type: GDExtensionVariantType) -> GDExtensionPtrIndexedGetter 
 
 /**
  * @name variant_get_ptr_keyed_setter
@@ -1306,7 +1333,7 @@ GDExtensionInterfaceVariantGetPtrIndexedGetter :: #type proc "c" (GDExtensionVar
  *
  * @return A pointer to a function that can set a key on the given Variant type.
  */
-GDExtensionInterfaceVariantGetPtrKeyedSetter :: #type proc "c" (GDExtensionVariantType p_type) -> GDExtensionPtrKeyedSetter 
+GDExtensionInterfaceVariantGetPtrKeyedSetter :: #type proc "c" (p_type: GDExtensionVariantType) -> GDExtensionPtrKeyedSetter 
 
 /**
  * @name variant_get_ptr_keyed_getter
@@ -1318,7 +1345,7 @@ GDExtensionInterfaceVariantGetPtrKeyedSetter :: #type proc "c" (GDExtensionVaria
  *
  * @return A pointer to a function that can get a key on the given Variant type.
  */
-GDExtensionInterfaceVariantGetPtrKeyedGetter :: #type proc "c" (GDExtensionVariantType p_type) -> GDExtensionPtrKeyedGetter 
+GDExtensionInterfaceVariantGetPtrKeyedGetter :: #type proc "c" (p_type: GDExtensionVariantType) -> GDExtensionPtrKeyedGetter 
 
 /**
  * @name variant_get_ptr_keyed_checker
@@ -1330,7 +1357,7 @@ GDExtensionInterfaceVariantGetPtrKeyedGetter :: #type proc "c" (GDExtensionVaria
  *
  * @return A pointer to a function that can check a key on the given Variant type.
  */
-GDExtensionInterfaceVariantGetPtrKeyedChecker :: #type proc "c" (GDExtensionVariantType p_type) -> GDExtensionPtrKeyedChecker 
+GDExtensionInterfaceVariantGetPtrKeyedChecker :: #type proc "c" (p_type: GDExtensionVariantType) -> GDExtensionPtrKeyedChecker 
 
 /**
  * @name variant_get_constant_value
@@ -1342,7 +1369,7 @@ GDExtensionInterfaceVariantGetPtrKeyedChecker :: #type proc "c" (GDExtensionVari
  * @param p_constant A pointer to a StringName with the constant name.
  * @param r_ret A pointer to a Variant to store the value.
  */
-GDExtensionInterfaceVariantGetConstantValue :: #type proc "c" (GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_constant, GDExtensionUninitializedVariantPtr r_ret) -> void 
+GDExtensionInterfaceVariantGetConstantValue :: #type proc "c" (p_type: GDExtensionVariantType, p_constant: GDExtensionConstStringNamePtr, r_ret: GDExtensionUninitializedVariantPtr)
 
 /**
  * @name variant_get_ptr_utility_function
@@ -1355,7 +1382,7 @@ GDExtensionInterfaceVariantGetConstantValue :: #type proc "c" (GDExtensionVarian
  *
  * @return A pointer to a function that can call a Variant utility function.
  */
-GDExtensionInterfaceVariantGetPtrUtilityFunction :: #type proc "c" (GDExtensionConstStringNamePtr p_function, GDExtensionInt p_hash) -> GDExtensionPtrUtilityFunction 
+GDExtensionInterfaceVariantGetPtrUtilityFunction :: #type proc "c" (p_function: GDExtensionConstStringNamePtr, p_hash: GDExtensionInt) -> GDExtensionPtrUtilityFunction 
 
 /* INTERFACE: String Utilities */
 
@@ -1368,7 +1395,7 @@ GDExtensionInterfaceVariantGetPtrUtilityFunction :: #type proc "c" (GDExtensionC
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a Latin-1 encoded C string (null terminated).
  */
-GDExtensionInterfaceStringNewWithLatin1Chars :: #type proc "c" (GDExtensionUninitializedStringPtr r_dest, char *p_contents) -> void 
+GDExtensionInterfaceStringNewWithLatin1Chars :: #type proc "c" (r_dest: GDExtensionUninitializedStringPtr, p_contents: cstring)
 
 /**
  * @name string_new_with_utf8_chars
@@ -1379,7 +1406,7 @@ GDExtensionInterfaceStringNewWithLatin1Chars :: #type proc "c" (GDExtensionUnini
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-8 encoded C string (null terminated).
  */
-GDExtensionInterfaceStringNewWithUtf8Chars :: #type proc "c" (GDExtensionUninitializedStringPtr r_dest, char *p_contents) -> void 
+GDExtensionInterfaceStringNewWithUtf8Chars :: #type proc "c" (r_dest: GDExtensionUninitializedStringPtr, p_contents: cstring)
 
 /**
  * @name string_new_with_utf16_chars
@@ -1390,7 +1417,7 @@ GDExtensionInterfaceStringNewWithUtf8Chars :: #type proc "c" (GDExtensionUniniti
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-16 encoded C string (null terminated).
  */
-GDExtensionInterfaceStringNewWithUtf16Chars :: #type proc "c" (GDExtensionUninitializedStringPtr r_dest, char16_t *p_contents) -> void 
+GDExtensionInterfaceStringNewWithUtf16Chars :: #type proc "c" (r_dest: GDExtensionUninitializedStringPtr, p_contents: ^char16_t)
 
 /**
  * @name string_new_with_utf32_chars
@@ -1401,7 +1428,7 @@ GDExtensionInterfaceStringNewWithUtf16Chars :: #type proc "c" (GDExtensionUninit
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-32 encoded C string (null terminated).
  */
-GDExtensionInterfaceStringNewWithUtf32Chars :: #type proc "c" (GDExtensionUninitializedStringPtr r_dest, char32_t *p_contents) -> void 
+GDExtensionInterfaceStringNewWithUtf32Chars :: #type proc "c" (r_dest: GDExtensionUninitializedStringPtr, p_contents: ^char32_t)
 
 /**
  * @name string_new_with_wide_chars
@@ -1412,7 +1439,7 @@ GDExtensionInterfaceStringNewWithUtf32Chars :: #type proc "c" (GDExtensionUninit
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a wide C string (null terminated).
  */
-GDExtensionInterfaceStringNewWithWideChars :: #type proc "c" (GDExtensionUninitializedStringPtr r_dest, wchar_t *p_contents) -> void 
+GDExtensionInterfaceStringNewWithWideChars :: #type proc "c" (r_dest: GDExtensionUninitializedStringPtr, p_contents: ^wchar_t)
 
 /**
  * @name string_new_with_latin1_chars_and_len
@@ -1424,7 +1451,7 @@ GDExtensionInterfaceStringNewWithWideChars :: #type proc "c" (GDExtensionUniniti
  * @param p_contents A pointer to a Latin-1 encoded C string.
  * @param p_size The number of characters (= number of bytes).
  */
-GDExtensionInterfaceStringNewWithLatin1CharsAndLen :: #type proc "c" (GDExtensionUninitializedStringPtr r_dest, char *p_contents, GDExtensionInt p_size) -> void 
+GDExtensionInterfaceStringNewWithLatin1CharsAndLen :: #type proc "c" (r_dest: GDExtensionUninitializedStringPtr, p_contents: cstring, p_size: GDExtensionInt)
 
 /**
  * @name string_new_with_utf8_chars_and_len
@@ -1436,7 +1463,7 @@ GDExtensionInterfaceStringNewWithLatin1CharsAndLen :: #type proc "c" (GDExtensio
  * @param p_contents A pointer to a UTF-8 encoded C string.
  * @param p_size The number of bytes (not code units).
  */
-GDExtensionInterfaceStringNewWithUtf8CharsAndLen :: #type proc "c" (GDExtensionUninitializedStringPtr r_dest, char *p_contents, GDExtensionInt p_size) -> void 
+GDExtensionInterfaceStringNewWithUtf8CharsAndLen :: #type proc "c" (r_dest: GDExtensionUninitializedStringPtr, p_contents: cstring, p_size: GDExtensionInt)
 
 /**
  * @name string_new_with_utf16_chars_and_len
@@ -1448,7 +1475,7 @@ GDExtensionInterfaceStringNewWithUtf8CharsAndLen :: #type proc "c" (GDExtensionU
  * @param p_contents A pointer to a UTF-16 encoded C string.
  * @param p_size The number of characters (not bytes).
  */
-GDExtensionInterfaceStringNewWithUtf16CharsAndLen :: #type proc "c" (GDExtensionUninitializedStringPtr r_dest, char16_t *p_contents, GDExtensionInt p_char_count) -> void 
+GDExtensionInterfaceStringNewWithUtf16CharsAndLen :: #type proc "c" (r_dest: GDExtensionUninitializedStringPtr, p_contents: ^char16_t, p_char_count: GDExtensionInt)
 
 /**
  * @name string_new_with_utf32_chars_and_len
@@ -1460,7 +1487,7 @@ GDExtensionInterfaceStringNewWithUtf16CharsAndLen :: #type proc "c" (GDExtension
  * @param p_contents A pointer to a UTF-32 encoded C string.
  * @param p_size The number of characters (not bytes).
  */
-GDExtensionInterfaceStringNewWithUtf32CharsAndLen :: #type proc "c" (GDExtensionUninitializedStringPtr r_dest, char32_t *p_contents, GDExtensionInt p_char_count) -> void 
+GDExtensionInterfaceStringNewWithUtf32CharsAndLen :: #type proc "c" (r_dest: GDExtensionUninitializedStringPtr, p_contents: ^char32_t, p_char_count: GDExtensionInt)
 
 /**
  * @name string_new_with_wide_chars_and_len
@@ -1472,7 +1499,7 @@ GDExtensionInterfaceStringNewWithUtf32CharsAndLen :: #type proc "c" (GDExtension
  * @param p_contents A pointer to a wide C string.
  * @param p_size The number of characters (not bytes).
  */
-GDExtensionInterfaceStringNewWithWideCharsAndLen :: #type proc "c" (GDExtensionUninitializedStringPtr r_dest, wchar_t *p_contents, GDExtensionInt p_char_count) -> void 
+GDExtensionInterfaceStringNewWithWideCharsAndLen :: #type proc "c" (r_dest: GDExtensionUninitializedStringPtr, p_contents: ^wchar_t, p_char_count: GDExtensionInt)
 
 /**
  * @name string_to_latin1_chars
@@ -1488,7 +1515,7 @@ GDExtensionInterfaceStringNewWithWideCharsAndLen :: #type proc "c" (GDExtensionU
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-GDExtensionInterfaceStringToLatin1Chars :: #type proc "c" (GDExtensionConstStringPtr p_self, char *r_text, GDExtensionInt p_max_write_length) -> GDExtensionInt 
+GDExtensionInterfaceStringToLatin1Chars :: #type proc "c" (p_self: GDExtensionConstStringPtr, r_text: cstring, p_max_write_length: GDExtensionInt) -> GDExtensionInt 
 
 /**
  * @name string_to_utf8_chars
@@ -1504,7 +1531,7 @@ GDExtensionInterfaceStringToLatin1Chars :: #type proc "c" (GDExtensionConstStrin
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-GDExtensionInterfaceStringToUtf8Chars :: #type proc "c" (GDExtensionConstStringPtr p_self, char *r_text, GDExtensionInt p_max_write_length) -> GDExtensionInt 
+GDExtensionInterfaceStringToUtf8Chars :: #type proc "c" (p_self: GDExtensionConstStringPtr, r_text: cstring, p_max_write_length: GDExtensionInt) -> GDExtensionInt 
 
 /**
  * @name string_to_utf16_chars
@@ -1520,7 +1547,7 @@ GDExtensionInterfaceStringToUtf8Chars :: #type proc "c" (GDExtensionConstStringP
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-GDExtensionInterfaceStringToUtf16Chars :: #type proc "c" (GDExtensionConstStringPtr p_self, char16_t *r_text, GDExtensionInt p_max_write_length) -> GDExtensionInt 
+GDExtensionInterfaceStringToUtf16Chars :: #type proc "c" (p_self: GDExtensionConstStringPtr, r_text: ^char16_t, p_max_write_length: GDExtensionInt) -> GDExtensionInt 
 
 /**
  * @name string_to_utf32_chars
@@ -1536,7 +1563,7 @@ GDExtensionInterfaceStringToUtf16Chars :: #type proc "c" (GDExtensionConstString
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-GDExtensionInterfaceStringToUtf32Chars :: #type proc "c" (GDExtensionConstStringPtr p_self, char32_t *r_text, GDExtensionInt p_max_write_length) -> GDExtensionInt 
+GDExtensionInterfaceStringToUtf32Chars :: #type proc "c" (p_self: GDExtensionConstStringPtr, r_text: ^char32_t, p_max_write_length: GDExtensionInt) -> GDExtensionInt 
 
 /**
  * @name string_to_wide_chars
@@ -1552,7 +1579,7 @@ GDExtensionInterfaceStringToUtf32Chars :: #type proc "c" (GDExtensionConstString
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-GDExtensionInterfaceStringToWideChars :: #type proc "c" (GDExtensionConstStringPtr p_self, wchar_t *r_text, GDExtensionInt p_max_write_length) -> GDExtensionInt 
+GDExtensionInterfaceStringToWideChars :: #type proc "c" (p_self: GDExtensionConstStringPtr, r_text: ^wchar_t, p_max_write_length: GDExtensionInt) -> GDExtensionInt 
 
 /**
  * @name string_operator_index
@@ -1565,7 +1592,7 @@ GDExtensionInterfaceStringToWideChars :: #type proc "c" (GDExtensionConstStringP
  *
  * @return A pointer to the requested character.
  */
-GDExtensionInterfaceStringOperatorIndex :: #type proc "c" (GDExtensionStringPtr p_self, GDExtensionInt p_index) -> char32_t *
+GDExtensionInterfaceStringOperatorIndex :: #type proc "c" (p_self: GDExtensionStringPtr, p_index: GDExtensionInt) -> ^char32_t
 
 /**
  * @name string_operator_index_const
@@ -1578,7 +1605,7 @@ GDExtensionInterfaceStringOperatorIndex :: #type proc "c" (GDExtensionStringPtr 
  *
  * @return A const pointer to the requested character.
  */
-GDExtensionInterfaceStringOperatorIndexConst :: #type proc "c" (GDExtensionConstStringPtr p_self, GDExtensionInt p_index) -> char32_t *
+GDExtensionInterfaceStringOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstStringPtr, p_index: GDExtensionInt) -> ^char32_t
 
 /**
  * @name string_operator_plus_eq_string
@@ -1589,7 +1616,7 @@ GDExtensionInterfaceStringOperatorIndexConst :: #type proc "c" (GDExtensionConst
  * @param p_self A pointer to the String.
  * @param p_b A pointer to the other String to append.
  */
-GDExtensionInterfaceStringOperatorPlusEqString :: #type proc "c" (GDExtensionStringPtr p_self, GDExtensionConstStringPtr p_b) -> void 
+GDExtensionInterfaceStringOperatorPlusEqString :: #type proc "c" (p_self: GDExtensionStringPtr, p_b: GDExtensionConstStringPtr)
 
 /**
  * @name string_operator_plus_eq_char
@@ -1600,7 +1627,7 @@ GDExtensionInterfaceStringOperatorPlusEqString :: #type proc "c" (GDExtensionStr
  * @param p_self A pointer to the String.
  * @param p_b A pointer to the character to append.
  */
-GDExtensionInterfaceStringOperatorPlusEqChar :: #type proc "c" (GDExtensionStringPtr p_self, char32_t p_b) -> void 
+GDExtensionInterfaceStringOperatorPlusEqChar :: #type proc "c" (p_self: GDExtensionStringPtr, p_b: char32_t)
 
 /**
  * @name string_operator_plus_eq_cstr
@@ -1611,7 +1638,7 @@ GDExtensionInterfaceStringOperatorPlusEqChar :: #type proc "c" (GDExtensionStrin
  * @param p_self A pointer to the String.
  * @param p_b A pointer to a Latin-1 encoded C string (null terminated).
  */
-GDExtensionInterfaceStringOperatorPlusEqCstr :: #type proc "c" (GDExtensionStringPtr p_self, char *p_b) -> void 
+GDExtensionInterfaceStringOperatorPlusEqCstr :: #type proc "c" (p_self: GDExtensionStringPtr, p_b: cstring)
 
 /**
  * @name string_operator_plus_eq_wcstr
@@ -1622,7 +1649,7 @@ GDExtensionInterfaceStringOperatorPlusEqCstr :: #type proc "c" (GDExtensionStrin
  * @param p_self A pointer to the String.
  * @param p_b A pointer to a wide C string (null terminated).
  */
-GDExtensionInterfaceStringOperatorPlusEqWcstr :: #type proc "c" (GDExtensionStringPtr p_self, wchar_t *p_b) -> void 
+GDExtensionInterfaceStringOperatorPlusEqWcstr :: #type proc "c" (p_self: GDExtensionStringPtr, p_b: ^wchar_t)
 
 /**
  * @name string_operator_plus_eq_c32str
@@ -1633,7 +1660,7 @@ GDExtensionInterfaceStringOperatorPlusEqWcstr :: #type proc "c" (GDExtensionStri
  * @param p_self A pointer to the String.
  * @param p_b A pointer to a UTF-32 encoded C string (null terminated).
  */
-GDExtensionInterfaceStringOperatorPlusEqC32str :: #type proc "c" (GDExtensionStringPtr p_self, char32_t *p_b) -> void 
+GDExtensionInterfaceStringOperatorPlusEqC32str :: #type proc "c" (p_self: GDExtensionStringPtr, p_b: ^char32_t)
 
 /**
  * @name string_resize
@@ -1652,7 +1679,7 @@ GDExtensionInterfaceStringOperatorPlusEqC32str :: #type proc "c" (GDExtensionStr
  *
  * @return Error code signifying if the operation successful.
  */
-GDExtensionInterfaceStringResize :: #type proc "c" (GDExtensionStringPtr p_self, GDExtensionInt p_resize) -> GDExtensionInt 
+GDExtensionInterfaceStringResize :: #type proc "c" (p_self: GDExtensionStringPtr, p_resize: GDExtensionInt) -> GDExtensionInt 
 
 /* INTERFACE: StringName Utilities */
 
@@ -1673,7 +1700,7 @@ GDExtensionInterfaceStringResize :: #type proc "c" (GDExtensionStringPtr p_self,
  * @param p_contents A pointer to a C string (null terminated and Latin-1 or ASCII encoded).
  * @param p_is_static Whether the StringName reuses the buffer directly (see above).
  */
-GDExtensionInterfaceStringNameNewWithLatin1Chars :: #type proc "c" (GDExtensionUninitializedStringNamePtr r_dest, char *p_contents, GDExtensionBool p_is_static) -> void 
+GDExtensionInterfaceStringNameNewWithLatin1Chars :: #type proc "c" (r_dest: GDExtensionUninitializedStringNamePtr, p_contents: cstring, p_is_static: GDExtensionBool)
 
 /**
  * @name string_name_new_with_utf8_chars
@@ -1684,7 +1711,7 @@ GDExtensionInterfaceStringNameNewWithLatin1Chars :: #type proc "c" (GDExtensionU
  * @param r_dest A pointer to uninitialized storage, into which the newly created StringName is constructed.
  * @param p_contents A pointer to a C string (null terminated and UTF-8 encoded).
  */
-GDExtensionInterfaceStringNameNewWithUtf8Chars :: #type proc "c" (GDExtensionUninitializedStringNamePtr r_dest, char *p_contents) -> void 
+GDExtensionInterfaceStringNameNewWithUtf8Chars :: #type proc "c" (r_dest: GDExtensionUninitializedStringNamePtr, p_contents: cstring)
 
 /**
  * @name string_name_new_with_utf8_chars_and_len
@@ -1696,7 +1723,7 @@ GDExtensionInterfaceStringNameNewWithUtf8Chars :: #type proc "c" (GDExtensionUni
  * @param p_contents A pointer to a C string (null terminated and UTF-8 encoded).
  * @param p_size The number of bytes (not UTF-8 code points).
  */
-GDExtensionInterfaceStringNameNewWithUtf8CharsAndLen :: #type proc "c" (GDExtensionUninitializedStringNamePtr r_dest, char *p_contents, GDExtensionInt p_size) -> void 
+GDExtensionInterfaceStringNameNewWithUtf8CharsAndLen :: #type proc "c" (r_dest: GDExtensionUninitializedStringNamePtr, p_contents: cstring, p_size: GDExtensionInt)
 
 /* INTERFACE: XMLParser Utilities */
 
@@ -1714,7 +1741,7 @@ GDExtensionInterfaceStringNameNewWithUtf8CharsAndLen :: #type proc "c" (GDExtens
  *
  * @see XMLParser::open_buffer()
  */
-GDExtensionInterfaceXmlParserOpenBuffer :: #type proc "c" (GDExtensionObjectPtr p_instance, uint8_t *p_buffer, size_t p_size) -> GDExtensionInt 
+GDExtensionInterfaceXmlParserOpenBuffer :: #type proc "c" (p_instance: GDExtensionObjectPtr, p_buffer: ^uint8_t, p_size: size_t) -> GDExtensionInt 
 
 /* INTERFACE: FileAccess Utilities */
 
@@ -1730,7 +1757,7 @@ GDExtensionInterfaceXmlParserOpenBuffer :: #type proc "c" (GDExtensionObjectPtr 
  *
  * @see FileAccess::store_buffer()
  */
-GDExtensionInterfaceFileAccessStoreBuffer :: #type proc "c" (GDExtensionObjectPtr p_instance, uint8_t *p_src, uint64_t p_length) -> void 
+GDExtensionInterfaceFileAccessStoreBuffer :: #type proc "c" (p_instance: GDExtensionObjectPtr, p_src: ^uint8_t, p_length: uint64_t)
 
 /**
  * @name file_access_get_buffer
@@ -1744,7 +1771,7 @@ GDExtensionInterfaceFileAccessStoreBuffer :: #type proc "c" (GDExtensionObjectPt
  *
  * @return The actual number of bytes read (may be less than requested).
  */
-GDExtensionInterfaceFileAccessGetBuffer :: #type proc "c" (GDExtensionConstObjectPtr p_instance, uint8_t *p_dst, uint64_t p_length) -> uint64_t 
+GDExtensionInterfaceFileAccessGetBuffer :: #type proc "c" (p_instance: GDExtensionConstObjectPtr, p_dst: ^uint8_t, p_length: uint64_t) -> uint64_t 
 
 /* INTERFACE: WorkerThreadPool Utilities */
 
@@ -1765,7 +1792,7 @@ GDExtensionInterfaceFileAccessGetBuffer :: #type proc "c" (GDExtensionConstObjec
  *
  * @see WorkerThreadPool::add_group_task()
  */
-GDExtensionInterfaceWorkerThreadPoolAddNativeGroupTask :: #type proc "c" (GDExtensionObjectPtr p_instance, void (*p_func)(void *, uint32_t), void *p_userdata, int p_elements, int p_tasks, GDExtensionBool p_high_priority, GDExtensionConstStringPtr p_description) -> int64_t 
+GDExtensionInterfaceWorkerThreadPoolAddNativeGroupTask :: #type proc "c" (p_instance: GDExtensionObjectPtr, p_func: proc(rawptr,uint32_t), p_userdata: rawptr, p_elements: int, p_tasks: int, p_high_priority: GDExtensionBool, p_description: GDExtensionConstStringPtr) -> int64_t
 
 /**
  * @name worker_thread_pool_add_native_task
@@ -1781,7 +1808,7 @@ GDExtensionInterfaceWorkerThreadPoolAddNativeGroupTask :: #type proc "c" (GDExte
  *
  * @return The task ID.
  */
-GDExtensionInterfaceWorkerThreadPoolAddNativeTask :: #type proc "c" (GDExtensionObjectPtr p_instance, void (*p_func)(void *), void *p_userdata, GDExtensionBool p_high_priority, GDExtensionConstStringPtr p_description) -> int64_t 
+GDExtensionInterfaceWorkerThreadPoolAddNativeTask :: #type proc "c" (p_instance: GDExtensionObjectPtr, p_func: proc(rawptr), p_userdata: rawptr, p_high_priority: GDExtensionBool, p_description: GDExtensionConstStringPtr) -> int64_t 
 
 /* INTERFACE: Packed Array */
 
@@ -1796,7 +1823,7 @@ GDExtensionInterfaceWorkerThreadPoolAddNativeTask :: #type proc "c" (GDExtension
  *
  * @return A pointer to the requested byte.
  */
-GDExtensionInterfacePackedByteArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionInt p_index) -> uint8_t *
+GDExtensionInterfacePackedByteArrayOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_index: GDExtensionInt) -> ^uint8_t
 
 /**
  * @name packed_byte_array_operator_index_const
@@ -1809,7 +1836,7 @@ GDExtensionInterfacePackedByteArrayOperatorIndex :: #type proc "c" (GDExtensionT
  *
  * @return A const pointer to the requested byte.
  */
-GDExtensionInterfacePackedByteArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionInt p_index) -> uint8_t *
+GDExtensionInterfacePackedByteArrayOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_index: GDExtensionInt) -> ^uint8_t
 
 /**
  * @name packed_color_array_operator_index
@@ -1822,7 +1849,7 @@ GDExtensionInterfacePackedByteArrayOperatorIndexConst :: #type proc "c" (GDExten
  *
  * @return A pointer to the requested Color.
  */
-GDExtensionInterfacePackedColorArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionInt p_index) -> GDExtensionTypePtr 
+GDExtensionInterfacePackedColorArrayOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_index: GDExtensionInt) -> GDExtensionTypePtr 
 
 /**
  * @name packed_color_array_operator_index_const
@@ -1835,7 +1862,7 @@ GDExtensionInterfacePackedColorArrayOperatorIndex :: #type proc "c" (GDExtension
  *
  * @return A const pointer to the requested Color.
  */
-GDExtensionInterfacePackedColorArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionInt p_index) -> GDExtensionTypePtr 
+GDExtensionInterfacePackedColorArrayOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_index: GDExtensionInt) -> GDExtensionTypePtr 
 
 /**
  * @name packed_float32_array_operator_index
@@ -1848,7 +1875,7 @@ GDExtensionInterfacePackedColorArrayOperatorIndexConst :: #type proc "c" (GDExte
  *
  * @return A pointer to the requested 32-bit float.
  */
-GDExtensionInterfacePackedFloat32ArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionInt p_index) -> float *
+GDExtensionInterfacePackedFloat32ArrayOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_index: GDExtensionInt) -> ^float
 
 /**
  * @name packed_float32_array_operator_index_const
@@ -1861,7 +1888,7 @@ GDExtensionInterfacePackedFloat32ArrayOperatorIndex :: #type proc "c" (GDExtensi
  *
  * @return A const pointer to the requested 32-bit float.
  */
-GDExtensionInterfacePackedFloat32ArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionInt p_index) -> float *
+GDExtensionInterfacePackedFloat32ArrayOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_index: GDExtensionInt) -> ^float
 
 /**
  * @name packed_float64_array_operator_index
@@ -1874,7 +1901,7 @@ GDExtensionInterfacePackedFloat32ArrayOperatorIndexConst :: #type proc "c" (GDEx
  *
  * @return A pointer to the requested 64-bit float.
  */
-GDExtensionInterfacePackedFloat64ArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionInt p_index) -> double *
+GDExtensionInterfacePackedFloat64ArrayOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_index: GDExtensionInt) -> ^double
 
 /**
  * @name packed_float64_array_operator_index_const
@@ -1887,7 +1914,7 @@ GDExtensionInterfacePackedFloat64ArrayOperatorIndex :: #type proc "c" (GDExtensi
  *
  * @return A const pointer to the requested 64-bit float.
  */
-GDExtensionInterfacePackedFloat64ArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionInt p_index) -> double *
+GDExtensionInterfacePackedFloat64ArrayOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_index: GDExtensionInt) -> ^double
 
 /**
  * @name packed_int32_array_operator_index
@@ -1900,7 +1927,7 @@ GDExtensionInterfacePackedFloat64ArrayOperatorIndexConst :: #type proc "c" (GDEx
  *
  * @return A pointer to the requested 32-bit integer.
  */
-GDExtensionInterfacePackedInt32ArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionInt p_index) -> int32_t *
+GDExtensionInterfacePackedInt32ArrayOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_index: GDExtensionInt) -> ^int32_t
 
 /**
  * @name packed_int32_array_operator_index_const
@@ -1913,7 +1940,7 @@ GDExtensionInterfacePackedInt32ArrayOperatorIndex :: #type proc "c" (GDExtension
  *
  * @return A const pointer to the requested 32-bit integer.
  */
-GDExtensionInterfacePackedInt32ArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionInt p_index) -> int32_t *
+GDExtensionInterfacePackedInt32ArrayOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_index: GDExtensionInt) -> ^int32_t
 
 /**
  * @name packed_int64_array_operator_index
@@ -1926,7 +1953,7 @@ GDExtensionInterfacePackedInt32ArrayOperatorIndexConst :: #type proc "c" (GDExte
  *
  * @return A pointer to the requested 64-bit integer.
  */
-GDExtensionInterfacePackedInt64ArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionInt p_index) -> int64_t *
+GDExtensionInterfacePackedInt64ArrayOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_index: GDExtensionInt) -> ^int64_t
 
 /**
  * @name packed_int64_array_operator_index_const
@@ -1939,7 +1966,7 @@ GDExtensionInterfacePackedInt64ArrayOperatorIndex :: #type proc "c" (GDExtension
  *
  * @return A const pointer to the requested 64-bit integer.
  */
-GDExtensionInterfacePackedInt64ArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionInt p_index) -> int64_t *
+GDExtensionInterfacePackedInt64ArrayOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_index: GDExtensionInt) -> ^int64_t
 
 /**
  * @name packed_string_array_operator_index
@@ -1952,7 +1979,7 @@ GDExtensionInterfacePackedInt64ArrayOperatorIndexConst :: #type proc "c" (GDExte
  *
  * @return A pointer to the requested String.
  */
-GDExtensionInterfacePackedStringArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionInt p_index) -> GDExtensionStringPtr 
+GDExtensionInterfacePackedStringArrayOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_index: GDExtensionInt) -> GDExtensionStringPtr 
 
 /**
  * @name packed_string_array_operator_index_const
@@ -1965,7 +1992,7 @@ GDExtensionInterfacePackedStringArrayOperatorIndex :: #type proc "c" (GDExtensio
  *
  * @return A const pointer to the requested String.
  */
-GDExtensionInterfacePackedStringArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionInt p_index) -> GDExtensionStringPtr 
+GDExtensionInterfacePackedStringArrayOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_index: GDExtensionInt) -> GDExtensionStringPtr 
 
 /**
  * @name packed_vector2_array_operator_index
@@ -1978,7 +2005,7 @@ GDExtensionInterfacePackedStringArrayOperatorIndexConst :: #type proc "c" (GDExt
  *
  * @return A pointer to the requested Vector2.
  */
-GDExtensionInterfacePackedVector2ArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionInt p_index) -> GDExtensionTypePtr 
+GDExtensionInterfacePackedVector2ArrayOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_index: GDExtensionInt) -> GDExtensionTypePtr 
 
 /**
  * @name packed_vector2_array_operator_index_const
@@ -1991,7 +2018,7 @@ GDExtensionInterfacePackedVector2ArrayOperatorIndex :: #type proc "c" (GDExtensi
  *
  * @return A const pointer to the requested Vector2.
  */
-GDExtensionInterfacePackedVector2ArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionInt p_index) -> GDExtensionTypePtr 
+GDExtensionInterfacePackedVector2ArrayOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_index: GDExtensionInt) -> GDExtensionTypePtr 
 
 /**
  * @name packed_vector3_array_operator_index
@@ -2004,7 +2031,7 @@ GDExtensionInterfacePackedVector2ArrayOperatorIndexConst :: #type proc "c" (GDEx
  *
  * @return A pointer to the requested Vector3.
  */
-GDExtensionInterfacePackedVector3ArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionInt p_index) -> GDExtensionTypePtr 
+GDExtensionInterfacePackedVector3ArrayOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_index: GDExtensionInt) -> GDExtensionTypePtr 
 
 /**
  * @name packed_vector3_array_operator_index_const
@@ -2017,7 +2044,7 @@ GDExtensionInterfacePackedVector3ArrayOperatorIndex :: #type proc "c" (GDExtensi
  *
  * @return A const pointer to the requested Vector3.
  */
-GDExtensionInterfacePackedVector3ArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionInt p_index) -> GDExtensionTypePtr 
+GDExtensionInterfacePackedVector3ArrayOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_index: GDExtensionInt) -> GDExtensionTypePtr 
 
 /**
  * @name array_operator_index
@@ -2030,7 +2057,7 @@ GDExtensionInterfacePackedVector3ArrayOperatorIndexConst :: #type proc "c" (GDEx
  *
  * @return A pointer to the requested Variant.
  */
-GDExtensionInterfaceArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionInt p_index) -> GDExtensionVariantPtr 
+GDExtensionInterfaceArrayOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_index: GDExtensionInt) -> GDExtensionVariantPtr 
 
 /**
  * @name array_operator_index_const
@@ -2043,7 +2070,7 @@ GDExtensionInterfaceArrayOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_s
  *
  * @return A const pointer to the requested Variant.
  */
-GDExtensionInterfaceArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionInt p_index) -> GDExtensionVariantPtr 
+GDExtensionInterfaceArrayOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_index: GDExtensionInt) -> GDExtensionVariantPtr 
 
 /**
  * @name array_ref
@@ -2054,7 +2081,7 @@ GDExtensionInterfaceArrayOperatorIndexConst :: #type proc "c" (GDExtensionConstT
  * @param p_self A pointer to the Array object to update.
  * @param p_from A pointer to the Array object to reference.
  */
-GDExtensionInterfaceArrayRef :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionConstTypePtr p_from) -> void 
+GDExtensionInterfaceArrayRef :: #type proc "c" (p_self: GDExtensionTypePtr, p_from: GDExtensionConstTypePtr)
 
 /**
  * @name array_set_typed
@@ -2067,7 +2094,7 @@ GDExtensionInterfaceArrayRef :: #type proc "c" (GDExtensionTypePtr p_self, GDExt
  * @param p_class_name A pointer to a StringName with the name of the object (if p_type is GDEXTENSION_VARIANT_TYPE_OBJECT).
  * @param p_script A pointer to a Script object (if p_type is GDEXTENSION_VARIANT_TYPE_OBJECT and the base class is extended by a script).
  */
-GDExtensionInterfaceArraySetTyped :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstVariantPtr p_script) -> void 
+GDExtensionInterfaceArraySetTyped :: #type proc "c" (p_self: GDExtensionTypePtr, p_type: GDExtensionVariantType, p_class_name: GDExtensionConstStringNamePtr, p_script: GDExtensionConstVariantPtr)
 
 /* INTERFACE: Dictionary */
 
@@ -2082,7 +2109,7 @@ GDExtensionInterfaceArraySetTyped :: #type proc "c" (GDExtensionTypePtr p_self, 
  *
  * @return A pointer to a Variant representing the value at the given key.
  */
-GDExtensionInterfaceDictionaryOperatorIndex :: #type proc "c" (GDExtensionTypePtr p_self, GDExtensionConstVariantPtr p_key) -> GDExtensionVariantPtr 
+GDExtensionInterfaceDictionaryOperatorIndex :: #type proc "c" (p_self: GDExtensionTypePtr, p_key: GDExtensionConstVariantPtr) -> GDExtensionVariantPtr 
 
 /**
  * @name dictionary_operator_index_const
@@ -2095,7 +2122,7 @@ GDExtensionInterfaceDictionaryOperatorIndex :: #type proc "c" (GDExtensionTypePt
  *
  * @return A const pointer to a Variant representing the value at the given key.
  */
-GDExtensionInterfaceDictionaryOperatorIndexConst :: #type proc "c" (GDExtensionConstTypePtr p_self, GDExtensionConstVariantPtr p_key) -> GDExtensionVariantPtr 
+GDExtensionInterfaceDictionaryOperatorIndexConst :: #type proc "c" (p_self: GDExtensionConstTypePtr, p_key: GDExtensionConstVariantPtr) -> GDExtensionVariantPtr 
 
 /* INTERFACE: Object */
 
@@ -2112,7 +2139,7 @@ GDExtensionInterfaceDictionaryOperatorIndexConst :: #type proc "c" (GDExtensionC
  * @param r_ret A pointer to Variant which will receive the return value.
  * @param r_error A pointer to a GDExtensionCallError struct that will receive error information.
  */
-GDExtensionInterfaceObjectMethodBindCall :: #type proc "c" (GDExtensionMethodBindPtr p_method_bind, GDExtensionObjectPtr p_instance, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_arg_count, GDExtensionUninitializedVariantPtr r_ret, GDExtensionCallError *r_error) -> void 
+GDExtensionInterfaceObjectMethodBindCall :: #type proc "c" (p_method_bind: GDExtensionMethodBindPtr, p_instance: GDExtensionObjectPtr, p_args: ^GDExtensionConstVariantPtr, p_arg_count: GDExtensionInt, r_ret: GDExtensionUninitializedVariantPtr, r_error: ^GDExtensionCallError)
 
 /**
  * @name object_method_bind_ptrcall
@@ -2125,7 +2152,7 @@ GDExtensionInterfaceObjectMethodBindCall :: #type proc "c" (GDExtensionMethodBin
  * @param p_args A pointer to a C array representing the arguments.
  * @param r_ret A pointer to the Object that will receive the return value.
  */
-GDExtensionInterfaceObjectMethodBindPtrcall :: #type proc "c" (GDExtensionMethodBindPtr p_method_bind, GDExtensionObjectPtr p_instance, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret) -> void 
+GDExtensionInterfaceObjectMethodBindPtrcall :: #type proc "c" (p_method_bind: GDExtensionMethodBindPtr, p_instance: GDExtensionObjectPtr, p_args: ^GDExtensionConstTypePtr, r_ret: GDExtensionTypePtr)
 
 /**
  * @name object_destroy
@@ -2135,7 +2162,7 @@ GDExtensionInterfaceObjectMethodBindPtrcall :: #type proc "c" (GDExtensionMethod
  *
  * @param p_o A pointer to the Object.
  */
-GDExtensionInterfaceObjectDestroy :: #type proc "c" (GDExtensionObjectPtr p_o) -> void 
+GDExtensionInterfaceObjectDestroy :: #type proc "c" (p_o: GDExtensionObjectPtr)
 
 /**
  * @name global_get_singleton
@@ -2147,7 +2174,7 @@ GDExtensionInterfaceObjectDestroy :: #type proc "c" (GDExtensionObjectPtr p_o) -
  *
  * @return A pointer to the singleton Object.
  */
-GDExtensionInterfaceGlobalGetSingleton :: #type proc "c" (GDExtensionConstStringNamePtr p_name) -> GDExtensionObjectPtr 
+GDExtensionInterfaceGlobalGetSingleton :: #type proc "c" (p_name: GDExtensionConstStringNamePtr) -> GDExtensionObjectPtr 
 
 /**
  * @name object_get_instance_binding
@@ -2161,7 +2188,7 @@ GDExtensionInterfaceGlobalGetSingleton :: #type proc "c" (GDExtensionConstString
  *
  * @return
  */
-GDExtensionInterfaceObjectGetInstanceBinding :: #type proc "c" (GDExtensionObjectPtr p_o, void *p_token, GDExtensionInstanceBindingCallbacks *p_callbacks) -> void *
+GDExtensionInterfaceObjectGetInstanceBinding :: #type proc "c" (p_o: GDExtensionObjectPtr, p_token: rawptr, p_callbacks: ^GDExtensionInstanceBindingCallbacks) -> rawptr
 
 /**
  * @name object_set_instance_binding
@@ -2174,7 +2201,7 @@ GDExtensionInterfaceObjectGetInstanceBinding :: #type proc "c" (GDExtensionObjec
  * @param p_binding A pointer to the instance binding.
  * @param p_callbacks A pointer to a GDExtensionInstanceBindingCallbacks struct.
  */
-GDExtensionInterfaceObjectSetInstanceBinding :: #type proc "c" (GDExtensionObjectPtr p_o, void *p_token, void *p_binding, GDExtensionInstanceBindingCallbacks *p_callbacks) -> void 
+GDExtensionInterfaceObjectSetInstanceBinding :: #type proc "c" (p_o: GDExtensionObjectPtr, p_token: rawptr, p_binding: rawptr, p_callbacks: ^GDExtensionInstanceBindingCallbacks)
 
 /**
  * @name object_free_instance_binding
@@ -2185,7 +2212,7 @@ GDExtensionInterfaceObjectSetInstanceBinding :: #type proc "c" (GDExtensionObjec
  * @param p_o A pointer to the Object.
  * @param p_library A token the library received by the GDExtension's entry point function.
  */
-GDExtensionInterfaceObjectFreeInstanceBinding :: #type proc "c" (GDExtensionObjectPtr p_o, void *p_token) -> void 
+GDExtensionInterfaceObjectFreeInstanceBinding :: #type proc "c" (p_o: GDExtensionObjectPtr, p_token: rawptr)
 
 /**
  * @name object_set_instance
@@ -2197,7 +2224,7 @@ GDExtensionInterfaceObjectFreeInstanceBinding :: #type proc "c" (GDExtensionObje
  * @param p_classname A pointer to a StringName with the registered extension class's name.
  * @param p_instance A pointer to the extension class instance.
  */
-GDExtensionInterfaceObjectSetInstance :: #type proc "c" (GDExtensionObjectPtr p_o, GDExtensionConstStringNamePtr p_classname, GDExtensionClassInstancePtr p_instance) -> void  /* p_classname should be a registered extension class and should extend the p_o object's class. */
+GDExtensionInterfaceObjectSetInstance :: #type proc "c" (p_o: GDExtensionObjectPtr, p_classname: GDExtensionConstStringNamePtr, p_instance: GDExtensionClassInstancePtr) // p_classname should be a registered extension class and should extend the p_o object's class. ^/
 
 /**
  * @name object_get_class_name
@@ -2211,7 +2238,7 @@ GDExtensionInterfaceObjectSetInstance :: #type proc "c" (GDExtensionObjectPtr p_
  *
  * @return true if successful in getting the class name; otherwise false.
  */
-GDExtensionInterfaceObjectGetClassName :: #type proc "c" (GDExtensionConstObjectPtr p_object, GDExtensionClassLibraryPtr p_library, GDExtensionUninitializedStringNamePtr r_class_name) -> GDExtensionBool 
+GDExtensionInterfaceObjectGetClassName :: #type proc "c" (p_object: GDExtensionConstObjectPtr, p_library: GDExtensionClassLibraryPtr, r_class_name: GDExtensionUninitializedStringNamePtr) -> GDExtensionBool 
 
 /**
  * @name object_cast_to
@@ -2224,7 +2251,7 @@ GDExtensionInterfaceObjectGetClassName :: #type proc "c" (GDExtensionConstObject
  *
  * @return Returns a pointer to the Object, or NULL if it can't be cast to the requested type.
  */
-GDExtensionInterfaceObjectCastTo :: #type proc "c" (GDExtensionConstObjectPtr p_object, void *p_class_tag) -> GDExtensionObjectPtr 
+GDExtensionInterfaceObjectCastTo :: #type proc "c" (p_object: GDExtensionConstObjectPtr, p_class_tag: rawptr) -> GDExtensionObjectPtr 
 
 /**
  * @name object_get_instance_from_id
@@ -2236,7 +2263,7 @@ GDExtensionInterfaceObjectCastTo :: #type proc "c" (GDExtensionConstObjectPtr p_
  *
  * @return A pointer to the Object.
  */
-GDExtensionInterfaceObjectGetInstanceFromId :: #type proc "c" (GDObjectInstanceID p_instance_id) -> GDExtensionObjectPtr 
+GDExtensionInterfaceObjectGetInstanceFromId :: #type proc "c" (p_instance_id: GDObjectInstanceID) -> GDExtensionObjectPtr 
 
 /**
  * @name object_get_instance_id
@@ -2248,7 +2275,7 @@ GDExtensionInterfaceObjectGetInstanceFromId :: #type proc "c" (GDObjectInstanceI
  *
  * @return The instance ID.
  */
-GDExtensionInterfaceObjectGetInstanceId :: #type proc "c" (GDExtensionConstObjectPtr p_object) -> GDObjectInstanceID 
+GDExtensionInterfaceObjectGetInstanceId :: #type proc "c" (p_object: GDExtensionConstObjectPtr) -> GDObjectInstanceID 
 
 /* INTERFACE: Reference */
 
@@ -2262,7 +2289,7 @@ GDExtensionInterfaceObjectGetInstanceId :: #type proc "c" (GDExtensionConstObjec
  *
  * @return A pointer to the Object from the reference or NULL.
  */
-GDExtensionInterfaceRefGetObject :: #type proc "c" (GDExtensionConstRefPtr p_ref) -> GDExtensionObjectPtr 
+GDExtensionInterfaceRefGetObject :: #type proc "c" (p_ref: GDExtensionConstRefPtr) -> GDExtensionObjectPtr 
 
 /**
  * @name ref_set_object
@@ -2273,7 +2300,7 @@ GDExtensionInterfaceRefGetObject :: #type proc "c" (GDExtensionConstRefPtr p_ref
  * @param p_ref A pointer to the reference.
  * @param p_object A pointer to the Object to refer to.
  */
-GDExtensionInterfaceRefSetObject :: #type proc "c" (GDExtensionRefPtr p_ref, GDExtensionObjectPtr p_object) -> void 
+GDExtensionInterfaceRefSetObject :: #type proc "c" (p_ref: GDExtensionRefPtr, p_object: GDExtensionObjectPtr)
 
 /* INTERFACE: Script Instance */
 
@@ -2289,7 +2316,7 @@ GDExtensionInterfaceRefSetObject :: #type proc "c" (GDExtensionRefPtr p_ref, GDE
  *
  * @return A pointer to a ScriptInstanceExtension object.
  */
-GDExtensionInterfaceScriptInstanceCreate :: #type proc "c" (GDExtensionScriptInstanceInfo *p_info, GDExtensionScriptInstanceDataPtr p_instance_data) -> GDExtensionScriptInstancePtr 
+GDExtensionInterfaceScriptInstanceCreate :: #type proc "c" (p_info: ^GDExtensionScriptInstanceInfo, p_instance_data: GDExtensionScriptInstanceDataPtr) -> GDExtensionScriptInstancePtr 
 
 /**
  * @name script_instance_create2
@@ -2302,7 +2329,7 @@ GDExtensionInterfaceScriptInstanceCreate :: #type proc "c" (GDExtensionScriptIns
  *
  * @return A pointer to a ScriptInstanceExtension object.
  */
-GDExtensionInterfaceScriptInstanceCreate2 :: #type proc "c" (GDExtensionScriptInstanceInfo2 *p_info, GDExtensionScriptInstanceDataPtr p_instance_data) -> GDExtensionScriptInstancePtr 
+GDExtensionInterfaceScriptInstanceCreate2 :: #type proc "c" (p_info: ^GDExtensionScriptInstanceInfo2, p_instance_data: GDExtensionScriptInstanceDataPtr) -> GDExtensionScriptInstancePtr 
 
 /**
  * @name placeholder_script_instance_create
@@ -2318,7 +2345,7 @@ GDExtensionInterfaceScriptInstanceCreate2 :: #type proc "c" (GDExtensionScriptIn
  *
  * @return A pointer to a PlaceHolderScriptInstance object.
  */
-GDExtensionInterfacePlaceHolderScriptInstanceCreate :: #type proc "c" (GDExtensionObjectPtr p_language, GDExtensionObjectPtr p_script, GDExtensionObjectPtr p_owner) -> GDExtensionScriptInstancePtr 
+GDExtensionInterfacePlaceHolderScriptInstanceCreate :: #type proc "c" (p_language: GDExtensionObjectPtr, p_script: GDExtensionObjectPtr, p_owner: GDExtensionObjectPtr) -> GDExtensionScriptInstancePtr 
 
 /**
  * @name placeholder_script_instance_update
@@ -2333,7 +2360,7 @@ GDExtensionInterfacePlaceHolderScriptInstanceCreate :: #type proc "c" (GDExtensi
  * @param p_properties A pointer to an Array of Dictionary representing PropertyInfo.
  * @param p_values A pointer to a Dictionary mapping StringName to Variant values.
  */
-GDExtensionInterfacePlaceHolderScriptInstanceUpdate :: #type proc "c" (GDExtensionScriptInstancePtr p_placeholder, GDExtensionConstTypePtr p_properties, GDExtensionConstTypePtr p_values) -> void 
+GDExtensionInterfacePlaceHolderScriptInstanceUpdate :: #type proc "c" (p_placeholder: GDExtensionScriptInstancePtr, p_properties: GDExtensionConstTypePtr, p_values: GDExtensionConstTypePtr)
 
 /**
  * @name object_get_script_instance
@@ -2346,7 +2373,7 @@ GDExtensionInterfacePlaceHolderScriptInstanceUpdate :: #type proc "c" (GDExtensi
  *
  * @return A GDExtensionScriptInstanceDataPtr that was attached to this object as part of script_instance_create.
  */
-GDExtensionInterfaceObjectGetScriptInstance :: #type proc "c" (GDExtensionConstObjectPtr p_object, GDExtensionObjectPtr p_language) -> GDExtensionScriptInstanceDataPtr 
+GDExtensionInterfaceObjectGetScriptInstance :: #type proc "c" (p_object: GDExtensionConstObjectPtr, p_language: GDExtensionObjectPtr) -> GDExtensionScriptInstanceDataPtr 
 
 /* INTERFACE: Callable */
 
@@ -2361,7 +2388,7 @@ GDExtensionInterfaceObjectGetScriptInstance :: #type proc "c" (GDExtensionConstO
  * @param r_callable A pointer that will receive the new Callable.
  * @param p_callable_custom_info The info required to construct a Callable.
  */
-GDExtensionInterfaceCallableCustomCreate :: #type proc "c" (GDExtensionUninitializedTypePtr r_callable, GDExtensionCallableCustomInfo *p_callable_custom_info) -> void 
+GDExtensionInterfaceCallableCustomCreate :: #type proc "c" (r_callable: GDExtensionUninitializedTypePtr, p_callable_custom_info: ^GDExtensionCallableCustomInfo)
 
 /**
  * @name callable_custom_get_userdata
@@ -2374,7 +2401,7 @@ GDExtensionInterfaceCallableCustomCreate :: #type proc "c" (GDExtensionUninitial
  * @param p_callable A pointer to a Callable.
  * @param p_token A pointer to an address that uniquely identifies the GDExtension.
  */
-GDExtensionInterfaceCallableCustomGetUserData :: #type proc "c" (GDExtensionConstTypePtr p_callable, void *p_token) -> void *
+GDExtensionInterfaceCallableCustomGetUserData :: #type proc "c" (p_callable: GDExtensionConstTypePtr, p_token: rawptr) -> rawptr
 
 /* INTERFACE: ClassDB */
 
@@ -2390,7 +2417,7 @@ GDExtensionInterfaceCallableCustomGetUserData :: #type proc "c" (GDExtensionCons
  *
  * @return A pointer to the newly created Object.
  */
-GDExtensionInterfaceClassdbConstructObject :: #type proc "c" (GDExtensionConstStringNamePtr p_classname) -> GDExtensionObjectPtr 
+GDExtensionInterfaceClassdbConstructObject :: #type proc "c" (p_classname: GDExtensionConstStringNamePtr) -> GDExtensionObjectPtr 
 
 /**
  * @name classdb_get_method_bind
@@ -2404,7 +2431,7 @@ GDExtensionInterfaceClassdbConstructObject :: #type proc "c" (GDExtensionConstSt
  *
  * @return A pointer to the MethodBind from ClassDB.
  */
-GDExtensionInterfaceClassdbGetMethodBind :: #type proc "c" (GDExtensionConstStringNamePtr p_classname, GDExtensionConstStringNamePtr p_methodname, GDExtensionInt p_hash) -> GDExtensionMethodBindPtr 
+GDExtensionInterfaceClassdbGetMethodBind :: #type proc "c" (p_classname: GDExtensionConstStringNamePtr, p_methodname: GDExtensionConstStringNamePtr, p_hash: GDExtensionInt) -> GDExtensionMethodBindPtr 
 
 /**
  * @name classdb_get_class_tag
@@ -2416,7 +2443,7 @@ GDExtensionInterfaceClassdbGetMethodBind :: #type proc "c" (GDExtensionConstStri
  *
  * @return A pointer uniquely identifying the built-in class in the ClassDB.
  */
-GDExtensionInterfaceClassdbGetClassTag :: #type proc "c" (GDExtensionConstStringNamePtr p_classname) -> void *
+GDExtensionInterfaceClassdbGetClassTag :: #type proc "c" (p_classname: GDExtensionConstStringNamePtr) -> rawptr
 
 /* INTERFACE: ClassDB Extension */
 
@@ -2434,7 +2461,7 @@ GDExtensionInterfaceClassdbGetClassTag :: #type proc "c" (GDExtensionConstString
  * @param p_parent_class_name A pointer to a StringName with the parent class name.
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo struct.
  */
-GDExtensionInterfaceClassdbRegisterExtensionClass :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, GDExtensionClassCreationInfo *p_extension_funcs) -> void 
+GDExtensionInterfaceClassdbRegisterExtensionClass :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, p_class_name: GDExtensionConstStringNamePtr, p_parent_class_name: GDExtensionConstStringNamePtr, p_extension_funcs: ^GDExtensionClassCreationInfo)
 
 /**
  * @name classdb_register_extension_class2
@@ -2449,7 +2476,7 @@ GDExtensionInterfaceClassdbRegisterExtensionClass :: #type proc "c" (GDExtension
  * @param p_parent_class_name A pointer to a StringName with the parent class name.
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
  */
-GDExtensionInterfaceClassdbRegisterExtensionClass2 :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, GDExtensionClassCreationInfo2 *p_extension_funcs) -> void 
+GDExtensionInterfaceClassdbRegisterExtensionClass2 :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, p_class_name: GDExtensionConstStringNamePtr, p_parent_class_name: GDExtensionConstStringNamePtr, p_extension_funcs: ^GDExtensionClassCreationInfo2)
 
 /**
  * @name classdb_register_extension_class_method
@@ -2463,7 +2490,7 @@ GDExtensionInterfaceClassdbRegisterExtensionClass2 :: #type proc "c" (GDExtensio
  * @param p_class_name A pointer to a StringName with the class name.
  * @param p_method_info A pointer to a GDExtensionClassMethodInfo struct.
  */
-GDExtensionInterfaceClassdbRegisterExtensionClassMethod :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionClassMethodInfo *p_method_info) -> void 
+GDExtensionInterfaceClassdbRegisterExtensionClassMethod :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, p_class_name: GDExtensionConstStringNamePtr, p_method_info: ^GDExtensionClassMethodInfo)
 
 /**
  * @name classdb_register_extension_class_integer_constant
@@ -2478,7 +2505,7 @@ GDExtensionInterfaceClassdbRegisterExtensionClassMethod :: #type proc "c" (GDExt
  * @param p_constant_value The constant value.
  * @param p_is_bitfield Whether or not this is a bit field.
  */
-GDExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_enum_name, GDExtensionConstStringNamePtr p_constant_name, GDExtensionInt p_constant_value, GDExtensionBool p_is_bitfield) -> void 
+GDExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, p_class_name: GDExtensionConstStringNamePtr, p_enum_name: GDExtensionConstStringNamePtr, p_constant_name: GDExtensionConstStringNamePtr, p_constant_value: GDExtensionInt, p_is_bitfield: GDExtensionBool)
 
 /**
  * @name classdb_register_extension_class_property
@@ -2494,7 +2521,7 @@ GDExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant :: #type proc "
  * @param p_setter A pointer to a StringName with the name of the setter method.
  * @param p_getter A pointer to a StringName with the name of the getter method.
  */
-GDExtensionInterfaceClassdbRegisterExtensionClassProperty :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionPropertyInfo *p_info, GDExtensionConstStringNamePtr p_setter, GDExtensionConstStringNamePtr p_getter) -> void 
+GDExtensionInterfaceClassdbRegisterExtensionClassProperty :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, p_class_name: GDExtensionConstStringNamePtr, p_info: ^GDExtensionPropertyInfo, p_setter: GDExtensionConstStringNamePtr, p_getter: GDExtensionConstStringNamePtr)
 
 /**
  * @name classdb_register_extension_class_property_indexed
@@ -2511,7 +2538,7 @@ GDExtensionInterfaceClassdbRegisterExtensionClassProperty :: #type proc "c" (GDE
  * @param p_getter A pointer to a StringName with the name of the getter method.
  * @param p_index The index to pass as the first argument to the getter and setter methods.
  */
-GDExtensionInterfaceClassdbRegisterExtensionClassPropertyIndexed :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionPropertyInfo *p_info, GDExtensionConstStringNamePtr p_setter, GDExtensionConstStringNamePtr p_getter, GDExtensionInt p_index) -> void 
+GDExtensionInterfaceClassdbRegisterExtensionClassPropertyIndexed :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, p_class_name: GDExtensionConstStringNamePtr, p_info: ^GDExtensionPropertyInfo, p_setter: GDExtensionConstStringNamePtr, p_getter: GDExtensionConstStringNamePtr, p_index: GDExtensionInt)
 
 /**
  * @name classdb_register_extension_class_property_group
@@ -2524,7 +2551,7 @@ GDExtensionInterfaceClassdbRegisterExtensionClassPropertyIndexed :: #type proc "
  * @param p_group_name A pointer to a String with the group name.
  * @param p_prefix A pointer to a String with the prefix used by properties in this group.
  */
-GDExtensionInterfaceClassdbRegisterExtensionClassPropertyGroup :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringPtr p_group_name, GDExtensionConstStringPtr p_prefix) -> void 
+GDExtensionInterfaceClassdbRegisterExtensionClassPropertyGroup :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, p_class_name: GDExtensionConstStringNamePtr, p_group_name: GDExtensionConstStringPtr, p_prefix: GDExtensionConstStringPtr)
 
 /**
  * @name classdb_register_extension_class_property_subgroup
@@ -2537,7 +2564,7 @@ GDExtensionInterfaceClassdbRegisterExtensionClassPropertyGroup :: #type proc "c"
  * @param p_subgroup_name A pointer to a String with the subgroup name.
  * @param p_prefix A pointer to a String with the prefix used by properties in this subgroup.
  */
-GDExtensionInterfaceClassdbRegisterExtensionClassPropertySubgroup :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringPtr p_subgroup_name, GDExtensionConstStringPtr p_prefix) -> void 
+GDExtensionInterfaceClassdbRegisterExtensionClassPropertySubgroup :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, p_class_name: GDExtensionConstStringNamePtr, p_subgroup_name: GDExtensionConstStringPtr, p_prefix: GDExtensionConstStringPtr)
 
 /**
  * @name classdb_register_extension_class_signal
@@ -2553,7 +2580,7 @@ GDExtensionInterfaceClassdbRegisterExtensionClassPropertySubgroup :: #type proc 
  * @param p_argument_info A pointer to a GDExtensionPropertyInfo struct.
  * @param p_argument_count The number of arguments the signal receives.
  */
-GDExtensionInterfaceClassdbRegisterExtensionClassSignal :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_signal_name, GDExtensionPropertyInfo *p_argument_info, GDExtensionInt p_argument_count) -> void 
+GDExtensionInterfaceClassdbRegisterExtensionClassSignal :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, p_class_name: GDExtensionConstStringNamePtr, p_signal_name: GDExtensionConstStringNamePtr, p_argument_info: ^GDExtensionPropertyInfo, p_argument_count: GDExtensionInt)
 
 /**
  * @name classdb_unregister_extension_class
@@ -2564,7 +2591,7 @@ GDExtensionInterfaceClassdbRegisterExtensionClassSignal :: #type proc "c" (GDExt
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param p_class_name A pointer to a StringName with the class name.
  */
-GDExtensionInterfaceClassdbUnregisterExtensionClass :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name) -> void  /* Unregistering a parent class before a class that inherits it will result in failure. Inheritors must be unregistered first. */
+GDExtensionInterfaceClassdbUnregisterExtensionClass :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, p_class_name: GDExtensionConstStringNamePtr) // Unregistering a parent class before a class that inherits it will result in failure. Inheritors must be unregistered first.
 
 /**
  * @name get_library_path
@@ -2575,7 +2602,7 @@ GDExtensionInterfaceClassdbUnregisterExtensionClass :: #type proc "c" (GDExtensi
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param r_path A pointer to a String which will receive the path.
  */
-GDExtensionInterfaceGetLibraryPath :: #type proc "c" (GDExtensionClassLibraryPtr p_library, GDExtensionUninitializedStringPtr r_path) -> void 
+GDExtensionInterfaceGetLibraryPath :: #type proc "c" (p_library: GDExtensionClassLibraryPtr, r_path: GDExtensionUninitializedStringPtr)
 
 /**
  * @name editor_add_plugin
@@ -2587,7 +2614,7 @@ GDExtensionInterfaceGetLibraryPath :: #type proc "c" (GDExtensionClassLibraryPtr
  *
  * @param p_class_name A pointer to a StringName with the name of a class (descending from EditorPlugin) which is already registered with ClassDB.
  */
-GDExtensionInterfaceEditorAddPlugin :: #type proc "c" (GDExtensionConstStringNamePtr p_class_name) -> void 
+GDExtensionInterfaceEditorAddPlugin :: #type proc "c" (p_class_name: GDExtensionConstStringNamePtr)
 
 /**
  * @name editor_remove_plugin
@@ -2597,4 +2624,4 @@ GDExtensionInterfaceEditorAddPlugin :: #type proc "c" (GDExtensionConstStringNam
  *
  * @param p_class_name A pointer to a StringName with the name of a class that was previously added as an editor plugin.
  */
-GDExtensionInterfaceEditorRemovePlugin :: #type proc "c" (GDExtensionConstStringNamePtr p_class_name) -> void 
+GDExtensionInterfaceEditorRemovePlugin :: #type proc "c" (p_class_name: GDExtensionConstStringNamePtr)
