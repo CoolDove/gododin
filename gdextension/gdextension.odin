@@ -32,7 +32,7 @@ package gdextension
 
 /* VARIANT TYPES */
 
-typedef enum {
+GDExtensionVariantType :: enum i32 {
 	GDEXTENSION_VARIANT_TYPE_NIL,
 
 	/*  atomic types */
@@ -81,9 +81,9 @@ typedef enum {
 	GDEXTENSION_VARIANT_TYPE_PACKED_COLOR_ARRAY,
 
 	GDEXTENSION_VARIANT_TYPE_VARIANT_MAX
-} GDExtensionVariantType;
+}
 
-typedef enum {
+GDExtensionVariantOperator :: enum i32 {
 	/* comparison */
 	GDEXTENSION_VARIANT_OP_EQUAL,
 	GDEXTENSION_VARIANT_OP_NOT_EQUAL,
@@ -120,7 +120,7 @@ typedef enum {
 	GDEXTENSION_VARIANT_OP_IN,
 	GDEXTENSION_VARIANT_OP_MAX
 
-} GDExtensionVariantOperator;
+}
 
 // In this API there are multiple functions which expect the caller to pass a pointer
 // on return value as parameter.
@@ -139,30 +139,30 @@ typedef enum {
 //   them it is always safe to skip the constructor for the return value if you are in a hurry ;-)
 
 typedef void *GDExtensionVariantPtr;
-typedef const void *GDExtensionConstVariantPtr;
+typedef void *GDExtensionConstVariantPtr;
 typedef void *GDExtensionUninitializedVariantPtr;
 typedef void *GDExtensionStringNamePtr;
-typedef const void *GDExtensionConstStringNamePtr;
+typedef void *GDExtensionConstStringNamePtr;
 typedef void *GDExtensionUninitializedStringNamePtr;
 typedef void *GDExtensionStringPtr;
-typedef const void *GDExtensionConstStringPtr;
+typedef void *GDExtensionConstStringPtr;
 typedef void *GDExtensionUninitializedStringPtr;
 typedef void *GDExtensionObjectPtr;
-typedef const void *GDExtensionConstObjectPtr;
+typedef void *GDExtensionConstObjectPtr;
 typedef void *GDExtensionUninitializedObjectPtr;
 typedef void *GDExtensionTypePtr;
-typedef const void *GDExtensionConstTypePtr;
+typedef void *GDExtensionConstTypePtr;
 typedef void *GDExtensionUninitializedTypePtr;
-typedef const void *GDExtensionMethodBindPtr;
+typedef void *GDExtensionMethodBindPtr;
 typedef int64_t GDExtensionInt;
 typedef uint8_t GDExtensionBool;
 typedef uint64_t GDObjectInstanceID;
 typedef void *GDExtensionRefPtr;
-typedef const void *GDExtensionConstRefPtr;
+typedef void *GDExtensionConstRefPtr;
 
 /* VARIANT DATA I/O */
 
-typedef enum {
+GDExtensionCallErrorType :: enum i32 {
 	GDEXTENSION_CALL_OK,
 	GDEXTENSION_CALL_ERROR_INVALID_METHOD,
 	GDEXTENSION_CALL_ERROR_INVALID_ARGUMENT, // Expected a different variant type.
@@ -170,19 +170,19 @@ typedef enum {
 	GDEXTENSION_CALL_ERROR_TOO_FEW_ARGUMENTS, // Expected higher number of arguments.
 	GDEXTENSION_CALL_ERROR_INSTANCE_IS_NULL,
 	GDEXTENSION_CALL_ERROR_METHOD_NOT_CONST, // Used for const call.
-} GDExtensionCallErrorType;
+}
 
-typedef struct {
-	GDExtensionCallErrorType error;
-	int32_t argument;
-	int32_t expected;
-} GDExtensionCallError;
+GDExtensionCallError :: struct {
+	error: GDExtensionCallErrorType,
+	argument: int32_t,
+	expected: int32_t,
+}
 
 typedef void (*GDExtensionVariantFromTypeConstructorFunc)(GDExtensionUninitializedVariantPtr, GDExtensionTypePtr);
 typedef void (*GDExtensionTypeFromVariantConstructorFunc)(GDExtensionUninitializedTypePtr, GDExtensionVariantPtr);
 typedef void (*GDExtensionPtrOperatorEvaluator)(GDExtensionConstTypePtr p_left, GDExtensionConstTypePtr p_right, GDExtensionTypePtr r_result);
-typedef void (*GDExtensionPtrBuiltInMethod)(GDExtensionTypePtr p_base, const GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_return, int p_argument_count);
-typedef void (*GDExtensionPtrConstructor)(GDExtensionUninitializedTypePtr p_base, const GDExtensionConstTypePtr *p_args);
+typedef void (*GDExtensionPtrBuiltInMethod)(GDExtensionTypePtr p_base, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_return, int p_argument_count);
+typedef void (*GDExtensionPtrConstructor)(GDExtensionUninitializedTypePtr p_base, GDExtensionConstTypePtr *p_args);
 typedef void (*GDExtensionPtrDestructor)(GDExtensionTypePtr p_base);
 typedef void (*GDExtensionPtrSetter)(GDExtensionTypePtr p_base, GDExtensionConstTypePtr p_value);
 typedef void (*GDExtensionPtrGetter)(GDExtensionConstTypePtr p_base, GDExtensionTypePtr r_value);
@@ -191,7 +191,7 @@ typedef void (*GDExtensionPtrIndexedGetter)(GDExtensionConstTypePtr p_base, GDEx
 typedef void (*GDExtensionPtrKeyedSetter)(GDExtensionTypePtr p_base, GDExtensionConstTypePtr p_key, GDExtensionConstTypePtr p_value);
 typedef void (*GDExtensionPtrKeyedGetter)(GDExtensionConstTypePtr p_base, GDExtensionConstTypePtr p_key, GDExtensionTypePtr r_value);
 typedef uint32_t (*GDExtensionPtrKeyedChecker)(GDExtensionConstVariantPtr p_base, GDExtensionConstVariantPtr p_key);
-typedef void (*GDExtensionPtrUtilityFunction)(GDExtensionTypePtr r_return, const GDExtensionConstTypePtr *p_args, int p_argument_count);
+typedef void (*GDExtensionPtrUtilityFunction)(GDExtensionTypePtr r_return, GDExtensionConstTypePtr *p_args, int p_argument_count);
 
 typedef GDExtensionObjectPtr (*GDExtensionClassConstructor)();
 
@@ -199,11 +199,11 @@ typedef void *(*GDExtensionInstanceBindingCreateCallback)(void *p_token, void *p
 typedef void (*GDExtensionInstanceBindingFreeCallback)(void *p_token, void *p_instance, void *p_binding);
 typedef GDExtensionBool (*GDExtensionInstanceBindingReferenceCallback)(void *p_token, void *p_binding, GDExtensionBool p_reference);
 
-typedef struct {
-	GDExtensionInstanceBindingCreateCallback create_callback;
-	GDExtensionInstanceBindingFreeCallback free_callback;
-	GDExtensionInstanceBindingReferenceCallback reference_callback;
-} GDExtensionInstanceBindingCallbacks;
+GDExtensionInstanceBindingCallbacks :: struct {
+	create_callback: GDExtensionInstanceBindingCreateCallback,
+	free_callback: GDExtensionInstanceBindingFreeCallback,
+	reference_callback: GDExtensionInstanceBindingReferenceCallback,
+}
 
 /* EXTENSION CLASSES */
 
@@ -213,32 +213,32 @@ typedef GDExtensionBool (*GDExtensionClassSet)(GDExtensionClassInstancePtr p_ins
 typedef GDExtensionBool (*GDExtensionClassGet)(GDExtensionClassInstancePtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionVariantPtr r_ret);
 typedef uint64_t (*GDExtensionClassGetRID)(GDExtensionClassInstancePtr p_instance);
 
-typedef struct {
-	GDExtensionVariantType type;
-	GDExtensionStringNamePtr name;
-	GDExtensionStringNamePtr class_name;
-	uint32_t hint; // Bitfield of `PropertyHint` (defined in `extension_api.json`).
-	GDExtensionStringPtr hint_string;
-	uint32_t usage; // Bitfield of `PropertyUsageFlags` (defined in `extension_api.json`).
-} GDExtensionPropertyInfo;
+GDExtensionPropertyInfo :: struct {
+	type: GDExtensionVariantType,
+	name: GDExtensionStringNamePtr,
+	class_name: GDExtensionStringNamePtr,
+	hint: uint32_t, // Bitfield of `PropertyHint` (defined in `extension_api.json`).
+	hint_string: GDExtensionStringPtr,
+	usage: uint32_t, // Bitfield of `PropertyUsageFlags` (defined in `extension_api.json`).
+}
 
-typedef struct {
-	GDExtensionStringNamePtr name;
-	GDExtensionPropertyInfo return_value;
-	uint32_t flags; // Bitfield of `GDExtensionClassMethodFlags`.
-	int32_t id;
+GDExtensionMethodInfo :: struct {
+	name: GDExtensionStringNamePtr,
+	return_value: GDExtensionPropertyInfo,
+	flags: uint32_t, // Bitfield of `GDExtensionClassMethodFlags`.
+	id: int32_t,
 
 	/* Arguments: `default_arguments` is an array of size `argument_count`. */
-	uint32_t argument_count;
-	GDExtensionPropertyInfo *arguments;
+	argument_count: uint32_t,
+	arguments: *GDExtensionPropertyInfo,
 
 	/* Default arguments: `default_arguments` is an array of size `default_argument_count`. */
-	uint32_t default_argument_count;
-	GDExtensionVariantPtr *default_arguments;
-} GDExtensionMethodInfo;
+	default_argument_count: uint32_t,
+	default_arguments: *GDExtensionVariantPtr,
+}
 
-typedef const GDExtensionPropertyInfo *(*GDExtensionClassGetPropertyList)(GDExtensionClassInstancePtr p_instance, uint32_t *r_count);
-typedef void (*GDExtensionClassFreePropertyList)(GDExtensionClassInstancePtr p_instance, const GDExtensionPropertyInfo *p_list);
+typedef GDExtensionPropertyInfo *(*GDExtensionClassGetPropertyList)(GDExtensionClassInstancePtr p_instance, uint32_t *r_count);
+typedef void (*GDExtensionClassFreePropertyList)(GDExtensionClassInstancePtr p_instance, GDExtensionPropertyInfo *p_list);
 typedef GDExtensionBool (*GDExtensionClassPropertyCanRevert)(GDExtensionClassInstancePtr p_instance, GDExtensionConstStringNamePtr p_name);
 typedef GDExtensionBool (*GDExtensionClassPropertyGetRevert)(GDExtensionClassInstancePtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionVariantPtr r_ret);
 typedef GDExtensionBool (*GDExtensionClassValidateProperty)(GDExtensionClassInstancePtr p_instance, GDExtensionPropertyInfo *p_property);
@@ -247,72 +247,72 @@ typedef void (*GDExtensionClassNotification2)(GDExtensionClassInstancePtr p_inst
 typedef void (*GDExtensionClassToString)(GDExtensionClassInstancePtr p_instance, GDExtensionBool *r_is_valid, GDExtensionStringPtr p_out);
 typedef void (*GDExtensionClassReference)(GDExtensionClassInstancePtr p_instance);
 typedef void (*GDExtensionClassUnreference)(GDExtensionClassInstancePtr p_instance);
-typedef void (*GDExtensionClassCallVirtual)(GDExtensionClassInstancePtr p_instance, const GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
+typedef void (*GDExtensionClassCallVirtual)(GDExtensionClassInstancePtr p_instance, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
 typedef GDExtensionObjectPtr (*GDExtensionClassCreateInstance)(void *p_class_userdata);
 typedef void (*GDExtensionClassFreeInstance)(void *p_class_userdata, GDExtensionClassInstancePtr p_instance);
 typedef GDExtensionClassInstancePtr (*GDExtensionClassRecreateInstance)(void *p_class_userdata, GDExtensionObjectPtr p_object);
 typedef GDExtensionClassCallVirtual (*GDExtensionClassGetVirtual)(void *p_class_userdata, GDExtensionConstStringNamePtr p_name);
 typedef void *(*GDExtensionClassGetVirtualCallData)(void *p_class_userdata, GDExtensionConstStringNamePtr p_name);
-typedef void (*GDExtensionClassCallVirtualWithData)(GDExtensionClassInstancePtr p_instance, GDExtensionConstStringNamePtr p_name, void *p_virtual_call_userdata, const GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
+typedef void (*GDExtensionClassCallVirtualWithData)(GDExtensionClassInstancePtr p_instance, GDExtensionConstStringNamePtr p_name, void *p_virtual_call_userdata, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
 
-typedef struct {
-	GDExtensionBool is_virtual;
-	GDExtensionBool is_abstract;
-	GDExtensionClassSet set_func;
-	GDExtensionClassGet get_func;
-	GDExtensionClassGetPropertyList get_property_list_func;
-	GDExtensionClassFreePropertyList free_property_list_func;
-	GDExtensionClassPropertyCanRevert property_can_revert_func;
-	GDExtensionClassPropertyGetRevert property_get_revert_func;
-	GDExtensionClassNotification notification_func;
-	GDExtensionClassToString to_string_func;
-	GDExtensionClassReference reference_func;
-	GDExtensionClassUnreference unreference_func;
-	GDExtensionClassCreateInstance create_instance_func; // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
-	GDExtensionClassFreeInstance free_instance_func; // Destructor; mandatory.
-	GDExtensionClassGetVirtual get_virtual_func; // Queries a virtual function by name and returns a callback to invoke the requested virtual function.
-	GDExtensionClassGetRID get_rid_func;
-	void *class_userdata; // Per-class user data, later accessible in instance bindings.
-} GDExtensionClassCreationInfo; // Deprecated. Use GDExtensionClassCreationInfo2 instead.
+GDExtensionClassCreationInfo :: struct {
+	is_virtual: GDExtensionBool,
+	is_abstract: GDExtensionBool,
+	set_func: GDExtensionClassSet,
+	get_func: GDExtensionClassGet,
+	get_property_list_func: GDExtensionClassGetPropertyList,
+	free_property_list_func: GDExtensionClassFreePropertyList,
+	property_can_revert_func: GDExtensionClassPropertyCanRevert,
+	property_get_revert_func: GDExtensionClassPropertyGetRevert,
+	notification_func: GDExtensionClassNotification,
+	to_string_func: GDExtensionClassToString,
+	reference_func: GDExtensionClassReference,
+	unreference_func: GDExtensionClassUnreference,
+	create_instance_func: GDExtensionClassCreateInstance, // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
+	free_instance_func: GDExtensionClassFreeInstance, // Destructor; mandatory.
+	get_virtual_func: GDExtensionClassGetVirtual, // Queries a virtual function by name and returns a callback to invoke the requested virtual function.
+	get_rid_func: GDExtensionClassGetRID,
+	class_userdata: *void, // Per-class user data, later accessible in instance bindings.
+}// Deprecated. Use GDExtensionClassCreationInfo2 instead.
 
-typedef struct {
-	GDExtensionBool is_virtual;
-	GDExtensionBool is_abstract;
-	GDExtensionBool is_exposed;
-	GDExtensionClassSet set_func;
-	GDExtensionClassGet get_func;
-	GDExtensionClassGetPropertyList get_property_list_func;
-	GDExtensionClassFreePropertyList free_property_list_func;
-	GDExtensionClassPropertyCanRevert property_can_revert_func;
-	GDExtensionClassPropertyGetRevert property_get_revert_func;
-	GDExtensionClassValidateProperty validate_property_func;
-	GDExtensionClassNotification2 notification_func;
-	GDExtensionClassToString to_string_func;
-	GDExtensionClassReference reference_func;
-	GDExtensionClassUnreference unreference_func;
-	GDExtensionClassCreateInstance create_instance_func; // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
-	GDExtensionClassFreeInstance free_instance_func; // Destructor; mandatory.
-	GDExtensionClassRecreateInstance recreate_instance_func;
+GDExtensionClassCreationInfo2 :: struct {
+	is_virtual: GDExtensionBool,
+	is_abstract: GDExtensionBool,
+	is_exposed: GDExtensionBool,
+	set_func: GDExtensionClassSet,
+	get_func: GDExtensionClassGet,
+	get_property_list_func: GDExtensionClassGetPropertyList,
+	free_property_list_func: GDExtensionClassFreePropertyList,
+	property_can_revert_func: GDExtensionClassPropertyCanRevert,
+	property_get_revert_func: GDExtensionClassPropertyGetRevert,
+	validate_property_func: GDExtensionClassValidateProperty,
+	notification_func: GDExtensionClassNotification2,
+	to_string_func: GDExtensionClassToString,
+	reference_func: GDExtensionClassReference,
+	unreference_func: GDExtensionClassUnreference,
+	create_instance_func: GDExtensionClassCreateInstance, // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
+	free_instance_func: GDExtensionClassFreeInstance, // Destructor; mandatory.
+	recreate_instance_func: GDExtensionClassRecreateInstance,
 	// Queries a virtual function by name and returns a callback to invoke the requested virtual function.
-	GDExtensionClassGetVirtual get_virtual_func;
+	get_virtual_func: GDExtensionClassGetVirtual,
 	// Paired with `call_virtual_with_data_func`, this is an alternative to `get_virtual_func` for extensions that
 	// need or benefit from extra data when calling virtual functions.
 	// Returns user data that will be passed to `call_virtual_with_data_func`.
 	// Returning `NULL` from this function signals to Godot that the virtual function is not overridden.
 	// Data returned from this function should be managed by the extension and must be valid until the extension is deinitialized.
 	// You should supply either `get_virtual_func`, or `get_virtual_call_data_func` with `call_virtual_with_data_func`.
-	GDExtensionClassGetVirtualCallData get_virtual_call_data_func;
+	get_virtual_call_data_func: GDExtensionClassGetVirtualCallData,
 	// Used to call virtual functions when `get_virtual_call_data_func` is not null.
-	GDExtensionClassCallVirtualWithData call_virtual_with_data_func;
-	GDExtensionClassGetRID get_rid_func;
-	void *class_userdata; // Per-class user data, later accessible in instance bindings.
-} GDExtensionClassCreationInfo2;
+	call_virtual_with_data_func: GDExtensionClassCallVirtualWithData,
+	get_rid_func: GDExtensionClassGetRID,
+	class_userdata: *void, // Per-class user data, later accessible in instance bindings.
+}
 
 typedef void *GDExtensionClassLibraryPtr;
 
 /* Method */
 
-typedef enum {
+GDExtensionClassMethodFlags :: enum i32 {
 	GDEXTENSION_METHOD_FLAG_NORMAL = 1,
 	GDEXTENSION_METHOD_FLAG_EDITOR = 2,
 	GDEXTENSION_METHOD_FLAG_CONST = 4,
@@ -320,9 +320,9 @@ typedef enum {
 	GDEXTENSION_METHOD_FLAG_VARARG = 16,
 	GDEXTENSION_METHOD_FLAG_STATIC = 32,
 	GDEXTENSION_METHOD_FLAGS_DEFAULT = GDEXTENSION_METHOD_FLAG_NORMAL,
-} GDExtensionClassMethodFlags;
+}
 
-typedef enum {
+GDExtensionClassMethodArgumentMetadata :: enum i32 {
 	GDEXTENSION_METHOD_ARGUMENT_METADATA_NONE,
 	GDEXTENSION_METHOD_ARGUMENT_METADATA_INT_IS_INT8,
 	GDEXTENSION_METHOD_ARGUMENT_METADATA_INT_IS_INT16,
@@ -334,37 +334,37 @@ typedef enum {
 	GDEXTENSION_METHOD_ARGUMENT_METADATA_INT_IS_UINT64,
 	GDEXTENSION_METHOD_ARGUMENT_METADATA_REAL_IS_FLOAT,
 	GDEXTENSION_METHOD_ARGUMENT_METADATA_REAL_IS_DOUBLE
-} GDExtensionClassMethodArgumentMetadata;
+}
 
-typedef void (*GDExtensionClassMethodCall)(void *method_userdata, GDExtensionClassInstancePtr p_instance, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
-typedef void (*GDExtensionClassMethodValidatedCall)(void *method_userdata, GDExtensionClassInstancePtr p_instance, const GDExtensionConstVariantPtr *p_args, GDExtensionVariantPtr r_return);
-typedef void (*GDExtensionClassMethodPtrCall)(void *method_userdata, GDExtensionClassInstancePtr p_instance, const GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
+typedef void (*GDExtensionClassMethodCall)(void *method_userdata, GDExtensionClassInstancePtr p_instance, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
+typedef void (*GDExtensionClassMethodValidatedCall)(void *method_userdata, GDExtensionClassInstancePtr p_instance, GDExtensionConstVariantPtr *p_args, GDExtensionVariantPtr r_return);
+typedef void (*GDExtensionClassMethodPtrCall)(void *method_userdata, GDExtensionClassInstancePtr p_instance, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
 
-typedef struct {
-	GDExtensionStringNamePtr name;
-	void *method_userdata;
-	GDExtensionClassMethodCall call_func;
-	GDExtensionClassMethodPtrCall ptrcall_func;
-	uint32_t method_flags; // Bitfield of `GDExtensionClassMethodFlags`.
+GDExtensionClassMethodInfo :: struct {
+	name: GDExtensionStringNamePtr,
+	method_userdata: *void,
+	call_func: GDExtensionClassMethodCall,
+	ptrcall_func: GDExtensionClassMethodPtrCall,
+	method_flags: uint32_t, // Bitfield of `GDExtensionClassMethodFlags`.
 
 	/* If `has_return_value` is false, `return_value_info` and `return_value_metadata` are ignored. */
-	GDExtensionBool has_return_value;
-	GDExtensionPropertyInfo *return_value_info;
-	GDExtensionClassMethodArgumentMetadata return_value_metadata;
+	has_return_value: GDExtensionBool,
+	return_value_info: *GDExtensionPropertyInfo,
+	return_value_metadata: GDExtensionClassMethodArgumentMetadata,
 
 	/* Arguments: `arguments_info` and `arguments_metadata` are array of size `argument_count`.
 	 * Name and hint information for the argument can be omitted in release builds. Class name should always be present if it applies.
 	 */
-	uint32_t argument_count;
-	GDExtensionPropertyInfo *arguments_info;
-	GDExtensionClassMethodArgumentMetadata *arguments_metadata;
+	argument_count: uint32_t,
+	arguments_info: *GDExtensionPropertyInfo,
+	arguments_metadata: *GDExtensionClassMethodArgumentMetadata,
 
 	/* Default arguments: `default_arguments` is an array of size `default_argument_count`. */
-	uint32_t default_argument_count;
-	GDExtensionVariantPtr *default_arguments;
-} GDExtensionClassMethodInfo;
+	default_argument_count: uint32_t,
+	default_arguments: *GDExtensionVariantPtr,
+}
 
-typedef void (*GDExtensionCallableCustomCall)(void *callable_userdata, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
+typedef void (*GDExtensionCallableCustomCall)(void *callable_userdata, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
 typedef GDExtensionBool (*GDExtensionCallableCustomIsValid)(void *callable_userdata);
 typedef void (*GDExtensionCallableCustomFree)(void *callable_userdata);
 
@@ -374,7 +374,7 @@ typedef GDExtensionBool (*GDExtensionCallableCustomLessThan)(void *callable_user
 
 typedef void (*GDExtensionCallableCustomToString)(void *callable_userdata, GDExtensionBool *r_is_valid, GDExtensionStringPtr r_out);
 
-typedef struct {
+GDExtensionCallableCustomInfo :: struct {
 	/* Only `call_func` and `token` are strictly required, however, `object_id` should be passed if its not a static method.
 	 *
 	 * `token` should point to an address that uniquely identifies the GDExtension (for example, the
@@ -389,21 +389,21 @@ typedef struct {
 	 *
 	 * `free_func` is necessary if `callable_userdata` needs to be cleaned up when the callable is freed.
 	 */
-	void *callable_userdata;
-	void *token;
+	callable_userdata: *void,
+	token: *void,
 
-	GDObjectInstanceID object_id;
+	object_id: GDObjectInstanceID,
 
-	GDExtensionCallableCustomCall call_func;
-	GDExtensionCallableCustomIsValid is_valid_func;
-	GDExtensionCallableCustomFree free_func;
+	call_func: GDExtensionCallableCustomCall,
+	is_valid_func: GDExtensionCallableCustomIsValid,
+	free_func: GDExtensionCallableCustomFree,
 
-	GDExtensionCallableCustomHash hash_func;
-	GDExtensionCallableCustomEqual equal_func;
-	GDExtensionCallableCustomLessThan less_than_func;
+	hash_func: GDExtensionCallableCustomHash,
+	equal_func: GDExtensionCallableCustomEqual,
+	less_than_func: GDExtensionCallableCustomLessThan,
 
-	GDExtensionCallableCustomToString to_string_func;
-} GDExtensionCallableCustomInfo;
+	to_string_func: GDExtensionCallableCustomToString,
+}
 
 /* SCRIPT INSTANCE EXTENSION */
 
@@ -411,8 +411,8 @@ typedef void *GDExtensionScriptInstanceDataPtr; // Pointer to custom ScriptInsta
 
 typedef GDExtensionBool (*GDExtensionScriptInstanceSet)(GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionConstVariantPtr p_value);
 typedef GDExtensionBool (*GDExtensionScriptInstanceGet)(GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionVariantPtr r_ret);
-typedef const GDExtensionPropertyInfo *(*GDExtensionScriptInstanceGetPropertyList)(GDExtensionScriptInstanceDataPtr p_instance, uint32_t *r_count);
-typedef void (*GDExtensionScriptInstanceFreePropertyList)(GDExtensionScriptInstanceDataPtr p_instance, const GDExtensionPropertyInfo *p_list);
+typedef GDExtensionPropertyInfo *(*GDExtensionScriptInstanceGetPropertyList)(GDExtensionScriptInstanceDataPtr p_instance, uint32_t *r_count);
+typedef void (*GDExtensionScriptInstanceFreePropertyList)(GDExtensionScriptInstanceDataPtr p_instance, GDExtensionPropertyInfo *p_list);
 typedef GDExtensionBool (*GDExtensionScriptInstanceGetClassCategory)(GDExtensionScriptInstanceDataPtr p_instance, GDExtensionPropertyInfo *p_class_category);
 
 typedef GDExtensionVariantType (*GDExtensionScriptInstanceGetPropertyType)(GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name, GDExtensionBool *r_is_valid);
@@ -425,12 +425,12 @@ typedef GDExtensionObjectPtr (*GDExtensionScriptInstanceGetOwner)(GDExtensionScr
 typedef void (*GDExtensionScriptInstancePropertyStateAdd)(GDExtensionConstStringNamePtr p_name, GDExtensionConstVariantPtr p_value, void *p_userdata);
 typedef void (*GDExtensionScriptInstanceGetPropertyState)(GDExtensionScriptInstanceDataPtr p_instance, GDExtensionScriptInstancePropertyStateAdd p_add_func, void *p_userdata);
 
-typedef const GDExtensionMethodInfo *(*GDExtensionScriptInstanceGetMethodList)(GDExtensionScriptInstanceDataPtr p_instance, uint32_t *r_count);
-typedef void (*GDExtensionScriptInstanceFreeMethodList)(GDExtensionScriptInstanceDataPtr p_instance, const GDExtensionMethodInfo *p_list);
+typedef GDExtensionMethodInfo *(*GDExtensionScriptInstanceGetMethodList)(GDExtensionScriptInstanceDataPtr p_instance, uint32_t *r_count);
+typedef void (*GDExtensionScriptInstanceFreeMethodList)(GDExtensionScriptInstanceDataPtr p_instance, GDExtensionMethodInfo *p_list);
 
 typedef GDExtensionBool (*GDExtensionScriptInstanceHasMethod)(GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name);
 
-typedef void (*GDExtensionScriptInstanceCall)(GDExtensionScriptInstanceDataPtr p_self, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
+typedef void (*GDExtensionScriptInstanceCall)(GDExtensionScriptInstanceDataPtr p_self, GDExtensionConstStringNamePtr p_method, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
 typedef void (*GDExtensionScriptInstanceNotification)(GDExtensionScriptInstanceDataPtr p_instance, int32_t p_what); // Deprecated. Use GDExtensionScriptInstanceNotification2 instead.
 typedef void (*GDExtensionScriptInstanceNotification2)(GDExtensionScriptInstanceDataPtr p_instance, int32_t p_what, GDExtensionBool p_reversed);
 typedef void (*GDExtensionScriptInstanceToString)(GDExtensionScriptInstanceDataPtr p_instance, GDExtensionBool *r_is_valid, GDExtensionStringPtr r_out);
@@ -449,109 +449,108 @@ typedef void (*GDExtensionScriptInstanceFree)(GDExtensionScriptInstanceDataPtr p
 
 typedef void *GDExtensionScriptInstancePtr; // Pointer to ScriptInstance.
 
-typedef struct {
-	GDExtensionScriptInstanceSet set_func;
-	GDExtensionScriptInstanceGet get_func;
-	GDExtensionScriptInstanceGetPropertyList get_property_list_func;
-	GDExtensionScriptInstanceFreePropertyList free_property_list_func;
+GDExtensionScriptInstanceInfo :: struct {
+	set_func: GDExtensionScriptInstanceSet,
+	get_func: GDExtensionScriptInstanceGet,
+	get_property_list_func: GDExtensionScriptInstanceGetPropertyList,
+	free_property_list_func: GDExtensionScriptInstanceFreePropertyList,
 
-	GDExtensionScriptInstancePropertyCanRevert property_can_revert_func;
-	GDExtensionScriptInstancePropertyGetRevert property_get_revert_func;
+	property_can_revert_func: GDExtensionScriptInstancePropertyCanRevert,
+	property_get_revert_func: GDExtensionScriptInstancePropertyGetRevert,
 
-	GDExtensionScriptInstanceGetOwner get_owner_func;
-	GDExtensionScriptInstanceGetPropertyState get_property_state_func;
+	get_owner_func: GDExtensionScriptInstanceGetOwner,
+	get_property_state_func: GDExtensionScriptInstanceGetPropertyState,
 
-	GDExtensionScriptInstanceGetMethodList get_method_list_func;
-	GDExtensionScriptInstanceFreeMethodList free_method_list_func;
-	GDExtensionScriptInstanceGetPropertyType get_property_type_func;
+	get_method_list_func: GDExtensionScriptInstanceGetMethodList,
+	free_method_list_func: GDExtensionScriptInstanceFreeMethodList,
+	get_property_type_func: GDExtensionScriptInstanceGetPropertyType,
 
-	GDExtensionScriptInstanceHasMethod has_method_func;
+	has_method_func: GDExtensionScriptInstanceHasMethod,
 
-	GDExtensionScriptInstanceCall call_func;
-	GDExtensionScriptInstanceNotification notification_func;
+	call_func: GDExtensionScriptInstanceCall,
+	notification_func: GDExtensionScriptInstanceNotification,
 
-	GDExtensionScriptInstanceToString to_string_func;
+	to_string_func: GDExtensionScriptInstanceToString,
 
-	GDExtensionScriptInstanceRefCountIncremented refcount_incremented_func;
-	GDExtensionScriptInstanceRefCountDecremented refcount_decremented_func;
+	refcount_incremented_func: GDExtensionScriptInstanceRefCountIncremented,
+	refcount_decremented_func: GDExtensionScriptInstanceRefCountDecremented,
 
-	GDExtensionScriptInstanceGetScript get_script_func;
+	get_script_func: GDExtensionScriptInstanceGetScript,
 
-	GDExtensionScriptInstanceIsPlaceholder is_placeholder_func;
+	is_placeholder_func: GDExtensionScriptInstanceIsPlaceholder,
 
-	GDExtensionScriptInstanceSet set_fallback_func;
-	GDExtensionScriptInstanceGet get_fallback_func;
+	set_fallback_func: GDExtensionScriptInstanceSet,
+	get_fallback_func: GDExtensionScriptInstanceGet,
 
-	GDExtensionScriptInstanceGetLanguage get_language_func;
+	get_language_func: GDExtensionScriptInstanceGetLanguage,
 
-	GDExtensionScriptInstanceFree free_func;
+	free_func: GDExtensionScriptInstanceFree,
+}// Deprecated. Use GDExtensionScriptInstanceInfo2 instead.
 
-} GDExtensionScriptInstanceInfo; // Deprecated. Use GDExtensionScriptInstanceInfo2 instead.
+GDExtensionScriptInstanceInfo2 :: struct {
+	set_func: GDExtensionScriptInstanceSet,
+	get_func: GDExtensionScriptInstanceGet,
+	get_property_list_func: GDExtensionScriptInstanceGetPropertyList,
+	free_property_list_func: GDExtensionScriptInstanceFreePropertyList,
+	get_class_category_func: GDExtensionScriptInstanceGetClassCategory, // Optional. Set to NULL for the default behavior.
 
-typedef struct {
-	GDExtensionScriptInstanceSet set_func;
-	GDExtensionScriptInstanceGet get_func;
-	GDExtensionScriptInstanceGetPropertyList get_property_list_func;
-	GDExtensionScriptInstanceFreePropertyList free_property_list_func;
-	GDExtensionScriptInstanceGetClassCategory get_class_category_func; // Optional. Set to NULL for the default behavior.
+	property_can_revert_func: GDExtensionScriptInstancePropertyCanRevert,
+	property_get_revert_func: GDExtensionScriptInstancePropertyGetRevert,
 
-	GDExtensionScriptInstancePropertyCanRevert property_can_revert_func;
-	GDExtensionScriptInstancePropertyGetRevert property_get_revert_func;
+	get_owner_func: GDExtensionScriptInstanceGetOwner,
+	get_property_state_func: GDExtensionScriptInstanceGetPropertyState,
 
-	GDExtensionScriptInstanceGetOwner get_owner_func;
-	GDExtensionScriptInstanceGetPropertyState get_property_state_func;
+	get_method_list_func: GDExtensionScriptInstanceGetMethodList,
+	free_method_list_func: GDExtensionScriptInstanceFreeMethodList,
+	get_property_type_func: GDExtensionScriptInstanceGetPropertyType,
+	validate_property_func: GDExtensionScriptInstanceValidateProperty,
 
-	GDExtensionScriptInstanceGetMethodList get_method_list_func;
-	GDExtensionScriptInstanceFreeMethodList free_method_list_func;
-	GDExtensionScriptInstanceGetPropertyType get_property_type_func;
-	GDExtensionScriptInstanceValidateProperty validate_property_func;
+	has_method_func: GDExtensionScriptInstanceHasMethod,
 
-	GDExtensionScriptInstanceHasMethod has_method_func;
+	call_func: GDExtensionScriptInstanceCall,
+	notification_func: GDExtensionScriptInstanceNotification2,
 
-	GDExtensionScriptInstanceCall call_func;
-	GDExtensionScriptInstanceNotification2 notification_func;
+	to_string_func: GDExtensionScriptInstanceToString,
 
-	GDExtensionScriptInstanceToString to_string_func;
+	refcount_incremented_func: GDExtensionScriptInstanceRefCountIncremented,
+	refcount_decremented_func: GDExtensionScriptInstanceRefCountDecremented,
 
-	GDExtensionScriptInstanceRefCountIncremented refcount_incremented_func;
-	GDExtensionScriptInstanceRefCountDecremented refcount_decremented_func;
+	get_script_func: GDExtensionScriptInstanceGetScript,
 
-	GDExtensionScriptInstanceGetScript get_script_func;
+	is_placeholder_func: GDExtensionScriptInstanceIsPlaceholder,
 
-	GDExtensionScriptInstanceIsPlaceholder is_placeholder_func;
+	set_fallback_func: GDExtensionScriptInstanceSet,
+	get_fallback_func: GDExtensionScriptInstanceGet,
 
-	GDExtensionScriptInstanceSet set_fallback_func;
-	GDExtensionScriptInstanceGet get_fallback_func;
+	get_language_func: GDExtensionScriptInstanceGetLanguage,
 
-	GDExtensionScriptInstanceGetLanguage get_language_func;
+	free_func: GDExtensionScriptInstanceFree,
 
-	GDExtensionScriptInstanceFree free_func;
-
-} GDExtensionScriptInstanceInfo2;
+}
 
 /* INITIALIZATION */
 
-typedef enum {
+GDExtensionInitializationLevel :: enum i32 {
 	GDEXTENSION_INITIALIZATION_CORE,
 	GDEXTENSION_INITIALIZATION_SERVERS,
 	GDEXTENSION_INITIALIZATION_SCENE,
 	GDEXTENSION_INITIALIZATION_EDITOR,
 	GDEXTENSION_MAX_INITIALIZATION_LEVEL,
-} GDExtensionInitializationLevel;
+}
 
-typedef struct {
+GDExtensionInitialization :: struct {
 	/* Minimum initialization level required.
 	 * If Core or Servers, the extension needs editor or game restart to take effect */
-	GDExtensionInitializationLevel minimum_initialization_level;
+	minimum_initialization_level: GDExtensionInitializationLevel,
 	/* Up to the user to supply when initializing */
-	void *userdata;
+	userdata: *void,
 	/* This function will be called multiple times for each initialization level. */
-	void (*initialize)(void *userdata, GDExtensionInitializationLevel p_level);
-	void (*deinitialize)(void *userdata, GDExtensionInitializationLevel p_level);
-} GDExtensionInitialization;
+	initialize : proc "c" (rawptr, GDExtensionInitializationLevel),
+	deinitialize : proc "c" (rawptr, GDExtensionInitializationLevel),
+}
 
 typedef void (*GDExtensionInterfaceFunctionPtr)();
-typedef GDExtensionInterfaceFunctionPtr (*GDExtensionInterfaceGetProcAddress)(const char *p_function_name);
+typedef GDExtensionInterfaceFunctionPtr (*GDExtensionInterfaceGetProcAddress)(char *p_function_name);
 
 /*
  * Each GDExtension should define a C function that matches the signature of GDExtensionInitializationFunction,
@@ -591,12 +590,12 @@ typedef GDExtensionBool (*GDExtensionInitializationFunction)(GDExtensionInterfac
 
 /* INTERFACE */
 
-typedef struct {
-	uint32_t major;
-	uint32_t minor;
-	uint32_t patch;
-	const char *string;
-} GDExtensionGodotVersion;
+GDExtensionGodotVersion :: struct {
+	major: uint32_t,
+	minor: uint32_t,
+	patch: uint32_t,
+	str: *char,
+}
 
 /**
  * @name get_godot_version
@@ -659,7 +658,7 @@ typedef void (*GDExtensionInterfaceMemFree)(void *p_ptr);
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-typedef void (*GDExtensionInterfacePrintError)(const char *p_description, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+typedef void (*GDExtensionInterfacePrintError)(char *p_description, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
 
 /**
  * @name print_error_with_message
@@ -674,7 +673,7 @@ typedef void (*GDExtensionInterfacePrintError)(const char *p_description, const 
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-typedef void (*GDExtensionInterfacePrintErrorWithMessage)(const char *p_description, const char *p_message, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+typedef void (*GDExtensionInterfacePrintErrorWithMessage)(char *p_description, char *p_message, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
 
 /**
  * @name print_warning
@@ -688,7 +687,7 @@ typedef void (*GDExtensionInterfacePrintErrorWithMessage)(const char *p_descript
  * @param p_line The line where the warning occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-typedef void (*GDExtensionInterfacePrintWarning)(const char *p_description, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+typedef void (*GDExtensionInterfacePrintWarning)(char *p_description, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
 
 /**
  * @name print_warning_with_message
@@ -703,7 +702,7 @@ typedef void (*GDExtensionInterfacePrintWarning)(const char *p_description, cons
  * @param p_line The line where the warning occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-typedef void (*GDExtensionInterfacePrintWarningWithMessage)(const char *p_description, const char *p_message, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+typedef void (*GDExtensionInterfacePrintWarningWithMessage)(char *p_description, char *p_message, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
 
 /**
  * @name print_script_error
@@ -717,7 +716,7 @@ typedef void (*GDExtensionInterfacePrintWarningWithMessage)(const char *p_descri
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-typedef void (*GDExtensionInterfacePrintScriptError)(const char *p_description, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+typedef void (*GDExtensionInterfacePrintScriptError)(char *p_description, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
 
 /**
  * @name print_script_error_with_message
@@ -732,7 +731,7 @@ typedef void (*GDExtensionInterfacePrintScriptError)(const char *p_description, 
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-typedef void (*GDExtensionInterfacePrintScriptErrorWithMessage)(const char *p_description, const char *p_message, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+typedef void (*GDExtensionInterfacePrintScriptErrorWithMessage)(char *p_description, char *p_message, char *p_function, char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
 
 /**
  * @name get_native_struct_size
@@ -794,7 +793,7 @@ typedef void (*GDExtensionInterfaceVariantDestroy)(GDExtensionVariantPtr p_self)
  *
  * @see Variant::callp()
  */
-typedef void (*GDExtensionInterfaceVariantCall)(GDExtensionVariantPtr p_self, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionUninitializedVariantPtr r_return, GDExtensionCallError *r_error);
+typedef void (*GDExtensionInterfaceVariantCall)(GDExtensionVariantPtr p_self, GDExtensionConstStringNamePtr p_method, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionUninitializedVariantPtr r_return, GDExtensionCallError *r_error);
 
 /**
  * @name variant_call_static
@@ -811,7 +810,7 @@ typedef void (*GDExtensionInterfaceVariantCall)(GDExtensionVariantPtr p_self, GD
  *
  * @see Variant::call_static()
  */
-typedef void (*GDExtensionInterfaceVariantCallStatic)(GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionUninitializedVariantPtr r_return, GDExtensionCallError *r_error);
+typedef void (*GDExtensionInterfaceVariantCallStatic)(GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_method, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionUninitializedVariantPtr r_return, GDExtensionCallError *r_error);
 
 /**
  * @name variant_evaluate
@@ -1245,7 +1244,7 @@ typedef GDExtensionPtrDestructor (*GDExtensionInterfaceVariantGetPtrDestructor)(
  * @param p_argument_count The number of arguments to pass to the constructor.
  * @param r_error A pointer the structure which will be updated with error information.
  */
-typedef void (*GDExtensionInterfaceVariantConstruct)(GDExtensionVariantType p_type, GDExtensionUninitializedVariantPtr r_base, const GDExtensionConstVariantPtr *p_args, int32_t p_argument_count, GDExtensionCallError *r_error);
+typedef void (*GDExtensionInterfaceVariantConstruct)(GDExtensionVariantType p_type, GDExtensionUninitializedVariantPtr r_base, GDExtensionConstVariantPtr *p_args, int32_t p_argument_count, GDExtensionCallError *r_error);
 
 /**
  * @name variant_get_ptr_setter
@@ -1369,7 +1368,7 @@ typedef GDExtensionPtrUtilityFunction (*GDExtensionInterfaceVariantGetPtrUtility
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a Latin-1 encoded C string (null terminated).
  */
-typedef void (*GDExtensionInterfaceStringNewWithLatin1Chars)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents);
+typedef void (*GDExtensionInterfaceStringNewWithLatin1Chars)(GDExtensionUninitializedStringPtr r_dest, char *p_contents);
 
 /**
  * @name string_new_with_utf8_chars
@@ -1380,7 +1379,7 @@ typedef void (*GDExtensionInterfaceStringNewWithLatin1Chars)(GDExtensionUninitia
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-8 encoded C string (null terminated).
  */
-typedef void (*GDExtensionInterfaceStringNewWithUtf8Chars)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents);
+typedef void (*GDExtensionInterfaceStringNewWithUtf8Chars)(GDExtensionUninitializedStringPtr r_dest, char *p_contents);
 
 /**
  * @name string_new_with_utf16_chars
@@ -1391,7 +1390,7 @@ typedef void (*GDExtensionInterfaceStringNewWithUtf8Chars)(GDExtensionUninitiali
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-16 encoded C string (null terminated).
  */
-typedef void (*GDExtensionInterfaceStringNewWithUtf16Chars)(GDExtensionUninitializedStringPtr r_dest, const char16_t *p_contents);
+typedef void (*GDExtensionInterfaceStringNewWithUtf16Chars)(GDExtensionUninitializedStringPtr r_dest, char16_t *p_contents);
 
 /**
  * @name string_new_with_utf32_chars
@@ -1402,7 +1401,7 @@ typedef void (*GDExtensionInterfaceStringNewWithUtf16Chars)(GDExtensionUninitial
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-32 encoded C string (null terminated).
  */
-typedef void (*GDExtensionInterfaceStringNewWithUtf32Chars)(GDExtensionUninitializedStringPtr r_dest, const char32_t *p_contents);
+typedef void (*GDExtensionInterfaceStringNewWithUtf32Chars)(GDExtensionUninitializedStringPtr r_dest, char32_t *p_contents);
 
 /**
  * @name string_new_with_wide_chars
@@ -1413,7 +1412,7 @@ typedef void (*GDExtensionInterfaceStringNewWithUtf32Chars)(GDExtensionUninitial
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a wide C string (null terminated).
  */
-typedef void (*GDExtensionInterfaceStringNewWithWideChars)(GDExtensionUninitializedStringPtr r_dest, const wchar_t *p_contents);
+typedef void (*GDExtensionInterfaceStringNewWithWideChars)(GDExtensionUninitializedStringPtr r_dest, wchar_t *p_contents);
 
 /**
  * @name string_new_with_latin1_chars_and_len
@@ -1425,7 +1424,7 @@ typedef void (*GDExtensionInterfaceStringNewWithWideChars)(GDExtensionUninitiali
  * @param p_contents A pointer to a Latin-1 encoded C string.
  * @param p_size The number of characters (= number of bytes).
  */
-typedef void (*GDExtensionInterfaceStringNewWithLatin1CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents, GDExtensionInt p_size);
+typedef void (*GDExtensionInterfaceStringNewWithLatin1CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, char *p_contents, GDExtensionInt p_size);
 
 /**
  * @name string_new_with_utf8_chars_and_len
@@ -1437,7 +1436,7 @@ typedef void (*GDExtensionInterfaceStringNewWithLatin1CharsAndLen)(GDExtensionUn
  * @param p_contents A pointer to a UTF-8 encoded C string.
  * @param p_size The number of bytes (not code units).
  */
-typedef void (*GDExtensionInterfaceStringNewWithUtf8CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents, GDExtensionInt p_size);
+typedef void (*GDExtensionInterfaceStringNewWithUtf8CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, char *p_contents, GDExtensionInt p_size);
 
 /**
  * @name string_new_with_utf16_chars_and_len
@@ -1449,7 +1448,7 @@ typedef void (*GDExtensionInterfaceStringNewWithUtf8CharsAndLen)(GDExtensionUnin
  * @param p_contents A pointer to a UTF-16 encoded C string.
  * @param p_size The number of characters (not bytes).
  */
-typedef void (*GDExtensionInterfaceStringNewWithUtf16CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const char16_t *p_contents, GDExtensionInt p_char_count);
+typedef void (*GDExtensionInterfaceStringNewWithUtf16CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, char16_t *p_contents, GDExtensionInt p_char_count);
 
 /**
  * @name string_new_with_utf32_chars_and_len
@@ -1461,7 +1460,7 @@ typedef void (*GDExtensionInterfaceStringNewWithUtf16CharsAndLen)(GDExtensionUni
  * @param p_contents A pointer to a UTF-32 encoded C string.
  * @param p_size The number of characters (not bytes).
  */
-typedef void (*GDExtensionInterfaceStringNewWithUtf32CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const char32_t *p_contents, GDExtensionInt p_char_count);
+typedef void (*GDExtensionInterfaceStringNewWithUtf32CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, char32_t *p_contents, GDExtensionInt p_char_count);
 
 /**
  * @name string_new_with_wide_chars_and_len
@@ -1473,7 +1472,7 @@ typedef void (*GDExtensionInterfaceStringNewWithUtf32CharsAndLen)(GDExtensionUni
  * @param p_contents A pointer to a wide C string.
  * @param p_size The number of characters (not bytes).
  */
-typedef void (*GDExtensionInterfaceStringNewWithWideCharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const wchar_t *p_contents, GDExtensionInt p_char_count);
+typedef void (*GDExtensionInterfaceStringNewWithWideCharsAndLen)(GDExtensionUninitializedStringPtr r_dest, wchar_t *p_contents, GDExtensionInt p_char_count);
 
 /**
  * @name string_to_latin1_chars
@@ -1579,7 +1578,7 @@ typedef char32_t *(*GDExtensionInterfaceStringOperatorIndex)(GDExtensionStringPt
  *
  * @return A const pointer to the requested character.
  */
-typedef const char32_t *(*GDExtensionInterfaceStringOperatorIndexConst)(GDExtensionConstStringPtr p_self, GDExtensionInt p_index);
+typedef char32_t *(*GDExtensionInterfaceStringOperatorIndexConst)(GDExtensionConstStringPtr p_self, GDExtensionInt p_index);
 
 /**
  * @name string_operator_plus_eq_string
@@ -1612,7 +1611,7 @@ typedef void (*GDExtensionInterfaceStringOperatorPlusEqChar)(GDExtensionStringPt
  * @param p_self A pointer to the String.
  * @param p_b A pointer to a Latin-1 encoded C string (null terminated).
  */
-typedef void (*GDExtensionInterfaceStringOperatorPlusEqCstr)(GDExtensionStringPtr p_self, const char *p_b);
+typedef void (*GDExtensionInterfaceStringOperatorPlusEqCstr)(GDExtensionStringPtr p_self, char *p_b);
 
 /**
  * @name string_operator_plus_eq_wcstr
@@ -1623,7 +1622,7 @@ typedef void (*GDExtensionInterfaceStringOperatorPlusEqCstr)(GDExtensionStringPt
  * @param p_self A pointer to the String.
  * @param p_b A pointer to a wide C string (null terminated).
  */
-typedef void (*GDExtensionInterfaceStringOperatorPlusEqWcstr)(GDExtensionStringPtr p_self, const wchar_t *p_b);
+typedef void (*GDExtensionInterfaceStringOperatorPlusEqWcstr)(GDExtensionStringPtr p_self, wchar_t *p_b);
 
 /**
  * @name string_operator_plus_eq_c32str
@@ -1634,7 +1633,7 @@ typedef void (*GDExtensionInterfaceStringOperatorPlusEqWcstr)(GDExtensionStringP
  * @param p_self A pointer to the String.
  * @param p_b A pointer to a UTF-32 encoded C string (null terminated).
  */
-typedef void (*GDExtensionInterfaceStringOperatorPlusEqC32str)(GDExtensionStringPtr p_self, const char32_t *p_b);
+typedef void (*GDExtensionInterfaceStringOperatorPlusEqC32str)(GDExtensionStringPtr p_self, char32_t *p_b);
 
 /**
  * @name string_resize
@@ -1674,7 +1673,7 @@ typedef GDExtensionInt (*GDExtensionInterfaceStringResize)(GDExtensionStringPtr 
  * @param p_contents A pointer to a C string (null terminated and Latin-1 or ASCII encoded).
  * @param p_is_static Whether the StringName reuses the buffer directly (see above).
  */
-typedef void (*GDExtensionInterfaceStringNameNewWithLatin1Chars)(GDExtensionUninitializedStringNamePtr r_dest, const char *p_contents, GDExtensionBool p_is_static);
+typedef void (*GDExtensionInterfaceStringNameNewWithLatin1Chars)(GDExtensionUninitializedStringNamePtr r_dest, char *p_contents, GDExtensionBool p_is_static);
 
 /**
  * @name string_name_new_with_utf8_chars
@@ -1685,7 +1684,7 @@ typedef void (*GDExtensionInterfaceStringNameNewWithLatin1Chars)(GDExtensionUnin
  * @param r_dest A pointer to uninitialized storage, into which the newly created StringName is constructed.
  * @param p_contents A pointer to a C string (null terminated and UTF-8 encoded).
  */
-typedef void (*GDExtensionInterfaceStringNameNewWithUtf8Chars)(GDExtensionUninitializedStringNamePtr r_dest, const char *p_contents);
+typedef void (*GDExtensionInterfaceStringNameNewWithUtf8Chars)(GDExtensionUninitializedStringNamePtr r_dest, char *p_contents);
 
 /**
  * @name string_name_new_with_utf8_chars_and_len
@@ -1697,7 +1696,7 @@ typedef void (*GDExtensionInterfaceStringNameNewWithUtf8Chars)(GDExtensionUninit
  * @param p_contents A pointer to a C string (null terminated and UTF-8 encoded).
  * @param p_size The number of bytes (not UTF-8 code points).
  */
-typedef void (*GDExtensionInterfaceStringNameNewWithUtf8CharsAndLen)(GDExtensionUninitializedStringNamePtr r_dest, const char *p_contents, GDExtensionInt p_size);
+typedef void (*GDExtensionInterfaceStringNameNewWithUtf8CharsAndLen)(GDExtensionUninitializedStringNamePtr r_dest, char *p_contents, GDExtensionInt p_size);
 
 /* INTERFACE: XMLParser Utilities */
 
@@ -1715,7 +1714,7 @@ typedef void (*GDExtensionInterfaceStringNameNewWithUtf8CharsAndLen)(GDExtension
  *
  * @see XMLParser::open_buffer()
  */
-typedef GDExtensionInt (*GDExtensionInterfaceXmlParserOpenBuffer)(GDExtensionObjectPtr p_instance, const uint8_t *p_buffer, size_t p_size);
+typedef GDExtensionInt (*GDExtensionInterfaceXmlParserOpenBuffer)(GDExtensionObjectPtr p_instance, uint8_t *p_buffer, size_t p_size);
 
 /* INTERFACE: FileAccess Utilities */
 
@@ -1731,7 +1730,7 @@ typedef GDExtensionInt (*GDExtensionInterfaceXmlParserOpenBuffer)(GDExtensionObj
  *
  * @see FileAccess::store_buffer()
  */
-typedef void (*GDExtensionInterfaceFileAccessStoreBuffer)(GDExtensionObjectPtr p_instance, const uint8_t *p_src, uint64_t p_length);
+typedef void (*GDExtensionInterfaceFileAccessStoreBuffer)(GDExtensionObjectPtr p_instance, uint8_t *p_src, uint64_t p_length);
 
 /**
  * @name file_access_get_buffer
@@ -1810,7 +1809,7 @@ typedef uint8_t *(*GDExtensionInterfacePackedByteArrayOperatorIndex)(GDExtension
  *
  * @return A const pointer to the requested byte.
  */
-typedef const uint8_t *(*GDExtensionInterfacePackedByteArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
+typedef uint8_t *(*GDExtensionInterfacePackedByteArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_color_array_operator_index
@@ -1862,7 +1861,7 @@ typedef float *(*GDExtensionInterfacePackedFloat32ArrayOperatorIndex)(GDExtensio
  *
  * @return A const pointer to the requested 32-bit float.
  */
-typedef const float *(*GDExtensionInterfacePackedFloat32ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
+typedef float *(*GDExtensionInterfacePackedFloat32ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_float64_array_operator_index
@@ -1888,7 +1887,7 @@ typedef double *(*GDExtensionInterfacePackedFloat64ArrayOperatorIndex)(GDExtensi
  *
  * @return A const pointer to the requested 64-bit float.
  */
-typedef const double *(*GDExtensionInterfacePackedFloat64ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
+typedef double *(*GDExtensionInterfacePackedFloat64ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_int32_array_operator_index
@@ -1914,7 +1913,7 @@ typedef int32_t *(*GDExtensionInterfacePackedInt32ArrayOperatorIndex)(GDExtensio
  *
  * @return A const pointer to the requested 32-bit integer.
  */
-typedef const int32_t *(*GDExtensionInterfacePackedInt32ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
+typedef int32_t *(*GDExtensionInterfacePackedInt32ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_int64_array_operator_index
@@ -1940,7 +1939,7 @@ typedef int64_t *(*GDExtensionInterfacePackedInt64ArrayOperatorIndex)(GDExtensio
  *
  * @return A const pointer to the requested 64-bit integer.
  */
-typedef const int64_t *(*GDExtensionInterfacePackedInt64ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
+typedef int64_t *(*GDExtensionInterfacePackedInt64ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_string_array_operator_index
@@ -2113,7 +2112,7 @@ typedef GDExtensionVariantPtr (*GDExtensionInterfaceDictionaryOperatorIndexConst
  * @param r_ret A pointer to Variant which will receive the return value.
  * @param r_error A pointer to a GDExtensionCallError struct that will receive error information.
  */
-typedef void (*GDExtensionInterfaceObjectMethodBindCall)(GDExtensionMethodBindPtr p_method_bind, GDExtensionObjectPtr p_instance, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_arg_count, GDExtensionUninitializedVariantPtr r_ret, GDExtensionCallError *r_error);
+typedef void (*GDExtensionInterfaceObjectMethodBindCall)(GDExtensionMethodBindPtr p_method_bind, GDExtensionObjectPtr p_instance, GDExtensionConstVariantPtr *p_args, GDExtensionInt p_arg_count, GDExtensionUninitializedVariantPtr r_ret, GDExtensionCallError *r_error);
 
 /**
  * @name object_method_bind_ptrcall
@@ -2126,7 +2125,7 @@ typedef void (*GDExtensionInterfaceObjectMethodBindCall)(GDExtensionMethodBindPt
  * @param p_args A pointer to a C array representing the arguments.
  * @param r_ret A pointer to the Object that will receive the return value.
  */
-typedef void (*GDExtensionInterfaceObjectMethodBindPtrcall)(GDExtensionMethodBindPtr p_method_bind, GDExtensionObjectPtr p_instance, const GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
+typedef void (*GDExtensionInterfaceObjectMethodBindPtrcall)(GDExtensionMethodBindPtr p_method_bind, GDExtensionObjectPtr p_instance, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
 
 /**
  * @name object_destroy
@@ -2162,7 +2161,7 @@ typedef GDExtensionObjectPtr (*GDExtensionInterfaceGlobalGetSingleton)(GDExtensi
  *
  * @return
  */
-typedef void *(*GDExtensionInterfaceObjectGetInstanceBinding)(GDExtensionObjectPtr p_o, void *p_token, const GDExtensionInstanceBindingCallbacks *p_callbacks);
+typedef void *(*GDExtensionInterfaceObjectGetInstanceBinding)(GDExtensionObjectPtr p_o, void *p_token, GDExtensionInstanceBindingCallbacks *p_callbacks);
 
 /**
  * @name object_set_instance_binding
@@ -2175,7 +2174,7 @@ typedef void *(*GDExtensionInterfaceObjectGetInstanceBinding)(GDExtensionObjectP
  * @param p_binding A pointer to the instance binding.
  * @param p_callbacks A pointer to a GDExtensionInstanceBindingCallbacks struct.
  */
-typedef void (*GDExtensionInterfaceObjectSetInstanceBinding)(GDExtensionObjectPtr p_o, void *p_token, void *p_binding, const GDExtensionInstanceBindingCallbacks *p_callbacks);
+typedef void (*GDExtensionInterfaceObjectSetInstanceBinding)(GDExtensionObjectPtr p_o, void *p_token, void *p_binding, GDExtensionInstanceBindingCallbacks *p_callbacks);
 
 /**
  * @name object_free_instance_binding
@@ -2290,7 +2289,7 @@ typedef void (*GDExtensionInterfaceRefSetObject)(GDExtensionRefPtr p_ref, GDExte
  *
  * @return A pointer to a ScriptInstanceExtension object.
  */
-typedef GDExtensionScriptInstancePtr (*GDExtensionInterfaceScriptInstanceCreate)(const GDExtensionScriptInstanceInfo *p_info, GDExtensionScriptInstanceDataPtr p_instance_data);
+typedef GDExtensionScriptInstancePtr (*GDExtensionInterfaceScriptInstanceCreate)(GDExtensionScriptInstanceInfo *p_info, GDExtensionScriptInstanceDataPtr p_instance_data);
 
 /**
  * @name script_instance_create2
@@ -2303,7 +2302,7 @@ typedef GDExtensionScriptInstancePtr (*GDExtensionInterfaceScriptInstanceCreate)
  *
  * @return A pointer to a ScriptInstanceExtension object.
  */
-typedef GDExtensionScriptInstancePtr (*GDExtensionInterfaceScriptInstanceCreate2)(const GDExtensionScriptInstanceInfo2 *p_info, GDExtensionScriptInstanceDataPtr p_instance_data);
+typedef GDExtensionScriptInstancePtr (*GDExtensionInterfaceScriptInstanceCreate2)(GDExtensionScriptInstanceInfo2 *p_info, GDExtensionScriptInstanceDataPtr p_instance_data);
 
 /**
  * @name placeholder_script_instance_create
@@ -2435,7 +2434,7 @@ typedef void *(*GDExtensionInterfaceClassdbGetClassTag)(GDExtensionConstStringNa
  * @param p_parent_class_name A pointer to a StringName with the parent class name.
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo struct.
  */
-typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClass)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, const GDExtensionClassCreationInfo *p_extension_funcs);
+typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClass)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, GDExtensionClassCreationInfo *p_extension_funcs);
 
 /**
  * @name classdb_register_extension_class2
@@ -2450,7 +2449,7 @@ typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClass)(GDExtensionCla
  * @param p_parent_class_name A pointer to a StringName with the parent class name.
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
  */
-typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClass2)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, const GDExtensionClassCreationInfo2 *p_extension_funcs);
+typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClass2)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, GDExtensionClassCreationInfo2 *p_extension_funcs);
 
 /**
  * @name classdb_register_extension_class_method
@@ -2464,7 +2463,7 @@ typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClass2)(GDExtensionCl
  * @param p_class_name A pointer to a StringName with the class name.
  * @param p_method_info A pointer to a GDExtensionClassMethodInfo struct.
  */
-typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassMethod)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionClassMethodInfo *p_method_info);
+typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassMethod)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionClassMethodInfo *p_method_info);
 
 /**
  * @name classdb_register_extension_class_integer_constant
@@ -2495,7 +2494,7 @@ typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant)
  * @param p_setter A pointer to a StringName with the name of the setter method.
  * @param p_getter A pointer to a StringName with the name of the getter method.
  */
-typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassProperty)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionPropertyInfo *p_info, GDExtensionConstStringNamePtr p_setter, GDExtensionConstStringNamePtr p_getter);
+typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassProperty)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionPropertyInfo *p_info, GDExtensionConstStringNamePtr p_setter, GDExtensionConstStringNamePtr p_getter);
 
 /**
  * @name classdb_register_extension_class_property_indexed
@@ -2512,7 +2511,7 @@ typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassProperty)(GDExte
  * @param p_getter A pointer to a StringName with the name of the getter method.
  * @param p_index The index to pass as the first argument to the getter and setter methods.
  */
-typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassPropertyIndexed)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionPropertyInfo *p_info, GDExtensionConstStringNamePtr p_setter, GDExtensionConstStringNamePtr p_getter, GDExtensionInt p_index);
+typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassPropertyIndexed)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionPropertyInfo *p_info, GDExtensionConstStringNamePtr p_setter, GDExtensionConstStringNamePtr p_getter, GDExtensionInt p_index);
 
 /**
  * @name classdb_register_extension_class_property_group
@@ -2554,7 +2553,7 @@ typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassPropertySubgroup
  * @param p_argument_info A pointer to a GDExtensionPropertyInfo struct.
  * @param p_argument_count The number of arguments the signal receives.
  */
-typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassSignal)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_signal_name, const GDExtensionPropertyInfo *p_argument_info, GDExtensionInt p_argument_count);
+typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassSignal)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_signal_name, GDExtensionPropertyInfo *p_argument_info, GDExtensionInt p_argument_count);
 
 /**
  * @name classdb_unregister_extension_class
