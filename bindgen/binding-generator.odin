@@ -1375,12 +1375,12 @@ clean_string_names :: proc(ptr: rawptr = nil) {
         os.write_string(fd, method_signature)
         os.write_string(fd, fmt.tprintf(" {{\n"))
 
-        os.write_string(fd, fmt.tprintf("  @static name : ^godot.StringName\n"))        
+        os.write_string(fd, fmt.tprintf("  @static name : godot.StringName\n"))        
         os.write_string(fd, fmt.tprintf("  @static method : gde.GDExtensionPtrBuiltInMethod\n"))
-        os.write_string(fd, fmt.tprintf("  if name == nil {{\n"))
+        os.write_string(fd, fmt.tprintf("  if method == nil {{\n"))
         // os.write_string(fd, fmt.tprintf("    name = new(godot.StringName); %s_to_string_name(name, \"%s\")\n", class_name!="String"?"gstring.":"", method_name))
-        os.write_string(fd, fmt.tprintf("    name : ^godot.StringName; gde.string_name_new_with_utf8_chars(name, \"%s\")\n", method_name))
-        os.write_string(fd, fmt.tprintf("    method = gde.variant_get_ptr_builtin_method(gde.GDExtensionVariantType.%s, cast(gde.GDExtensionConstStringNamePtr)&name.opaque[0], %d)\n", enum_type_name, hash))
+        os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&name, \"%s\")\n", method_name))
+        os.write_string(fd, fmt.tprintf("    method = gde.variant_get_ptr_builtin_method(gde.GDExtensionVariantType.%s, &name, %d)\n", enum_type_name, hash))
         os.write_string(fd, fmt.tprintf("  }}\n"))
 
         arguments : [dynamic]string; defer delete(arguments)
@@ -1603,10 +1603,10 @@ clean_string_names :: proc(ptr: rawptr = nil) {
 
         os.write_string(fd, fmt.tprintf("{{\n"))
         enum_type_name := fmt.tprintf("GDEXTENSION_VARIANT_TYPE_%s", strings.to_upper(snake_class_name))
-        os.write_string(fd, fmt.tprintf("  @static name : ^godot.String\n"))
+        os.write_string(fd, fmt.tprintf("  @static name : godot.String\n"))
         os.write_string(fd, fmt.tprintf("  @static operator : gde.GDExtensionPtrOperatorEvaluator\n"))
-        os.write_string(fd, fmt.tprintf("  if name == nil {{\n"))
-        os.write_string(fd, fmt.tprintf("    name = new(godot.String); %s_to_string(name, \"%s\")\n", class_name=="String" ? "" : "gstring.", operator_name))
+        os.write_string(fd, fmt.tprintf("  if operator == nil {{\n"))
+        os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&name, \"%s\")\n", operator_name))
         if right_type == "Variant" do right_type = "nil"
         snake_right_type := camel_to_snake(right_type)
         rt := fmt.tprintf("GDEXTENSION_VARIANT_TYPE_%s", strings.to_upper(snake_right_type))
@@ -2005,13 +2005,14 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
     // if no_obj is true, then just bind procs, don't make an object with godot
     os.write_string(fd, fmt.tprintf("constructor :: proc(me: ^godot.%s, no_obj: bool = false)\n", class_name))
     os.write_string(fd, fmt.tprintf("{{\n"))
-    os.write_string(fd, fmt.tprintf("  @static class_name : ^godot.StringName\n"))
-    os.write_string(fd, fmt.tprintf("  if class_name == nil {{\n"))
-    // os.write_string(fd, fmt.tprintf("    class_name = new(godot.StringName); gstring._to_string_name(class_name, \"%s\")\n", class_name))
-    os.write_string(fd, fmt.tprintf("    class_name : ^godot.StringName; gde.string_name_new_with_utf8_chars(name, \"%s\")\n", class_name))
+    os.write_string(fd, fmt.tprintf("  @static class_name : godot.StringName\n"))
+    os.write_string(fd, fmt.tprintf("  @static initialized : bool\n"))
+    os.write_string(fd, fmt.tprintf("  if initialized {{\n"))
+    os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&class_name, \"%s\")\n", class_name))
+    os.write_string(fd, fmt.tprintf("    initalized = true\n"))
     os.write_string(fd, fmt.tprintf("  }}\n"))
     os.write_string(fd, fmt.tprintf("  if no_obj != true {{\n"))
-    os.write_string(fd, fmt.tprintf("    me._owner = gde.classdb_construct_object(cast(gde.GDExtensionConstStringNamePtr)class_name)\n"))
+    os.write_string(fd, fmt.tprintf("    me._owner = gde.classdb_construct_object(cast(gde.GDExtensionConstStringNamePtr)&class_name)\n"))
     os.write_string(fd, fmt.tprintf("  }}\n"))
     
     if "methods" in class_api {
@@ -2068,14 +2069,14 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
     os.write_string(fd, fmt.tprintf("  inst := cast(gde.GDExtensionObjectPtr)nil\n"))    
   }
   
-  os.write_string(fd, fmt.tprintf("  @static class_name : ^godot.StringName\n"))
-  os.write_string(fd, fmt.tprintf("  @static method_name : ^godot.StringName\n"))
+  os.write_string(fd, fmt.tprintf("  @static class_name : godot.StringName\n"))
+  os.write_string(fd, fmt.tprintf("  @static method_name : godot.StringName\n"))
   os.write_string(fd, fmt.tprintf("  @static method : gde.GDExtensionMethodBindPtr\n"))
-  os.write_string(fd, fmt.tprintf("  if class_name == nil {{\n"))
+  os.write_string(fd, fmt.tprintf("  if method == nil {{\n"))
   // os.write_string(fd, fmt.tprintf("    class_name = new(godot.StringName); gstring._to_string_name(class_name, \"%s\")\n", class_name))
   // os.write_string(fd, fmt.tprintf("    method_name = new(godot.StringName); gstring._to_string_name(method_name, \"%s\")\n", method_name))
-  os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(class_name, \"%s\")\n", class_name))
-  os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(method_name, \"%s\")\n", method_name))
+  os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&class_name, \"%s\")\n", class_name))
+  os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&method_name, \"%s\")\n", method_name))
   os.write_string(fd, fmt.tprintf("    method = gde.classdb_get_method_bind(cast(gde.GDExtensionConstStringNamePtr)&class_name.opaque[0], cast(gde.GDExtensionConstStringNamePtr)&method_name.opaque[0], %s)\n", hash))
   os.write_string(fd, fmt.tprintf("  }}\n"))
   
