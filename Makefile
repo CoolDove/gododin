@@ -5,3 +5,9 @@ dll: clean
 
 clean:
 	rm bin/ -rf
+
+bg:
+	pushd bindgen && \
+	odin run . -out:g.exe && \
+	rm g.exe && \
+	popd

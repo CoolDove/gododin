@@ -3,6 +3,7 @@ package main
 import gde "gdextension"
 import "core:fmt"
 import "base:runtime"
+import utl "godot/utility_functions"
 
 @export
 _entry :: proc "c" (proc_load: gde.GDExtensionInterfaceGetProcAddress, library: gde.GDExtensionClassLibraryPtr, initialization: ^gde.GDExtensionInitialization) -> gde.GDExtensionBool {
@@ -12,17 +13,16 @@ _entry :: proc "c" (proc_load: gde.GDExtensionInterfaceGetProcAddress, library: 
 	initialization.initialize = _initialize
 	initialization.deinitialize = _deinitialize
 
-	fmt.printf("Odin extension loaded.\n")
+	utl.print("Odin extension loaded.\n")
 
 	return gde.TRUE
 }
 
-
 _initialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	context = runtime.default_context()
-	fmt.printf("Odin extension initialized.\n")
+	utl.print("Odin extension initialized\n")
 }
 _deinitialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	context = runtime.default_context()
-	fmt.printf("Odin extension uninitialized.\n")
+	utl.print("Odin extension uninitialized\n")
 }
