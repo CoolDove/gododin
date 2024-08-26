@@ -29,24 +29,25 @@ _entry :: proc "c" (proc_load: gde.GDExtensionInterfaceGetProcAddress, library: 
 	god.initialization = initialization
 
 	utl.print_rich("[color=green][b]Godin[/b][/color] extension loaded.\n")
-
-	strn_class : godot.StringName
-	strn_parent : godot.StringName
-	utl.print_rich("godot maxi: [u]", utl.maxi(10, -11), "[/u]\n")
 	
-	gde.string_name_new_with_utf8_chars(&strn_class, "Dove")
-	gde.string_name_new_with_utf8_chars(&strn_class, "Node")
-	fmt.printf("string name Dove created, strn_class: {}, strn_node: {}\n", strn_class.opaque, strn_parent.opaque)
-	utl.print_rich("length of class name: [b]", string_name.length(&strn_class), "[/b].")
-
 	return gde.TRUE
 }
 
 _initialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	context = runtime.default_context()
+	if (l != .GDEXTENSION_INITIALIZATION_SCENE) do return
 	utl.print("Odin extension initialized\n")
+
+	strn_class, strn_parent : godot.StringName
+
+	gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer string_name.destructor(&strn_class)
+	gde.string_name_new_with_utf8_chars(&strn_parent, "Node2D"); defer string_name.destructor(&strn_parent)
+
+	gde.classdb_register_extension_class2(god.library, &strn_class, &strn_parent, &DoveRegister)
+
 }
 _deinitialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
+	if (l != .GDEXTENSION_INITIALIZATION_SCENE) do return
 	context = runtime.default_context()
 	utl.print("Odin extension uninitialized\n")
 }
