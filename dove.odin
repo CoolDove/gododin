@@ -30,7 +30,6 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		instance := new(Dove)
 		instance._owner = obj
 		gde.object_set_instance(obj, &strn_class, instance)
-		sprite2d.constructor(instance, true)
 		return obj
 	},
 	free_instance_func = proc "c" (uptr: rawptr, instance: gde.GDExtensionClassInstancePtr) {
@@ -42,7 +41,7 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		context = runtime.default_context()
 		strn_process : godot.String
 		gde.string_new_with_utf8_chars(&strn_process, "_process"); defer gstring.destructor(&strn_process)
-		if string_name.operator_OP_EQUAL1(auto_cast p_name, &strn_process) {
+		if string_name.operator_OP_EQUAL1(auto_cast p_name, strn_process) {
 			return Dove_process_gcall
 		}
 		return nil
@@ -56,10 +55,10 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 }
 Dove_process :: proc (self: ^Dove, delta: f64) {
 	self.time += delta
-	offset :godot.Vector2= {x=auto_cast math.sin(self.time), y=0}
-	vector2.constructor3(&offset, auto_cast math.sin(self.time), 0)
-	sprite2d.set_offset(self, &offset)
-	parent := self->get_parent()
-	parent_strn := node.get_name(parent)
-	fmt.printf("parent name: {}\n", string_name_to_string(&parent_strn, context.temp_allocator))
+	// offset :godot.Vector2= {x=auto_cast math.sin(self.time), y=0}
+	offset := vector2.constructor3(auto_cast math.sin(self.time), 0)
+	sprite2d.set_offset(self, offset)
+	// parent := self->get_parent()
+	// parent_strn := node.get_name(parent)
+	// fmt.printf("parent name: {}\n", string_name_to_string(&parent_strn, context.temp_allocator))
 }

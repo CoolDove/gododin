@@ -53,9 +53,8 @@ _deinitialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 }
 
 
-string_name_to_string :: proc(strn: ^godot.StringName, allocator:=context.allocator) -> string {
+string_name_to_string :: proc(strn: godot.StringName, allocator:=context.allocator) -> string {
 	context.allocator = allocator
-	str : godot.String
-	gstring.constructor2(&str, strn)
+	str := gstring.constructor2(strn)
 	return gstring.to_string(&str)
 }

@@ -579,7 +579,7 @@ type_for_parameter :: proc(type_name: string, meta: string, g: ^Globals) -> stri
   } else if is_pod_type(type_name) && type_name != "Nil" || is_enum(type_name) {
     return correct_type(type_name, meta, g)
   } else if is_variant(type_name, g) || is_refcounted(type_name, g) || type_name == "Object" {
-    return fmt.tprintf("^%s", correct_type(type_name, "", g))
+    return fmt.tprintf("%s", correct_type(type_name, "", g))
   } else {
     return correct_type(type_name, "", g)
   }
@@ -613,26 +613,29 @@ escape_identifier :: proc(id: string) -> string {
 }
 
 correct_default_value :: proc(value: string, type_name: string, g: ^Globals) -> string {
-  @static value_map : map[string]string
-  if len(value_map) == 0 {
-    value_map["null"] = "nil"
-    //value_map["\"\""] = fmt.tprintf("%sString()", g.pck)
-    //value_map["&\"\""] = fmt.tprintf("%sStringName()", g.pck)
-    //value_map["[]"] = fmt.tprintf("%sArray()", g.pck)
-    //value_map["{}"] = fmt.tprintf("%sDictionary()", g.pck)
-  }
-  _, ok := strconv.parse_int(value)
-  if ok do return value
-  if type_name == "bool" do return value
+	return "{}"
+  // @static value_map : map[string]string
+  // fmt.printf("get default value for type: {}\n", type_name)
+  // if len(value_map) == 0 {
+  //   value_map["null"] = "{}"// 
+  //   // value_map["null"] = "nil"
+  //   //value_map["\"\""] = fmt.tprintf("%sString()", g.pck)
+  //   //value_map["&\"\""] = fmt.tprintf("%sStringName()", g.pck)
+  //   //value_map["[]"] = fmt.tprintf("%sArray()", g.pck)
+  //   //value_map["{}"] = fmt.tprintf("%sDictionary()", g.pck)
+  // }
+  // _, ok := strconv.parse_int(value)
+  // if ok do return value
+  // if type_name == "bool" do return value
 
-  is_real := (type_name == "float")
-  if !is_real do return "nil"
-  
-  if value in value_map do return value_map[value]
-  if value == "" do return fmt.tprintf("%s()", type_name)
-  
-  if strings.has_prefix(value, "Array[") do return "{}"
-  return value
+  // is_real := (type_name == "float")
+  // if !is_real do return "nil"
+  // 
+  // if value in value_map do return value_map[value]
+  // if value == "" do return fmt.tprintf("%s()", type_name)
+  // 
+  // if strings.has_prefix(value, "Array[") do return "{}"
+  // return value
 }
 
 make_function_parameters :: proc(parameters: json.Array, g: ^Globals, include_default: bool=false, for_builtin: bool=false, is_vararg: bool=false) -> string {
@@ -756,8 +759,9 @@ generate_variant_class :: proc(target_dir: string, g: ^Globals) {
     os.write_string(fd, "import gde \"../../gdextension\"\n\n")
 
     os.write_string(fd, `
-from_type_constructor :: proc(type: int) -> gde.GDExtensionVariantFromTypeConstructorFunc {
+from_type_constructor :: proc(type: godot.Variant_Type) -> gde.GDExtensionVariantFromTypeConstructorFunc {
   @static from_type : [godot.Variant_Type.VARIANT_MAX]gde.GDExtensionVariantFromTypeConstructorFunc
+  type := cast(int)type
   if from_type[1] == nil { // start from 1 to skip NIL
     for i := 1; i < cast(int)godot.Variant_Type.VARIANT_MAX; i+=1 {
       from_type[i] = gde.get_variant_from_type_constructor(cast(gde.GDExtensionVariantType)i)
@@ -765,8 +769,9 @@ from_type_constructor :: proc(type: int) -> gde.GDExtensionVariantFromTypeConstr
   }
   return from_type[type]
 }
-to_type_constructor :: proc(type: int) -> gde.GDExtensionTypeFromVariantConstructorFunc {
+to_type_constructor :: proc(type: godot.Variant_Type) -> gde.GDExtensionTypeFromVariantConstructorFunc {
   @static to_type : [godot.Variant_Type.VARIANT_MAX]gde.GDExtensionTypeFromVariantConstructorFunc
+  type :int= cast(int)type
   if to_type[1] == nil { // start from 1 to skip NIL
     for i := 1; i < cast(int)godot.Variant_Type.VARIANT_MAX; i+=1 {
       to_type[i] = gde.get_variant_to_type_constructor(cast(gde.GDExtensionVariantType)i)
@@ -774,14 +779,19 @@ to_type_constructor :: proc(type: int) -> gde.GDExtensionTypeFromVariantConstruc
   }
   return to_type[type]
 }
-copy :: proc(me: ^godot.Variant, v: ^godot.Variant) {
-  gde.variant_new_copy(cast(gde.GDExtensionVariantPtr)&me.opaque[0], cast(gde.GDExtensionConstVariantPtr)&v.opaque[0])
+copy :: proc(from: godot.Variant) -> godot.Variant {
+  from := from
+  to : godot.Variant
+  gde.variant_new_copy(cast(gde.GDExtensionVariantPtr)&to, cast(gde.GDExtensionConstVariantPtr)&from)
+  return to
 }
-new_nil :: proc(me: ^godot.Variant) {
-  gde.variant_new_nil(cast(gde.GDExtensionVariantPtr)&me.opaque[0])
+new_nil :: proc() -> godot.Variant {
+  me : godot.Variant
+  gde.variant_new_nil(cast(gde.GDExtensionVariantPtr)&me)
+  return me
 }
 destroy :: proc(me: ^godot.Variant) {
-  gde.variant_destroy(cast(gde.GDExtensionVariantPtr)&me.opaque[0])
+  gde.variant_destroy(cast(gde.GDExtensionVariantPtr)me)
 }
 `)
 
@@ -794,11 +804,11 @@ destroy :: proc(me: ^godot.Variant) {
         os.write_string(fd, fmt.tprintf(`
 constructor%d :: proc(me: ^godot.Variant, val: %s) {{
   lval : %s = cast(%s)val
-  from_type_constructor(cast(int)godot.Variant_Type.%s)(cast(gde.GDExtensionVariantPtr)&me.opaque[0], cast(gde.GDExtensionTypePtr)&lval)
+  from_type_constructor(.%s)(cast(gde.GDExtensionVariantPtr)me, cast(gde.GDExtensionTypePtr)&lval)
 }}
 to_type%d :: proc(me: ^godot.Variant, ret: ^%s) {{
   lval : %s
-  to_type_constructor(cast(int)godot.Variant_Type.%s)(cast(gde.GDExtensionTypePtr)&lval, cast(gde.GDExtensionVariantPtr)&me.opaque[0])
+  to_type_constructor(.%s)(cast(gde.GDExtensionTypePtr)&lval, cast(gde.GDExtensionVariantPtr)me)
   ret^ = lval
 }}
 `, idx, k, v[1], v[1], v[0], idx, k, k, v[0]))
@@ -807,24 +817,24 @@ to_type%d :: proc(me: ^godot.Variant, ret: ^%s) {{
         os.write_string(fd, fmt.tprintf(`
 constructor%d :: proc(me: ^godot.Variant, val: %s) {{
   if val != nil {{
-    from_type_constructor(cast(int)godot.Variant_Type.%s)(cast(gde.GDExtensionVariantPtr)&me.opaque[0], cast(gde.GDExtensionTypePtr)val)
+    from_type_constructor(.%s)(cast(gde.GDExtensionVariantPtr)me, cast(gde.GDExtensionTypePtr)val)
   }} else {{
     nullobj : godot.GodotObject = nil
-    from_type_constructor(cast(int)godot.Variant_Type.%s)(cast(gde.GDExtensionVariantPtr)&me.opaque[0], cast(gde.GDExtensionTypePtr)&nullobj)
+    from_type_constructor(.%s)(cast(gde.GDExtensionVariantPtr)me, cast(gde.GDExtensionTypePtr)&nullobj)
   }}
 }}
 to_type%d :: proc(me: ^godot.Variant, ret: %s) {{
-  to_type_constructor(cast(int)godot.Variant_Type.%s)(cast(gde.GDExtensionTypePtr)ret, cast(gde.GDExtensionVariantPtr)&me.opaque[0])
+  to_type_constructor(.%s)(cast(gde.GDExtensionTypePtr)ret, cast(gde.GDExtensionVariantPtr)me)
 }}
 `, idx, k, v[0], v[0], idx, k, v[0]))
         
       }else {
         os.write_string(fd, fmt.tprintf(`
 constructor%d :: proc(me: ^godot.Variant, val: %s) {{
-  from_type_constructor(cast(int)godot.Variant_Type.%s)(cast(gde.GDExtensionVariantPtr)&me.opaque[0], cast(gde.GDExtensionTypePtr)&val.opaque[0])
+  from_type_constructor(.%s)(cast(gde.GDExtensionVariantPtr)me, cast(gde.GDExtensionTypePtr)&val)
 }}
 to_type%d :: proc(me: ^godot.Variant, ret: %s) {{
-  to_type_constructor(cast(int)godot.Variant_Type.%s)(cast(gde.GDExtensionTypePtr)&ret.opaque[0], cast(gde.GDExtensionVariantPtr)&me.opaque[0])
+  to_type_constructor(.%s)(cast(gde.GDExtensionTypePtr)&ret, cast(gde.GDExtensionVariantPtr)me)
 }}
 `, idx, k, v[0], idx, k, v[0]))
         
@@ -838,10 +848,10 @@ constructor_string :: proc(me: ^godot.Variant, str: string) {{
   val := new(godot.String); defer free(val)
       
   str := strings.clone_to_cstring(str)
-  gde.string_new_with_latin1_chars(cast(gde.GDExtensionStringPtr)&val.opaque[0], str)
+  gde.string_new_with_latin1_chars(cast(gde.GDExtensionStringPtr)&val, str)
   delete(str)
 
-  from_type_constructor(cast(int)godot.Variant_Type.STRING)(cast(gde.GDExtensionVariantPtr)&me.opaque[0], cast(gde.GDExtensionTypePtr)&val.opaque[0])
+  from_type_constructor(.STRING)(cast(gde.GDExtensionVariantPtr)me, cast(gde.GDExtensionTypePtr)&val)
 }}
 to_type_string :: proc(me: ^godot.Variant, ret: ^string) {{
   s := new(godot.String); defer free(s)
@@ -1031,7 +1041,7 @@ _to_string :: proc(sn: ^godot.String, s: string) {
 //   call_args : [1]rawptr
 //   call_args[0] = &str
 //   p = gde.variant_get_ptr_constructor(gde.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_STRING_NAME, 2)
-//   p(cast(gde.GDExtensionTypePtr)&sn.opaque[0], cast(^gde.GDExtensionConstTypePtr)&call_args[0])
+//   p(cast(gde.GDExtensionTypePtr)&sn, cast(^gde.GDExtensionConstTypePtr)&call_args[0])
 // 
 //   clean_string_names(sn)
 // }
@@ -1081,62 +1091,77 @@ clean_string_names :: proc(ptr: rawptr = nil) {
     }
     if len(fully_used_classes) > 0 do os.write_string(fd, "\n")
 
-
-    // Create struct in builtin_structures.odin
     os.write_string(sfd, fmt.tprintf("%s_SIZE :: %d\n", class_name, size))
-    os.write_string(sfd, fmt.tprintf("%s :: struct {{\n", class_name))
-
-    os.write_string(sfd, fmt.tprintf("  opaque : [%s_SIZE]u8,\n", class_name))
     if "members" in builtin_api {
-      for member in builtin_api["members"].(json.Array) {
-        name := fmt.tprintf("%s", member.(json.Object)["name"])
-        type := fmt.tprintf("%s", member.(json.Object)["type"])
+		os.write_string(sfd, fmt.tprintf("%s :: struct {{ // size: %d\n", class_name, size))
+		// os.write_string(sfd, fmt.tprintf("  opaque : [%d]u8,\n", size))
+		for member in builtin_api["members"].(json.Array) {
+			name := fmt.tprintf("%s", member.(json.Object)["name"])
+			type := fmt.tprintf("%s", member.(json.Object)["type"])
+			os.write_string(sfd, fmt.tprintf("  %s : %s,\n", name, correct_type(type, "", g)))
+		}
+		os.write_string(sfd, "}\n")
+    } else {
+		os.write_string(sfd, fmt.tprintf("%s :: distinct [%s_SIZE]u8\n", class_name, class_name))
+	}
 
-        os.write_string(sfd, fmt.tprintf("  %s : %s,\n", name, correct_type(type, "", g)))
-      }
-    }
-    if "methods" in builtin_api {
-      for method in builtin_api["methods"].(json.Array) {
-        method_name := fmt.tprintf("%s", method.(json.Object)["name"])
-        if method_name == "map" do method_name = "_map"
+	// -- old version
+    // Create struct in builtin_structures.odin
+    // os.write_string(sfd, fmt.tprintf("%s_SIZE :: %d\n", class_name, size))
+    // os.write_string(sfd, fmt.tprintf("%s :: distinct [%d]u8\n", class_name, size))
+    // os.write_string(sfd, fmt.tprintf("%s :: struct {{\n", class_name))
 
-        method_signature := fmt.tprintf("proc(me: ^%s", correct_type(class_name, "", g))
-        vararg := cast(bool) method.(json.Object)["is_vararg"].(json.Boolean)
-        if "arguments" in method.(json.Object) {        
-          method_signature = fmt.tprintf("%s, %s", method_signature,
-                                         make_function_parameters(method.(json.Object)["arguments"].(json.Array), g, true, true, vararg))
-        }
-        method_signature = fmt.tprintf("%s)", method_signature)       
-        if "is_static" in method.(json.Object) && method.(json.Object)["is_static"].(json.Boolean) {
-          //method_signature = fmt.tprintf("%s", method_signature) // TODO??
-        }
-        if "return_type" in method.(json.Object) {
-          return_type := fmt.tprintf("%s", method.(json.Object)["return_type"])
-          pta := get_ptr_to_arg()
-          crt := correct_type(return_type, "", g)
-          ptr := "^"
-          if crt in pta {
-            ptr = ""
-          }
-          method_signature = fmt.tprintf("%s -> %s%s", method_signature, ptr, crt)
-        }
+    // os.write_string(sfd, fmt.tprintf("  opaque : [%s_SIZE]u8,\n", class_name))
+    // if "members" in builtin_api {
+	// 	for member in builtin_api["members"].(json.Array) {
+	// 		name := fmt.tprintf("%s", member.(json.Object)["name"])
+	// 		type := fmt.tprintf("%s", member.(json.Object)["type"])
 
-        os.write_string(sfd, fmt.tprintf("  %s : %s,\n", method_name, method_signature))
-      }
-    }
-    if "indexing_return_type" in builtin_api {
-      type := fmt.tprintf("%s", builtin_api["indexing_return_type"])
-      cname := correct_type(class_name, "", g)
-      ctype := correct_type(type, "", g)
-      if strings.contains(cname, "Int32") do ctype = "i32"
-      if strings.contains(cname, "Int64") do ctype = "i64"
-      if strings.contains(cname, "Float32") do ctype = "f32"
-      if strings.contains(cname, "Float64") do ctype = "f64"
-      os.write_string(sfd, fmt.tprintf("  set_idx : proc(me: ^%s, #any_int idx: int, v: ^%s),\n", cname, ctype))
-      os.write_string(sfd, fmt.tprintf("  get_idx : proc(me: ^%s, #any_int idx: int) -> ^%s,\n", cname, ctype))
-    }
-    
-    os.write_string(sfd, "}\n\n")
+	// 		os.write_string(sfd, fmt.tprintf("  %s : %s,\n", name, correct_type(type, "", g)))
+	// 	}
+    // }
+    // if "methods" in builtin_api {
+    //   for method in builtin_api["methods"].(json.Array) {
+    //     method_name := fmt.tprintf("%s", method.(json.Object)["name"])
+    //     if method_name == "map" do method_name = "_map"
+
+    //     method_signature := fmt.tprintf("proc(me: ^%s", correct_type(class_name, "", g))
+    //     vararg := cast(bool) method.(json.Object)["is_vararg"].(json.Boolean)
+    //     if "arguments" in method.(json.Object) {        
+    //       method_signature = fmt.tprintf("%s, %s", method_signature,
+    //                                      make_function_parameters(method.(json.Object)["arguments"].(json.Array), g, true, true, vararg))
+    //     }
+    //     method_signature = fmt.tprintf("%s)", method_signature)       
+    //     if "is_static" in method.(json.Object) && method.(json.Object)["is_static"].(json.Boolean) {
+    //       //method_signature = fmt.tprintf("%s", method_signature) // TODO??
+    //     }
+    //     if "return_type" in method.(json.Object) {
+    //       return_type := fmt.tprintf("%s", method.(json.Object)["return_type"])
+    //       pta := get_ptr_to_arg()
+    //       crt := correct_type(return_type, "", g)
+    //       ptr := "^"
+    //       if crt in pta {
+    //         ptr = ""
+    //       }
+    //       method_signature = fmt.tprintf("%s -> %s%s", method_signature, ptr, crt)
+    //     }
+
+    //     os.write_string(sfd, fmt.tprintf("  %s : %s,\n", method_name, method_signature))
+    //   }
+    // }
+    // if "indexing_return_type" in builtin_api {
+    //   type := fmt.tprintf("%s", builtin_api["indexing_return_type"])
+    //   cname := correct_type(class_name, "", g)
+    //   ctype := correct_type(type, "", g)
+    //   if strings.contains(cname, "Int32") do ctype = "i32"
+    //   if strings.contains(cname, "Int64") do ctype = "i64"
+    //   if strings.contains(cname, "Float32") do ctype = "f32"
+    //   if strings.contains(cname, "Float64") do ctype = "f64"
+    //   os.write_string(sfd, fmt.tprintf("  set_idx : proc(me: ^%s, #any_int idx: int, v: ^%s),\n", cname, ctype))
+    //   os.write_string(sfd, fmt.tprintf("  get_idx : proc(me: ^%s, #any_int idx: int) -> ^%s,\n", cname, ctype))
+    // }
+    // os.write_string(sfd, "}\n\n")
+
     os.write_string(fd, "// Constants ------------------------------\n")
     // ------------------------------
 
@@ -1228,23 +1253,23 @@ clean_string_names :: proc(ptr: rawptr = nil) {
     os.write_string(fd, "\n// Constructors Destructor ------------------------------\n")
 
     os.write_string(fd, fmt.tprintf("_bind :: proc(me: ^%s) {{\n", correct_type(class_name, "", g)))
-    if "methods" in builtin_api {
-      for method in builtin_api["methods"].(json.Array) {
-        method_name := fmt.tprintf("%s", method.(json.Object)["name"])
-        if method_name == "map" do method_name = "_map"
-        os.write_string(fd, fmt.tprintf("  me.%s = %s\n", method_name, method_name))
-      }
-    }
-    if "indexing_return_type" in builtin_api {
-      os.write_string(fd, fmt.tprintf("  me.set_idx = set_idx\n"))
-      os.write_string(fd, fmt.tprintf("  me.get_idx = get_idx\n"))
-    }
+    // if "methods" in builtin_api {
+    //   for method in builtin_api["methods"].(json.Array) {
+    //     method_name := fmt.tprintf("%s", method.(json.Object)["name"])
+    //     if method_name == "map" do method_name = "_map"
+    //     os.write_string(fd, fmt.tprintf("  me.%s = %s\n", method_name, method_name))
+    //   }
+    // }
+    // if "indexing_return_type" in builtin_api {
+    //   os.write_string(fd, fmt.tprintf("  me.set_idx = set_idx\n"))
+    //   os.write_string(fd, fmt.tprintf("  me.get_idx = get_idx\n"))
+    // }
     os.write_string(fd, fmt.tprintf("}}\n"))
     
     if "constructors" in builtin_api {
       for constructor in builtin_api["constructors"].(json.Array) {
         idx, _ := strconv.parse_int(fmt.tprintf("%f", constructor.(json.Object)["index"]))
-        method_signature := fmt.tprintf("constructor%d :: proc(me: ^%s", idx, correct_type(class_name, "", g))
+        method_signature := fmt.tprintf("constructor%d :: proc(", idx)
         arguments : [dynamic]string; defer delete(arguments)
         if "arguments" in constructor.(json.Object) {
           for argument, i in constructor.(json.Object)["arguments"].(json.Array) {
@@ -1258,7 +1283,7 @@ clean_string_names :: proc(ptr: rawptr = nil) {
             } else if type == "float" {
               tmp = fmt.tprintf("val%d := cast(f64)%s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)&val%d", i, escape_identifier(name), i, i)
             } else {
-              tmp = fmt.tprintf("call_args[%d] = cast(gde.GDExtensionConstTypePtr)%s", i, escape_identifier(name))
+              tmp = fmt.tprintf("val%d := %s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)&val%d", i, escape_identifier(name), i, i)
             }
             
             append(&arguments, strings.clone(tmp))
@@ -1269,10 +1294,10 @@ clean_string_names :: proc(ptr: rawptr = nil) {
           args := constructor.(json.Object)["arguments"]
           arg_type := fmt.tprintf("%s", args.(json.Array)[0].(json.Object)["type"])
           
-          method_signature = fmt.tprintf("%s, %s", method_signature,
+          method_signature = fmt.tprintf("%s%s", method_signature,
                                          make_function_parameters(args.(json.Array), g, true, true))          
         }
-        method_signature = fmt.tprintf("%s) {{\n", method_signature)
+        method_signature = fmt.tprintf("%s) -> godot.%s {{\n", method_signature, class_name)
         os.write_string(fd, method_signature)
         os.write_string(fd, fmt.tprintf("  @static constructor_%d : gde.GDExtensionPtrConstructor\n", idx)) // TODO: assign to me's proc ptr instead?
         l := len(arguments) > 0 ? len(arguments) : 1
@@ -1280,42 +1305,42 @@ clean_string_names :: proc(ptr: rawptr = nil) {
         for a in arguments {
           os.write_string(fd, fmt.tprintf("  %s\n", a))
         }
+        os.write_string(fd, fmt.tprintf("  me : godot.%s\n", class_name))
         os.write_string(fd, fmt.tprintf("  if constructor_%d == nil do constructor_%d = gde.variant_get_ptr_constructor(gde.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_%s, %d)\n", idx, idx, strings.to_upper(snake_class_name), idx))
-        os.write_string(fd, fmt.tprintf("  constructor_%d(cast(gde.GDExtensionTypePtr)&me.opaque[0], cast(^gde.GDExtensionConstTypePtr)&call_args[0])\n", idx))
+        os.write_string(fd, fmt.tprintf("  constructor_%d(cast(gde.GDExtensionTypePtr)&me, cast(^gde.GDExtensionConstTypePtr)&call_args[0])\n", idx))
 
         // also call bind in all constructors
-        os.write_string(fd, fmt.tprintf("  _bind(me)\n"))
+        // os.write_string(fd, fmt.tprintf("  _bind(me)\n"))
+        os.write_string(fd, "  return me\n")
         os.write_string(fd, "}\n")
       }
 
-      if class_name == "String" || class_name == "StringName" {
+      if class_name == "String" {
         // generate custom string proc constructors here
-        if class_name == "String" {
-          os.write_string(fd, fmt.tprintf("constructor_string :: proc(me: ^%s", correct_type(class_name, "", g)))
-          os.write_string(fd, ", s: string) {\n")
-          os.write_string(fd, "  str := strings.clone_to_cstring(s)\n")
-          os.write_string(fd, "  gde.string_new_with_latin1_chars(cast(gde.GDExtensionStringPtr)&me.opaque[0], str)\n")
-          os.write_string(fd, "  delete(str)\n")
-          os.write_string(fd, "}\n")
           os.write_string(fd, fmt.tprintf("to_string :: proc(me: ^%s, allocator:= context.allocator) -> string {{\n", correct_type(class_name, "", g)))
           os.write_string(fd, "  context.allocator = allocator\n")
-          os.write_string(fd, "  data_len := gde.string_to_latin1_chars(cast(gde.GDExtensionConstStringPtr)&me.opaque[0], nil, 0)\n")
+          os.write_string(fd, "  data_len := gde.string_to_latin1_chars(cast(gde.GDExtensionConstStringPtr)me, nil, 0)\n")
           os.write_string(fd, "  data := make([]u8, data_len+1)\n")
-          os.write_string(fd, "  gde.string_to_latin1_chars(cast(gde.GDExtensionConstStringPtr)&me.opaque[0], cast(cstring)&data[0], data_len)\n")
+          os.write_string(fd, "  gde.string_to_latin1_chars(cast(gde.GDExtensionConstStringPtr)me, cast(cstring)&data[0], data_len)\n")
           os.write_string(fd, "  data[data_len] = 0\n")
           os.write_string(fd, "  return string(data)\n")          
           os.write_string(fd, "}\n")
           
-        } else {
-          os.write_string(fd, fmt.tprintf("constructor_string :: proc(me: ^%s", correct_type(class_name, "", g)))
-          os.write_string(fd, ", s: string) {\n")
-          os.write_string(fd, "  str := new(godot.String)\n")
-          os.write_string(fd, "  gstring.constructor_string(str, s)\n")
-          os.write_string(fd, "  constructor2(me, str)\n")
-          os.write_string(fd, "  free(str)\n")          
-          os.write_string(fd, "}\n")
-          
-        }
+          os.write_string(fd, `
+constructor_string :: proc(str: cstring) -> godot.String {
+	gstr : godot.String
+	gde.string_new_with_utf8_chars(&gstr, str)
+	return gstr
+}
+`)
+      } else if class_name == "StringName" {
+        os.write_string(fd, `
+constructor_string :: proc(str: cstring) -> godot.StringName {
+	strn : godot.StringName
+	gde.string_name_new_with_utf8_chars(&strn, str)
+	return strn
+}
+`)
       }
       
       os.write_string(fd, "constructor :: proc{")
@@ -1336,7 +1361,7 @@ clean_string_names :: proc(ptr: rawptr = nil) {
       os.write_string(fd, method_signature)
       os.write_string(fd, fmt.tprintf("  @static destructor : gde.GDExtensionPtrDestructor\n"))
       os.write_string(fd, fmt.tprintf("  if destructor == nil do destructor = gde.variant_get_ptr_destructor(gde.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_%s)\n", strings.to_upper(snake_class_name)))
-      os.write_string(fd, fmt.tprintf("  destructor(cast(gde.GDExtensionTypePtr)&me.opaque)\n"))
+      os.write_string(fd, fmt.tprintf("  destructor(cast(gde.GDExtensionTypePtr)me)\n"))
       os.write_string(fd, "}\n")
     }
     
@@ -1370,11 +1395,14 @@ clean_string_names :: proc(ptr: rawptr = nil) {
             ptr = ""
           }
           
-          method_signature = fmt.tprintf("%s -> %s%s", method_signature, ptr, crt)
+          // method_signature = fmt.tprintf("%s -> %s%s", method_signature, ptr, crt)
+          method_signature = fmt.tprintf("%s -> %s", method_signature, crt)
           
         }
         os.write_string(fd, method_signature)
         os.write_string(fd, fmt.tprintf(" {{\n"))
+
+        os.write_string(fd, "// builtin class method\n")
 
         os.write_string(fd, fmt.tprintf("  @static name : godot.StringName\n"))        
         os.write_string(fd, fmt.tprintf("  @static method : gde.GDExtensionPtrBuiltInMethod\n"))
@@ -1393,17 +1421,18 @@ clean_string_names :: proc(ptr: rawptr = nil) {
             if type == "bool" {
               tmp = fmt.tprintf("bval%d := %s ? 1 : 0\n  call_args[%d] = cast(gde.GDExtensionConstTypePtr)&bval%d", i, escape_identifier(name), i, i)
             } else {
-              if strings.has_prefix(correct_type(type, "", g), "godot") {
-                tmp = fmt.tprintf("val%d := %s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)val%d", i, escape_identifier(name), i, i)
-              } else {
-                tmp = fmt.tprintf("val%d : %s; val%d = %s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)&val%d", i, correct_type(type, "", g), i, escape_identifier(name), i, i)
-              }
+              tmp = fmt.tprintf("val%d :%s= %s; call_args[%d] = auto_cast &val%d", i, correct_type(type, "", g), escape_identifier(name), i, i)
+              // if strings.has_prefix(correct_type(type, "", g), "godot") {
+              //   tmp = fmt.tprintf("val%d := %s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)val%d", i, escape_identifier(name), i, i)
+              // } else {
+              //   tmp = fmt.tprintf("val%d :%s= %s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)&val%d", i, correct_type(type, "", g), escape_identifier(name), i, i)
+              // }
             }
             append(&arguments, strings.clone(tmp))
           }
         }
         l := len(arguments) > 0 ? len(arguments) : 1
-        os.write_string(fd, fmt.tprintf("  call_args : [%d]rawptr\n", l))
+        os.write_string(fd, fmt.tprintf("  call_args : [%d]gde.GDExtensionConstTypePtr\n", l))
         for a in arguments {
           os.write_string(fd, fmt.tprintf("  %s\n", a))
         }
@@ -1418,17 +1447,19 @@ clean_string_names :: proc(ptr: rawptr = nil) {
             ptr = "^"
           }
 
-          if ptr == "^" {
-            os.write_string(fd, fmt.tprintf("  ret := new(%s)\n", crt))
-            os.write_string(fd, fmt.tprintf("  method(cast(gde.GDExtensionTypePtr)&me.opaque[0], cast(^gde.GDExtensionConstTypePtr)&call_args[0], cast(gde.GDExtensionTypePtr)ret, %d)\n", len(arguments)))
-          } else {
-            os.write_string(fd, fmt.tprintf("  ret : %s\n", crt))
-            os.write_string(fd, fmt.tprintf("  method(cast(gde.GDExtensionTypePtr)&me.opaque[0], cast(^gde.GDExtensionConstTypePtr)&call_args[0], cast(gde.GDExtensionTypePtr)&ret, %d)\n", len(arguments)))
-          }
-          
+          os.write_string(fd, fmt.tprintf("  ret : %s\n", crt))
+          os.write_string(fd, fmt.tprintf("  method(cast(gde.GDExtensionTypePtr)me, raw_data(call_args[:]), cast(gde.GDExtensionTypePtr)&ret, %d)\n", len(arguments)))
+          // if ptr == "^" {
+          //   os.write_string(fd, fmt.tprintf("  ret := new(%s)\n", crt))
+          //   os.write_string(fd, fmt.tprintf("  method(cast(gde.GDExtensionTypePtr)&me, cast(^gde.GDExtensionConstTypePtr)&call_args[0], cast(gde.GDExtensionTypePtr)ret, %d)\n", len(arguments)))
+          // } else {
+          //   os.write_string(fd, fmt.tprintf("  ret : %s\n", crt))
+          //   os.write_string(fd, fmt.tprintf("  method(cast(gde.GDExtensionTypePtr)&me, cast(^gde.GDExtensionConstTypePtr)&call_args[0], cast(gde.GDExtensionTypePtr)&ret, %d)\n", len(arguments)))
+          // }
+          // 
           os.write_string(fd, fmt.tprintf("  return ret\n"))
         } else {
-          os.write_string(fd, fmt.tprintf("  method(cast(gde.GDExtensionTypePtr)&me.opaque[0], cast(^gde.GDExtensionConstTypePtr)&call_args[0], nil, %d)\n", len(arguments)))
+          os.write_string(fd, fmt.tprintf("  method(cast(gde.GDExtensionTypePtr)&me, cast(^gde.GDExtensionConstTypePtr)&call_args[0], nil, %d)\n", len(arguments)))
         }
         os.write_string(fd, "}\n")
       }
@@ -1661,6 +1692,7 @@ clean_string_names :: proc(ptr: rawptr = nil) {
 
 generate_builtin_bindings :: proc(root: json.Object, target_dir: string, build_config: string, g: ^Globals) {
   file := filepath.join([]string{target_dir, "builtin_structures.odin"})
+    fmt.printf("Generate builtin class\n")
   mode: int = 0
   when os.OS == .Linux || os.OS == .Darwin {
     mode = os.S_IRUSR | os.S_IWUSR | os.S_IRGRP | os.S_IROTH
@@ -1698,9 +1730,7 @@ generate_builtin_bindings :: proc(root: json.Object, target_dir: string, build_c
 
     // Variant, GodotObject, Wrapped, and Ref
     os.write_string(fd, fmt.tprintf("GODOT_ODIN_VARIANT_SIZE :: %d\n", builtin_sizes["Variant"]))
-    os.write_string(fd, fmt.tprintf("Variant :: struct {{\n"))
-    os.write_string(fd, fmt.tprintf("  opaque : [GODOT_ODIN_VARIANT_SIZE]u8,\n"))
-    os.write_string(fd, fmt.tprintf("}}\n\n"))
+    os.write_string(fd, fmt.tprintf("Variant :: distinct [GODOT_ODIN_VARIANT_SIZE]u8\n"))
     
     os.write_string(fd, fmt.tprintf("GodotObject :: distinct rawptr\n"))
     
@@ -1718,7 +1748,6 @@ generate_builtin_bindings :: proc(root: json.Object, target_dir: string, build_c
     // Write something similar to class header/source files for odin
     for builtin_api in root["builtin_classes"].(json.Array) {
       name := fmt.tprintf("%s", builtin_api.(json.Object)["name"])
-      fmt.printf("Generate builtin class: {}\n", name)
 
       if is_pod_type(name) { continue }
       if is_included_type(name) { continue }
@@ -1883,12 +1912,11 @@ make_signature :: proc(class_name: string, function_data: json.Object, g: ^Globa
   }
 
   if return_type != "" {
-
-    if is_engine_class(return_type, g) {
-      func_signature = fmt.tprintf("%s -> ^%s", func_signature, rt)
-    } else {
-      func_signature = fmt.tprintf("%s -> %s", func_signature, rt)
-    }
+    func_signature = fmt.tprintf("%s -> %s", func_signature, rt)
+    // if is_engine_class(return_type, g) {
+    // } else {
+    //   func_signature = fmt.tprintf("%s -> %s", func_signature, rt)
+    // }
   }
   return func_signature
 }
@@ -1901,7 +1929,7 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
   dir := fmt.tprintf("%s/%s", target_dir, snake_class_name)
   class_file := fmt.tprintf("%s/%s%s", dir, snake_class_name, ".odin")
 
-  fmt.printf("Generate engine class: {}\n", class_name)
+  // fmt.printf("Generate engine class: {}\n", class_name)
 
   // instead of making an odin struct "fit" what a class should be
   // make a package of snake_class_name that contains NO member variables/data struct(class_name) but
@@ -1957,54 +1985,56 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
 
     tmp := g.pck
     g.pck = ""
-    os.write_string(sfd, fmt.tprintf("%s :: struct {{\n", class_name))
-    os.write_string(sfd, fmt.tprintf("  using _ : %s,\n", parent))
+    os.write_string(sfd, fmt.tprintf("%s :: distinct %s\n", class_name, parent))
+    // os.write_string(sfd, fmt.tprintf("%s :: struct {{\n", class_name))
+    // os.write_string(sfd, fmt.tprintf("  using _ : %s,\n", parent))
 
     // any data??
     
-    is_refcounted := class_name == "RefCounted"
-    if is_refcounted {
-      //os.write_string(sfd, "  reference : rawptr,\n")
-    }
+    // is_refcounted := class_name == "RefCounted"
+    // if is_refcounted {
+    //   //os.write_string(sfd, "  reference : rawptr,\n")
+    // }
 
     // struct proc pointers
     // it's the constructor that currently sets up these proc pointers to non-nil values, so don't include this for now
     // os.write_string(sfd, fmt.tprintf("constructor : proc(me: ^godot.%s),\n", class_name))
-    if "methods" in class_api {
-      for method in class_api["methods"].(json.Array) {
-        method_signature := make_signature(class_name, method.(json.Object), g, true, false, true)
-        if strings.has_prefix(method_signature, "_") do continue
-        method_signature, _ = strings.replace_all(method_signature, "::", ":")
-        is_vararg := method.(json.Object)["is_vararg"].(json.Boolean)
-        if is_vararg {
-          end := strings.index(method_signature, ":")
-          method_signature = method_signature[0:end-1]
-          return_type := get_return_type(method.(json.Object), g)
-          rt := correct_type(return_type, "", g) // TODO return meta?
-          has_return := return_type != ""
-          
-          if has_return {
-            method_signature = fmt.tprintf("%s : proc(me: ^%s, args: ..any) -> %s", method_signature, correct_type(class_name, "", g), correct_type(return_type, "", g))
-          } else {
-            method_signature = fmt.tprintf("%s : proc(me: ^%s, args: ..any)", method_signature, correct_type(class_name, "", g))
-          }
+    // if "methods" in class_api {
+    //   for method in class_api["methods"].(json.Array) {
+    //     method_signature := make_signature(class_name, method.(json.Object), g, true, false, true)
+    //     if strings.has_prefix(method_signature, "_") do continue
+    //     method_signature, _ = strings.replace_all(method_signature, "::", ":")
+    //     is_vararg := method.(json.Object)["is_vararg"].(json.Boolean)
+    //     if is_vararg {
+    //       end := strings.index(method_signature, ":")
+    //       method_signature = method_signature[0:end-1]
+    //       return_type := get_return_type(method.(json.Object), g)
+    //       rt := correct_type(return_type, "", g) // TODO return meta?
+    //       has_return := return_type != ""
+    //       
+    //       if has_return {
+    //         method_signature = fmt.tprintf("%s : proc(me: ^%s, args: ..any) -> %s", method_signature, correct_type(class_name, "", g), correct_type(return_type, "", g))
+    //       } else {
+    //         method_signature = fmt.tprintf("%s : proc(me: ^%s, args: ..any)", method_signature, correct_type(class_name, "", g))
+    //       }
 
-          method_signature, _ = strings.replace_all(method_signature, "_internal", "")
-        }
-        os.write_string(sfd, fmt.tprintf("  %s,\n", method_signature))
-      }
-    }
+    //       method_signature, _ = strings.replace_all(method_signature, "_internal", "")
+    //     }
+    //     os.write_string(sfd, fmt.tprintf("  %s,\n", method_signature))
+    //   }
+    // }
     
-    is_singleton := slice.contains(g.singletons[:], class_name)
-    if is_singleton {
-      // anything TODO here? for singletons?
-    }   
-    os.write_string(sfd, "}\n") // end struct {
+    // is_singleton := slice.contains(g.singletons[:], class_name)
+    // if is_singleton {
+    //   // anything TODO here? for singletons?
+    // }   
+    // os.write_string(sfd, "}\n") // end struct {
+
     g.pck = tmp
 
     // do fancy foot work to make a "constructor" for and engine object
     // if no_obj is true, then just bind procs, don't make an object with godot
-    os.write_string(fd, fmt.tprintf("constructor :: proc(me: ^godot.%s, no_obj: bool = false)\n", class_name))
+    os.write_string(fd, fmt.tprintf("constructor :: proc() -> godot.%s\n", class_name))
     os.write_string(fd, fmt.tprintf("{{\n"))
     os.write_string(fd, fmt.tprintf("  @static class_name : godot.StringName\n"))
     os.write_string(fd, fmt.tprintf("  @static initialized : bool\n"))
@@ -2012,28 +2042,28 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
     os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&class_name, \"%s\")\n", class_name))
     os.write_string(fd, fmt.tprintf("    initialized = true\n"))
     os.write_string(fd, fmt.tprintf("  }}\n"))
-    os.write_string(fd, fmt.tprintf("  if no_obj != true {{\n"))
-    os.write_string(fd, fmt.tprintf("    me._owner = gde.classdb_construct_object(cast(gde.GDExtensionConstStringNamePtr)&class_name)\n"))
-    os.write_string(fd, fmt.tprintf("  }}\n"))
+    os.write_string(fd, fmt.tprintf("  me : godot.%s\n", class_name))
+    os.write_string(fd, fmt.tprintf("  me._owner = gde.classdb_construct_object(cast(gde.GDExtensionConstStringNamePtr)&class_name)\n"))
+    os.write_string(fd, "  return me\n")
+    os.write_string(fd, "}\n")
     
-    if "methods" in class_api {
-      for method in class_api["methods"].(json.Array) {
-        method_signature := make_signature(class_name, method.(json.Object), g, true, false, true)
-        method_signature, _ = strings.replace_all(method_signature, "_internal", "")
-        end := strings.index(method_signature, "::") // just get the name... TODO: only do what make_signature() does for method name...
-        method_signature = method_signature[0:end]
-        if !strings.has_prefix(method_signature, "_") {  // don't include _process() or _ready() etc methods (TODO?)
-          os.write_string(fd, fmt.tprintf("  me.%s = %s\n", method_signature, method_signature))
-        }
-      }
-    }
+    // if "methods" in class_api {
+    //   for method in class_api["methods"].(json.Array) {
+    //     method_signature := make_signature(class_name, method.(json.Object), g, true, false, true)
+    //     method_signature, _ = strings.replace_all(method_signature, "_internal", "")
+    //     end := strings.index(method_signature, "::") // just get the name... TODO: only do what make_signature() does for method name...
+    //     method_signature = method_signature[0:end]
+    //     if !strings.has_prefix(method_signature, "_") {  // don't include _process() or _ready() etc methods (TODO?)
+    //       os.write_string(fd, fmt.tprintf("  me.%s = %s\n", method_signature, method_signature))
+    //     }
+    //   }
+    // }
 		
     // call parent constructor, but don't setup new object
-		if parent != "Wrapped" {
-			os.write_string(fd, fmt.tprintf("\n  %s.constructor(me, true)\n", camel_to_snake(parent)))
-		}
-
-    os.write_string(fd, fmt.tprintf("}}\n")) // end engine object "constructor"
+	// if parent != "Wrapped" {
+	// 	os.write_string(fd, fmt.tprintf("\n  %s.constructor(me, true)\n", camel_to_snake(parent)))
+	// }
+    // os.write_string(fd, fmt.tprintf("}}\n")) // end engine object "constructor"
     
     if "methods" in class_api {
       for method in class_api["methods"].(json.Array) {
@@ -2058,6 +2088,7 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
 
 generate_engine_classes_method :: proc(method: json.Object, class_name: string, fd: os.Handle, g: ^Globals) {
   os.write_string(fd, "{\n")
+  os.write_string(fd, "// engine class method\n")
 
   method_name := fmt.tprintf("%s", method["name"])
   hash := fmt.tprintf("%.0f", method["hash"])
@@ -2065,7 +2096,7 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
   is_vararg := "is_vararg" in method && method["is_vararg"].(json.Boolean)
 
   if !is_static {
-    os.write_string(fd, fmt.tprintf("  inst := cast(gde.GDExtensionObjectPtr)(cast(^godot.Wrapped)me)._owner\n"))
+    os.write_string(fd, fmt.tprintf("  inst := cast(gde.GDExtensionObjectPtr)me._owner\n"))
   } else {
     os.write_string(fd, fmt.tprintf("  inst := cast(gde.GDExtensionObjectPtr)nil\n"))    
   }
@@ -2078,7 +2109,7 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
   // os.write_string(fd, fmt.tprintf("    method_name = new(godot.StringName); gstring._to_string_name(method_name, \"%s\")\n", method_name))
   os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&class_name, \"%s\")\n", class_name))
   os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&method_name, \"%s\")\n", method_name))
-  os.write_string(fd, fmt.tprintf("    method = gde.classdb_get_method_bind(cast(gde.GDExtensionConstStringNamePtr)&class_name.opaque[0], cast(gde.GDExtensionConstStringNamePtr)&method_name.opaque[0], %s)\n", hash))
+  os.write_string(fd, fmt.tprintf("    method = gde.classdb_get_method_bind(cast(gde.GDExtensionConstStringNamePtr)&class_name, cast(gde.GDExtensionConstStringNamePtr)&method_name, %s)\n", hash))
   os.write_string(fd, fmt.tprintf("  }}\n"))
   
   arguments : [dynamic]string; defer delete(arguments)
@@ -2097,12 +2128,13 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
       
       tmp : string
       if type == "bool" {
-        tmp = fmt.tprintf("bval%d := %s ? 1 : 0\n  call_args[%d] = cast(gde.GDExtensionConstTypePtr)&bval%d", i, escape_identifier(name), i, i)
-      } else if strings.has_prefix(parameter, "^") {
-        tmp = fmt.tprintf("val%d := %s%s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)val%d", i, escape_identifier(name), with_owner, i, i)
+        tmp = fmt.tprintf("bval%d := %s ? gde.TRUE : gde.FALSE\n  call_args[%d] = cast(gde.GDExtensionConstTypePtr)&bval%d", i, escape_identifier(name), i, i)
+      // } else if strings.has_prefix(parameter, "^") {
+      //   tmp = fmt.tprintf("val%d := %s%s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)&val%d", i, escape_identifier(name), with_owner, i, i)
       } else {
-        tmp = fmt.tprintf("val%d := %s%s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)%sval%d", i, escape_identifier(name), with_owner, i, with_owner==""?"&":"", i)
-      }
+        // tmp = fmt.tprintf("val%d := %s%s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)%sval%d", i, escape_identifier(name), with_owner, i, with_owner==""?"&":"", i)
+		tmp = fmt.tprintf("val%d := %s%s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)&val%d", i, escape_identifier(name), with_owner, i, i)
+	  }
       append(&arguments, strings.clone(tmp))
     }
   }
@@ -2120,15 +2152,15 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
 
     
     if has_return {   // _ptrcall doesn't need arg_count, since it's not vararg
-      if is_engine_class(return_type, g) {
-        os.write_string(fd, fmt.tprintf("  ret := new(%s)\n", rt))
-        os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, cast(^gde.GDExtensionConstTypePtr)&call_args[0], cast(gde.GDExtensionTypePtr)ret)\n"))
-        os.write_string(fd, fmt.tprintf("  return ret\n"))
-      } else {
         os.write_string(fd, fmt.tprintf("  ret : %s\n", rt))
         os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, cast(^gde.GDExtensionConstTypePtr)&call_args[0], cast(gde.GDExtensionTypePtr)&ret)\n"))
         os.write_string(fd, fmt.tprintf("  return ret\n"))
-      }
+      // if is_engine_class(return_type, g) {
+      //   os.write_string(fd, fmt.tprintf("  ret : %s\n", rt))
+      //   os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, cast(^gde.GDExtensionConstTypePtr)&call_args[0], cast(gde.GDExtensionTypePtr)ret)\n"))
+      //   os.write_string(fd, fmt.tprintf("  return ret\n"))
+      // } else {
+      // }
     } else {
       os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, cast(^gde.GDExtensionConstTypePtr)&call_args[0], nil)\n"))
     }
@@ -2181,6 +2213,7 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
 
 generate_engine_classes_bindings :: proc(root: json.Object, target_dir: string, use_template_get_node: bool, g: ^Globals) {
   file := filepath.join([]string{target_dir, "engine_structures.odin"})
+  fmt.printf("Generate engine classes\n")
 
 	do_open_file :: proc(file: string) -> os.Handle {
 		mode: int = 0
@@ -2439,7 +2472,7 @@ generate_utility_functions :: proc(root: json.Object, target_dir: string, g: ^Gl
     os.write_string(fd, fmt.tprintf("  @static __function_name : godot.StringName\n"))
     os.write_string(fd, fmt.tprintf("  @static __function : gde.GDExtensionPtrUtilityFunction\n"))   
     os.write_string(fd, fmt.tprintf("  if __function == nil {{\n"))
-    os.write_string(fd, fmt.tprintf("    string_name.constructor(&__function_name, \"%s\")\n", func_name))
+    os.write_string(fd, fmt.tprintf("    __function_name = string_name.constructor(\"%s\")\n", func_name))
     os.write_string(fd, fmt.tprintf("    __function = gde.variant_get_ptr_utility_function(cast(gde.GDExtensionConstStringNamePtr)&__function_name, %s)\n", hash))
     os.write_string(fd, fmt.tprintf("  }}\n"))
 
@@ -2465,9 +2498,10 @@ generate_utility_functions :: proc(root: json.Object, target_dir: string, g: ^Gl
     }
         
     if !vararg {
-      os.write_string(fd, fmt.tprintf("  args := make([]gde.GDExtensionConstTypePtr, %d)\n", len(arguments)))
+      // os.write_string(fd, fmt.tprintf("  args := make([]gde.GDExtensionConstTypePtr, %d)\n", len(arguments)))
+      os.write_string(fd, fmt.tprintf("  args : [%d]gde.GDExtensionConstTypePtr\n", len(arguments)))
       for a, idx in arguments {
-        os.write_string(fd, fmt.tprintf("  args[%d] = cast(gde.GDExtensionConstTypePtr)%s\n", idx, a))
+        os.write_string(fd, fmt.tprintf(" args[%d] = cast(gde.GDExtensionConstTypePtr)%s\n", idx, a))
       }
 
       if has_return {
@@ -2479,7 +2513,7 @@ generate_utility_functions :: proc(root: json.Object, target_dir: string, g: ^Gl
           os.write_string(fd, "  return nil\n")
         } else {
           os.write_string(fd, fmt.tprintf("  ret : %s\n", get_gdextension_type(correct_type(return_type, "", g))))
-          os.write_string(fd, "  __function(cast(gde.GDExtensionTypePtr)&ret, &args[0], len(args))\n")
+          os.write_string(fd, "  __function(cast(gde.GDExtensionTypePtr)&ret, raw_data(args[:]), len(args))\n")
           os.write_string(fd, fmt.tprintf("  return cast(%s)ret\n", correct_type(return_type, "", g)))
         }
       } else {
