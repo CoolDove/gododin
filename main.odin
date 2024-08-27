@@ -51,3 +51,11 @@ _deinitialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	context = runtime.default_context()
 	utl.print("Odin extension uninitialized\n")
 }
+
+
+string_name_to_string :: proc(strn: ^godot.StringName, allocator:=context.allocator) -> string {
+	context.allocator = allocator
+	str : godot.String
+	gstring.constructor2(&str, strn)
+	return gstring.to_string(&str)
+}

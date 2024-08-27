@@ -5,6 +5,7 @@ import "core:math"
 import "core:math/linalg"
 import "core:fmt"
 import "godot"
+import "godot/node"
 import "godot/string_name"
 import gstring "godot/string"
 import "godot/vector2"
@@ -58,4 +59,7 @@ Dove_process :: proc (self: ^Dove, delta: f64) {
 	offset :godot.Vector2= {x=auto_cast math.sin(self.time), y=0}
 	vector2.constructor3(&offset, auto_cast math.sin(self.time), 0)
 	sprite2d.set_offset(self, &offset)
+	parent := self->get_parent()
+	parent_strn := node.get_name(parent)
+	fmt.printf("parent name: {}\n", string_name_to_string(&parent_strn, context.temp_allocator))
 }
