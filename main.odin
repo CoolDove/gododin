@@ -41,7 +41,7 @@ _initialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	strn_class, strn_parent : godot.StringName
 
 	gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer string_name.destructor(&strn_class)
-	gde.string_name_new_with_utf8_chars(&strn_parent, "Node2D"); defer string_name.destructor(&strn_parent)
+	gde.string_name_new_with_utf8_chars(&strn_parent, "Sprite2D"); defer string_name.destructor(&strn_parent)
 
 	gde.classdb_register_extension_class2(god.library, &strn_class, &strn_parent, &DoveRegister)
 

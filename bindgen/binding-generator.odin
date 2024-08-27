@@ -2009,7 +2009,7 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
     os.write_string(fd, fmt.tprintf("  @static initialized : bool\n"))
     os.write_string(fd, fmt.tprintf("  if initialized {{\n"))
     os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&class_name, \"%s\")\n", class_name))
-    os.write_string(fd, fmt.tprintf("    initalized = true\n"))
+    os.write_string(fd, fmt.tprintf("    initialized = true\n"))
     os.write_string(fd, fmt.tprintf("  }}\n"))
     os.write_string(fd, fmt.tprintf("  if no_obj != true {{\n"))
     os.write_string(fd, fmt.tprintf("    me._owner = gde.classdb_construct_object(cast(gde.GDExtensionConstStringNamePtr)&class_name)\n"))
