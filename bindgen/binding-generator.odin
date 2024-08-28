@@ -989,10 +989,9 @@ generate_builtin_classes :: proc(builtin_api: json.Object, target_dir: string, s
   
   defer os.close(fd)
   if err == os.ERROR_NONE {
-    os.write_string(fd, fmt.tprintf("package %s\n\n", snake_class_name))
+    os.write_string(fd, fmt.tprintf("package godot\n\n"))
     os.write_string(fd, "// builtin\n")
-    os.write_string(fd, "import godot \"../\"\n")
-    os.write_string(fd, "import gde \"../../gdextension\"\n\n")
+    os.write_string(fd, "import gde \"../gdextension\"\n\n")
 
     // Special cases.
     if class_name == "String" || class_name == "StringName" {
@@ -1905,8 +1904,9 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
   
   class_name := fmt.tprintf("%s", class_api["name"])
   snake_class_name := camel_to_snake(class_name)
-  dir := fmt.tprintf("%s/%s", target_dir, snake_class_name)
-  class_file := fmt.tprintf("%s/%s%s", dir, snake_class_name, ".odin")
+  // dir := fmt.tprintf("%s/%s", target_dir, snake_class_name)
+  // class_file := fmt.tprintf("%s/%s%s", dir, snake_class_name, ".odin")
+  class_file := filepath.join([]string{target_dir, fmt.tprintf("%s.odin", snake_class_name)})
 
   // fmt.printf("Generate engine class: {}\n", class_name)
 
@@ -1915,7 +1915,7 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
   // does contain all member functions(as procs), constructors, destructor, operators, etc.. of the class
   // note1: packages are directory based, so all class procs will be packages/sub-directories of godot
   // note2: and all (:: structs) will be in "godot" package (structures.odin)
-  os.make_directory(dir)
+  // os.make_directory(dir)
   
   mode: int = 0
   when os.OS == .Linux || os.OS == .Darwin {
@@ -1928,11 +1928,9 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
   
   defer os.close(fd)
   if err == os.ERROR_NONE {
-    os.write_string(fd, fmt.tprintf("package %s\n\n", snake_class_name))
+    os.write_string(fd, "package godot\n\n")
     os.write_string(fd, "// engine\n")    
-    os.write_string(fd, "import godot \"../\"\n")
-    os.write_string(fd, "import gde \"../../gdextension\"\n")
-    os.write_string(fd, "import gstring \"../string\"\n")
+    os.write_string(fd, "import gde \"../gdextension\"\n")
     os.write_string(fd, "import \"../variant\"\n")
 
     for included in fully_used_classes {
@@ -2015,7 +2013,7 @@ __%s_table : %s_VTABLE
 
     // do fancy foot work to make a "constructor" for and engine object
     // if no_obj is true, then just bind procs, don't make an object with godot
-    os.write_string(fd, fmt.tprintf("constructor :: proc() -> godot.%s\n", class_name))
+    os.write_string(fd, fmt.tprintf("constructor :: proc() -> %s\n", class_name))
     os.write_string(fd, fmt.tprintf("{{\n"))
     os.write_string(fd, fmt.tprintf("  @static class_name : godot.StringName\n"))
     os.write_string(fd, fmt.tprintf("  @static initialized : bool\n"))
@@ -2040,38 +2038,6 @@ __%s_table : %s_VTABLE
 	os.write_string(fd, "}\n\n\n")
 
 	os.write_string(fd, "// methods\n")
-
-    // os.write_string(fd, fmt.tprintf("_bind :: proc(me: ^godot.%s) {{\n", correct_type(class_name, "", g)))
-    // if "methods" in class_api {
-    //   for method in class_api["methods"].(json.Array) {
-    //     method_name := fmt.tprintf("%s", method.(json.Object)["name"])
-    //     if method_name == "map" do method_name = "_map"
-    //     os.write_string(fd, fmt.tprintf("  me.%s = %s\n", method_name, method_name))
-    //   }
-    // }
-    // if "indexing_return_type" in builtin_api {
-    //   os.write_string(fd, fmt.tprintf("  me.set_idx = set_idx\n"))
-    //   os.write_string(fd, fmt.tprintf("  me.get_idx = get_idx\n"))
-    // }
-    // os.write_string(fd, fmt.tprintf("}}\n"))
-    
-    // if "methods" in class_api {
-    //   for method in class_api["methods"].(json.Array) {
-    //     method_signature := make_signature(class_name, method.(json.Object), g, true, false, true)
-    //     method_signature, _ = strings.replace_all(method_signature, "_internal", "")
-    //     end := strings.index(method_signature, "::") // just get the name... TODO: only do what make_signature() does for method name...
-    //     method_signature = method_signature[0:end]
-    //     if !strings.has_prefix(method_signature, "_") {  // don't include _process() or _ready() etc methods (TODO?)
-    //       os.write_string(fd, fmt.tprintf("  me.%s = %s\n", method_signature, method_signature))
-    //     }
-    //   }
-    // }
-		
-    // call parent constructor, but don't setup new object
-	// if parent != "Wrapped" {
-	// 	os.write_string(fd, fmt.tprintf("\n  %s.constructor(me, true)\n", camel_to_snake(parent)))
-	// }
-    // os.write_string(fd, fmt.tprintf("}}\n")) // end engine object "constructor"
     
     if "methods" in class_api {
       for method in class_api["methods"].(json.Array) {
@@ -2090,11 +2056,95 @@ __%s_table : %s_VTABLE
       }
     }
 
-	fmt.printf("classes used by {}: {}\n", class_name, used_classes)
+	// fmt.printf("classes used by {}: {}\n", class_name, used_classes)
   }
     
   // TODO: more "nice stuff" for engine classes
 }
+
+dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class_api: json.Object) {
+	using strings
+	sb_header, sb_body : Builder
+
+	// Generate class file
+	class_name :string= class_api["name"].(json.String)
+	parent_name :string= class_api["inherits"].(json.String) if "inherits" in class_api else ""
+	builder_init(&sb_header); defer builder_destroy(&sb_header)
+	builder_init(&sb_body); defer builder_destroy(&sb_body)
+
+	write_string(&sb_header, "package godot\n\n")
+	write_string(&sb_header, "import gde \"../gdextension\"\n\n")
+
+	dovegen_object_constructor(&sb_body, class_name)
+
+	// Table
+	write_string(&sb_body, fmt.tprintf(`
+@private
+_%s_TABLE :: struct {{
+	using _ : ^_%s_TABLE
+`, class_name, parent_name))
+	if "methods" in class_api {
+		for method in class_api["methods"].(json.Array) {
+			method_name := method.(json.Object)["name"].(json.String)
+			write_string(&sb_body, fmt.tprintf("\t%s : ", method_name))
+			dovegen_method_signature(&sb_body, method.(json.Object))
+			write_string(&sb_body, ",\n")
+		}
+	}
+	write_string(&sb_body, "}\n")
+
+	// Submit
+	write_string(sb_classfile, to_string(sb_header))
+	write_string(sb_classfile, to_string(sb_body))
+
+	// Struct definition in file `_godot.odin`.
+	if parent_name == "" {// No parent, the only one is `Object`
+		write_string(sb_godotfile, fmt.tprintf(`
+%s :: struct {{
+	_obj : rawptr,
+	_table : rawptr,
+}}
+`, class_name))
+	} else {
+		write_string(sb_godotfile, fmt.tprintf(`
+%s :: struct {{ // : %s
+	_obj : rawptr,
+	_table : ^_%s_TABLE,
+}}
+`, class_name, parent_name, class_name))
+	}
+}
+
+dovegen_object_constructor :: proc(sb: ^strings.Builder, class_name: string) {
+	using strings
+	write_string(sb, "\n")
+	write_string(sb, fmt.tprintf(`
+create_%s :: proc() -> %s {{// dove object constructor
+	@static class_name : StringName
+	@static initialized : bool
+	if initialized {{
+		gde.string_name_new_with_utf8_chars(&class_name, "%s")
+		initialized = true
+	}}
+	o := gde.classdb_construct_object(cast(gde.GDExtensionConstStringNamePtr)&class_name)
+	return {{ _obj = o, _table = &__%s_table }}
+	return me
+}}
+`, class_name, class_name, class_name, class_name))
+	write_string(sb, fmt.tprintf(`
+as_%s :: proc(obj: Object) -> %s {{// dove object converter
+	return {{ _obj = obj._obj, _table = &__%s_table }}
+}}
+`, class_name, class_name, class_name))
+
+}
+
+dovegen_method_signature :: proc(sb: ^strings.Builder, method: json.Object) {
+	is_vararg := "is_vararg" in method && method["is_vararg"].(json.Boolean)
+	strings.write_string(sb, "proc (")
+	strings.write_string(sb, ")")
+}
+
 
 generate_engine_classes_method :: proc(method: json.Object, class_name: string, fd: os.Handle, g: ^Globals, used_classes: ^[dynamic]string=nil) {
   os.write_string(fd, "{\n")
@@ -2164,7 +2214,7 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
 		if is_engine_class(rt, g) {
 			if strings.has_prefix(rt, "[]") {// TODO: Array handling
 				elem_type := strings.trim_left(rt, "[]")
-				fmt.printf("return type: {} -> {}\n", rt, return_type)
+				// fmt.printf("return type: {} -> {}\n", rt, return_type)
 				os.write_string(fd, fmt.tprintf("  retary: godot.Array\n"))
 				os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, raw_data(call_args[:]), &retary)\n"))
 				os.write_string(fd, fmt.tprintf("  count := array.size(&retary)\n"))
@@ -2257,168 +2307,183 @@ generate_engine_classes_bindings :: proc(root: json.Object, target_dir: string, 
 	sfd := do_open_file(file)
 	defer os.close(sfd)
 	
-  g.pck = "godot."
+	g.pck = "godot."
+	
+	sb_godotfile : strings.Builder
+	strings.builder_init(&sb_godotfile); strings.builder_destroy(&sb_godotfile)
+	strings.write_string(&sb_godotfile, "package godot\n")
+	strings.write_string(&sb_godotfile, "import gde \"../gdextension\"\n\n")
+
+	sb_classfile : strings.Builder
+	strings.builder_init(&sb_classfile); strings.builder_destroy(&sb_classfile)
+	for class_api in root["classes"].(json.Array) {
+		class_name := fmt.tprintf("%s", class_api.(json.Object)["name"])
+		if class_name == "ClassDB" do continue
+		if class_name == "OS" do continue
+		strings.builder_reset(&sb_classfile)
+		dovegen_engine_class(&sb_godotfile, &sb_classfile, class_api.(json.Object))
+		path := filepath.join([]string{ target_dir, fmt.tprintf("%s.odin", camel_to_snake(class_name)) }, context.temp_allocator)
+		os.write_entire_file(path, transmute([]u8)strings.to_string(sb_classfile))
+	}
+
+	os.write_entire_file(filepath.join([]string{ target_dir, "_godot.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_godotfile))
+	// if true do continue
+
+    // used_classes : [dynamic]string
+    // fully_used_classes : [dynamic]string
+    // defer delete(used_classes)
+    // defer delete(fully_used_classes)
+    // 
+    // if "methods" in class_api.(json.Object) {
+    //   for method in class_api.(json.Object)["methods"].(json.Array) {
+    //     if "arguments" in method.(json.Object) {
+    //       for argument in method.(json.Object)["arguments"].(json.Array) {
+    //         type_name := fmt.tprintf("%s", argument.(json.Object)["type"])
+    //         if strings.has_prefix(type_name, "const ") {
+    //           type_name = type_name[6:]
+    //         }
+    //         if strings.has_suffix(type_name, "*") {
+    //           type_name = type_name[:len(type_name)-1]
+    //         }
+
+    //         if is_included(type_name, class_name, g) {
+    //           if strings.has_prefix(type_name, "typedarray::") {
+    //             append(&fully_used_classes, "TypedArray")
+    //             array_type_name, _ := strings.replace_all(type_name, "typedarray::", "")
+    //             if strings.has_prefix(array_type_name, "const ") {
+    //               array_type_name = array_type_name[6:]
+    //             }
+    //             if strings.has_suffix(array_type_name, "*") {
+    //               array_type_name = array_type_name[:len(array_type_name)-1]
+    //             }
+
+    //             if is_included(array_type_name, class_name, g) {
+    //               if is_enum(array_type_name) {
+    //                 append(&fully_used_classes, get_enum_class(array_type_name))
+    //               } else if "default_value" in argument.(json.Object) {
+    //                 append(&fully_used_classes, array_type_name)
+    //               } else {
+    //                 append(&used_classes, array_type_name)
+    //               }
+    //             }
+    //           } else if is_enum(type_name) {
+    //             append(&fully_used_classes, get_enum_class(type_name))
+    //           } else if "default_value" in argument.(json.Object) {
+    //             append(&fully_used_classes, type_name)                
+    //           } else {
+    //             append(&used_classes, type_name)
+    //           }
+    //           //if is_refcounted(type_name, g) {
+    //           //  append(&fully_used_classes, "Ref")
+    //           //}  // TODO
+    //         }
+    //       }
+    //     }
+    //     
+    //     // for method
+    //     if "return_value" in method.(json.Object) {
+    //       type_name := fmt.tprintf("%s", method.(json.Object)["return_value"].(json.Object)["type"])
+    //       if strings.has_prefix(type_name, "const ") {
+    //         type_name = type_name[6:]
+    //       }
+    //       if strings.has_suffix(type_name, "*") {
+    //         type_name = type_name[:len(type_name)-1]
+    //       }
+    //       if is_included(type_name, class_name, g) {
+    //         if strings.has_prefix(type_name, "typedarray::") {
+    //           append(&fully_used_classes, "TypedArray")
+    //           array_type_name, _ := strings.replace_all(type_name, "typedarray::", "")
+    //           if strings.has_prefix(array_type_name, "const ") {
+    //             array_type_name = array_type_name[6:]
+    //           }
+    //           if strings.has_suffix(array_type_name, "*") {
+    //             array_type_name = array_type_name[:len(array_type_name)-1]
+    //           }
+    //           if is_included(array_type_name, class_name, g) {
+    //             if is_enum(array_type_name) {
+    //               append(&fully_used_classes, get_enum_class(array_type_name))
+    //             } else if is_variant(array_type_name, g) {
+    //               append(&fully_used_classes, array_type_name)
+    //             } else {
+    //               append(&used_classes, array_type_name)
+    //             }
+    //           }
+    //         } else if is_enum(type_name) {
+    //           append(&fully_used_classes, get_enum_class(type_name))
+    //         } else if is_variant(type_name, g) {
+    //           append(&fully_used_classes, type_name)
+    //         } else {
+    //           append(&used_classes, type_name)
+    //         }
+    //         //if is_refcounted(type_name, g) {
+    //         //  append(&fully_used_classes, "Ref")
+    //         //}  // TODO
+    //       }
+    //     }
+
+    //     if "members" in class_api.(json.Object) {
+    //       for member in class_api.(json.Object)["members"].(json.Array) {
+    //         type := fmt.tprintf("%s", member.(json.Object)["type"])
+    //         if is_included(type, class_name, g) {
+    //           if is_enum(type) {
+    //             append(&fully_used_classes, get_enum_class(type))
+    //           } else {
+    //             append(&used_classes, type)
+    //           }
+    //           //if is_refcounted(type, g) {
+    //           //  append(&fully_used_classes, "Ref")
+    //           //}  // TODO
+    //         }
+    //       }
+    //     }
+
+    //     if "inherits" in class_api.(json.Object) {
+    //       name := fmt.tprintf("%s", class_api.(json.Object)["name"])
+    //       inherits := fmt.tprintf("%s", class_api.(json.Object)["inherits"])
+    //       if is_included(inherits, class_name, g) {
+    //         append(&fully_used_classes, inherits)
+    //       }
+    //       //if is_refcounted(name, g) {
+    //       //  append(&fully_used_classes, "Ref")
+    //       //}  // TODO
+    //     } else {
+    //       //append(&fully_used_classes, "Wrapped")
+    //     }
+    //     
+    //   }
+    // }
+
+    // // adjustments
+    // for type_name in fully_used_classes {
+    //   for i in 0..<len(used_classes) {
+    //     if type_name == used_classes[i] {
+    //       unordered_remove(&used_classes, i)
+    //     }
+    //   }
+    // }
+    // 
+    // slice.sort(used_classes[:])
+    // slice.sort(fully_used_classes[:])
+    // slim_used_classes : [dynamic]string
+    // slim_fully_used_classes : [dynamic]string   
+    // prev := ""
+    // for i in 0..<len(used_classes) {
+    //   if prev != used_classes[i] do append(&slim_used_classes, used_classes[i])
+    //   prev = used_classes[i]
+    // }
+    // prev = ""
+    // for i in 0..<len(fully_used_classes) {
+    //   if prev != fully_used_classes[i] do append(&slim_fully_used_classes, fully_used_classes[i])
+    //   prev = fully_used_classes[i]
+    // }
+    // 
+    // //fmt.println(class_name, "is using", slim_used_classes)    
+    // //fmt.println(class_name, "is fully using", slim_fully_used_classes)
+
+    // generate_engine_classes(class_api.(json.Object), target_dir, &slim_used_classes, &slim_fully_used_classes, sfd, g)
+	// }
   
-  for class_api in root["classes"].(json.Array) {
-    class_name := fmt.tprintf("%s", class_api.(json.Object)["name"])
-    if class_name == "ClassDB" do continue
-	if class_name == "OS" do continue
-
-    used_classes : [dynamic]string
-    fully_used_classes : [dynamic]string
-    defer delete(used_classes)
-    defer delete(fully_used_classes)
-    
-    if "methods" in class_api.(json.Object) {
-      for method in class_api.(json.Object)["methods"].(json.Array) {
-        if "arguments" in method.(json.Object) {
-          for argument in method.(json.Object)["arguments"].(json.Array) {
-            type_name := fmt.tprintf("%s", argument.(json.Object)["type"])
-            if strings.has_prefix(type_name, "const ") {
-              type_name = type_name[6:]
-            }
-            if strings.has_suffix(type_name, "*") {
-              type_name = type_name[:len(type_name)-1]
-            }
-
-            if is_included(type_name, class_name, g) {
-              if strings.has_prefix(type_name, "typedarray::") {
-                append(&fully_used_classes, "TypedArray")
-                array_type_name, _ := strings.replace_all(type_name, "typedarray::", "")
-                if strings.has_prefix(array_type_name, "const ") {
-                  array_type_name = array_type_name[6:]
-                }
-                if strings.has_suffix(array_type_name, "*") {
-                  array_type_name = array_type_name[:len(array_type_name)-1]
-                }
-
-                if is_included(array_type_name, class_name, g) {
-                  if is_enum(array_type_name) {
-                    append(&fully_used_classes, get_enum_class(array_type_name))
-                  } else if "default_value" in argument.(json.Object) {
-                    append(&fully_used_classes, array_type_name)
-                  } else {
-                    append(&used_classes, array_type_name)
-                  }
-                }
-              } else if is_enum(type_name) {
-                append(&fully_used_classes, get_enum_class(type_name))
-              } else if "default_value" in argument.(json.Object) {
-                append(&fully_used_classes, type_name)                
-              } else {
-                append(&used_classes, type_name)
-              }
-              //if is_refcounted(type_name, g) {
-              //  append(&fully_used_classes, "Ref")
-              //}  // TODO
-            }
-          }
-        }
-        
-        // for method
-        if "return_value" in method.(json.Object) {
-          type_name := fmt.tprintf("%s", method.(json.Object)["return_value"].(json.Object)["type"])
-          if strings.has_prefix(type_name, "const ") {
-            type_name = type_name[6:]
-          }
-          if strings.has_suffix(type_name, "*") {
-            type_name = type_name[:len(type_name)-1]
-          }
-          if is_included(type_name, class_name, g) {
-            if strings.has_prefix(type_name, "typedarray::") {
-              append(&fully_used_classes, "TypedArray")
-              array_type_name, _ := strings.replace_all(type_name, "typedarray::", "")
-              if strings.has_prefix(array_type_name, "const ") {
-                array_type_name = array_type_name[6:]
-              }
-              if strings.has_suffix(array_type_name, "*") {
-                array_type_name = array_type_name[:len(array_type_name)-1]
-              }
-              if is_included(array_type_name, class_name, g) {
-                if is_enum(array_type_name) {
-                  append(&fully_used_classes, get_enum_class(array_type_name))
-                } else if is_variant(array_type_name, g) {
-                  append(&fully_used_classes, array_type_name)
-                } else {
-                  append(&used_classes, array_type_name)
-                }
-              }
-            } else if is_enum(type_name) {
-              append(&fully_used_classes, get_enum_class(type_name))
-            } else if is_variant(type_name, g) {
-              append(&fully_used_classes, type_name)
-            } else {
-              append(&used_classes, type_name)
-            }
-            //if is_refcounted(type_name, g) {
-            //  append(&fully_used_classes, "Ref")
-            //}  // TODO
-          }
-        }
-
-        if "members" in class_api.(json.Object) {
-          for member in class_api.(json.Object)["members"].(json.Array) {
-            type := fmt.tprintf("%s", member.(json.Object)["type"])
-            if is_included(type, class_name, g) {
-              if is_enum(type) {
-                append(&fully_used_classes, get_enum_class(type))
-              } else {
-                append(&used_classes, type)
-              }
-              //if is_refcounted(type, g) {
-              //  append(&fully_used_classes, "Ref")
-              //}  // TODO
-            }
-          }
-        }
-
-        if "inherits" in class_api.(json.Object) {
-          name := fmt.tprintf("%s", class_api.(json.Object)["name"])
-          inherits := fmt.tprintf("%s", class_api.(json.Object)["inherits"])
-          if is_included(inherits, class_name, g) {
-            append(&fully_used_classes, inherits)
-          }
-          //if is_refcounted(name, g) {
-          //  append(&fully_used_classes, "Ref")
-          //}  // TODO
-        } else {
-          //append(&fully_used_classes, "Wrapped")
-        }
-        
-      }
-    }
-
-    // adjustments
-    for type_name in fully_used_classes {
-      for i in 0..<len(used_classes) {
-        if type_name == used_classes[i] {
-          unordered_remove(&used_classes, i)
-        }
-      }
-    }
-    
-    slice.sort(used_classes[:])
-    slice.sort(fully_used_classes[:])
-    slim_used_classes : [dynamic]string
-    slim_fully_used_classes : [dynamic]string   
-    prev := ""
-    for i in 0..<len(used_classes) {
-      if prev != used_classes[i] do append(&slim_used_classes, used_classes[i])
-      prev = used_classes[i]
-    }
-    prev = ""
-    for i in 0..<len(fully_used_classes) {
-      if prev != fully_used_classes[i] do append(&slim_fully_used_classes, fully_used_classes[i])
-      prev = fully_used_classes[i]
-    }
-    
-    //fmt.println(class_name, "is using", slim_used_classes)    
-    //fmt.println(class_name, "is fully using", slim_fully_used_classes)
-
-    generate_engine_classes(class_api.(json.Object), target_dir, &slim_used_classes, &slim_fully_used_classes, sfd, g)
-  }
-  
-  g.pck = ""
+	g.pck = ""
 }
 
 get_gdextension_type :: proc(type_name: string) -> string {
