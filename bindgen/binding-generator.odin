@@ -8,6 +8,7 @@ import "core:strconv"
 import "core:unicode"
 import "core:path/filepath"
 import "core:encoding/json"
+import gde "../gdextension"
 
 Globals :: struct {
 	builtin_classes : [dynamic]string,
@@ -802,16 +803,22 @@ destroy :: proc(me: ^godot.Variant) {
     for k, v in ptr_to_arg {
       if v[0] == "BOOL" || v[0] == "INT" || v[0] == "FLOAT" {
         os.write_string(fd, fmt.tprintf(`
-constructor%d :: proc(me: ^godot.Variant, val: %s) {{
-  lval : %s = cast(%s)val
-  from_type_constructor(.%s)(cast(gde.GDExtensionVariantPtr)me, cast(gde.GDExtensionTypePtr)&lval)
-}}
+constructor%d :: proc(val: %s) -> godot.Variant {{
+	@static _constructor : gde.GDExtensionVariantFromTypeConstructorFunc
+	if _constructor == nil do _constructor = gde.get_variant_from_type_constructor(.%s)
+	lval := cast(%s)val
+	me: godot.Variant
+	_constructor(cast(gde.GDExtensionVariantPtr)&me, cast(gde.GDExtensionTypePtr)&lval)
+	return me
+}}`, idx, v[1], v[1], v[1]))
+        os.write_string(fd, fmt.tprintf(`
 to_type%d :: proc(me: ^godot.Variant, ret: ^%s) {{
+  @static _to_type : [godot.Variant_Type.VARIANT_MAX]gde.GDExtensionTypeFromVariantConstructorFunc
   lval : %s
   to_type_constructor(.%s)(cast(gde.GDExtensionTypePtr)&lval, cast(gde.GDExtensionVariantPtr)me)
   ret^ = lval
 }}
-`, idx, k, v[1], v[1], v[0], idx, k, k, v[0]))
+`, idx, k, k, v[0]))
         
       } else if v[0] == "OBJECT" {
         os.write_string(fd, fmt.tprintf(`
