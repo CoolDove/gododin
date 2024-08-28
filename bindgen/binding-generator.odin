@@ -543,7 +543,7 @@ correct_type :: proc(type_name: string, meta: string, g: ^Globals) -> string {
 
   if strings.has_prefix(type_name, "typedarray::") {
     str, _ := strings.replace_all(type_name, "typedarray::", "") // TODO?
-    return fmt.tprintf("[^]%s%s", g.pck, str)
+    return fmt.tprintf("[]%s%s", g.pck, str)
   }
 
   if is_enum(type_name) {
@@ -1226,7 +1226,7 @@ clean_string_names :: proc(ptr: rawptr = nil) {
 
     os.write_string(fd, "\n// Constructors Destructor ------------------------------\n")
 
-    os.write_string(fd, fmt.tprintf("_bind :: proc(me: ^%s) {{\n", correct_type(class_name, "", g)))
+    // os.write_string(fd, fmt.tprintf("_bind :: proc(me: ^%s) {{\n", correct_type(class_name, "", g)))
     // if "methods" in builtin_api {
     //   for method in builtin_api["methods"].(json.Array) {
     //     method_name := fmt.tprintf("%s", method.(json.Object)["name"])
@@ -1238,7 +1238,7 @@ clean_string_names :: proc(ptr: rawptr = nil) {
     //   os.write_string(fd, fmt.tprintf("  me.set_idx = set_idx\n"))
     //   os.write_string(fd, fmt.tprintf("  me.get_idx = get_idx\n"))
     // }
-    os.write_string(fd, fmt.tprintf("}}\n"))
+    // os.write_string(fd, fmt.tprintf("}}\n"))
     
     if "constructors" in builtin_api {
       for constructor in builtin_api["constructors"].(json.Array) {
@@ -1714,13 +1714,14 @@ generate_builtin_bindings :: proc(root: json.Object, target_dir: string, build_c
     
     os.write_string(fd, fmt.tprintf("GodotObject :: distinct rawptr\n"))
     
-    os.write_string(fd, fmt.tprintf("Wrapped :: struct {{\n"))
-    //os.write_string(fd, fmt.tprintf("  plist_owned : [dynamic]gde.GDExtensionPropertyInfo,\n"))
-    //os.write_string(fd, fmt.tprintf("  plist : ^gde.GDExtensionPropertyInfo,\n"))
-    //os.write_string(fd, fmt.tprintf("  plist_size : u32,\n"))
-    os.write_string(fd, fmt.tprintf("  _owner : rawptr, // GodotObject ptr\n"))
-    os.write_string(fd, fmt.tprintf("  _table : rawptr, // vtable\n"))
-    os.write_string(fd, fmt.tprintf("}}\n\n"))
+    os.write_string(fd, `
+Wrapped :: struct {
+	_owner : rawptr, // GodotObject ptr
+	_table : rawptr, // vtable
+}
+Wrapped_VTABLE :: struct {
+}
+`)
 
     os.write_string(fd, fmt.tprintf("Ref :: struct {{\n"))
     //os.write_string(fd, fmt.tprintf("  reference : rawptr,\n"))
@@ -1872,6 +1873,8 @@ make_signature :: proc(class_name: string, function_data: json.Object, g: ^Globa
 
   func_signature = fmt.tprintf("%s%s%s :: proc(", func_signature, escape_identifier(name), function_signature_internal)
 
+  return_type := get_return_type(function_data, g)
+
   if for_engine { // include "me: ^SomeClass," arg
     func_signature = fmt.tprintf("%sme: ^%s, ", func_signature, correct_type(class_name, "", g))
   }
@@ -1880,12 +1883,11 @@ make_signature :: proc(class_name: string, function_data: json.Object, g: ^Globa
     func_signature = fmt.tprintf("%sargs: ^^%sVariant, arg_count: int", func_signature, g.pck)
   } else {
     if "arguments" in function_data {
-      func_signature = fmt.tprintf("%s%s", func_signature, make_function_parameters(function_data["arguments"].(json.Array), g, false, false, is_vararg))
+		// return_type_is_array := strings.has_prefix(return_type, "typedarray::")
+		func_signature = fmt.tprintf("%s%s", func_signature, make_function_parameters(function_data["arguments"].(json.Array), g, false, false, is_vararg))
     }
   }
   func_signature = fmt.tprintf("%s)", func_signature)
-
-  return_type := get_return_type(function_data, g)
   
   rt := correct_type(return_type, "", g) // TODO return meta?
   if strings.contains(rt, "^void") {
@@ -1893,11 +1895,7 @@ make_signature :: proc(class_name: string, function_data: json.Object, g: ^Globa
   }
 
   if return_type != "" {
-    func_signature = fmt.tprintf("%s -> %s", func_signature, rt)
-    // if is_engine_class(return_type, g) {
-    // } else {
-    //   func_signature = fmt.tprintf("%s -> %s", func_signature, rt)
-    // }
+	func_signature = fmt.tprintf("%s -> %s", func_signature, rt)
   }
   return func_signature
 }
@@ -1966,20 +1964,21 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
 
     tmp := g.pck
     g.pck = ""
-    os.write_string(sfd, fmt.tprintf("%s :: distinct %s\n", class_name, parent))
-    // os.write_string(sfd, fmt.tprintf("%s :: struct {{\n", class_name))
-    // os.write_string(sfd, fmt.tprintf("  using _ : %s,\n", parent))
 
-    // any data??
-    
-    // is_refcounted := class_name == "RefCounted"
-    // if is_refcounted {
-    //   //os.write_string(sfd, "  reference : rawptr,\n")
-    // }
+    os.write_string(sfd, fmt.tprintf(`
+%s :: struct {{
+	_owner : rawptr, // GodotObject ptr
+	using _table : ^%s_VTABLE, // vtable
+}}
+`, class_name, class_name))
+
+    os.write_string(sfd, fmt.tprintf(`as_%s :: proc(obj: Object) -> %s {{
+	return {{ _owner=obj._owner, _table = &__%s_table }}
+}}
+__%s_table : %s_VTABLE
+`, class_name, class_name, class_name, class_name, class_name))
 
     os.write_string(sfd, fmt.tprintf("%s_VTABLE :: struct {{\n", class_name))
-    // struct proc pointers
-    // it's the constructor that currently sets up these proc pointers to non-nil values, so don't include this for now
     os.write_string(sfd, fmt.tprintf("  using _ : ^%s_VTABLE,\n", parent))
     if "methods" in class_api {
       for method in class_api["methods"].(json.Array) {
@@ -2026,8 +2025,35 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
     os.write_string(fd, fmt.tprintf("  }}\n"))
     os.write_string(fd, fmt.tprintf("  me : godot.%s\n", class_name))
     os.write_string(fd, fmt.tprintf("  me._owner = gde.classdb_construct_object(cast(gde.GDExtensionConstStringNamePtr)&class_name)\n"))
+    os.write_string(fd, fmt.tprintf("  me._table = &__%s_table\n", class_name))
     os.write_string(fd, "  return me\n")
     os.write_string(fd, "}\n")
+
+	os.write_string(fd, fmt.tprintf("__%s_table := godot.%s_VTABLE {{\n", class_name, class_name))
+    if "methods" in class_api {
+      for method in class_api["methods"].(json.Array) {
+        method_name :string= method.(json.Object)["name"].(json.String)
+		if method_name == "" || method_name[0] == '_' do continue
+        os.write_string(fd, fmt.tprintf("  %s = %s,\n", method_name, method_name))
+      }
+    }
+	os.write_string(fd, "}\n\n\n")
+
+	os.write_string(fd, "// methods\n")
+
+    // os.write_string(fd, fmt.tprintf("_bind :: proc(me: ^godot.%s) {{\n", correct_type(class_name, "", g)))
+    // if "methods" in class_api {
+    //   for method in class_api["methods"].(json.Array) {
+    //     method_name := fmt.tprintf("%s", method.(json.Object)["name"])
+    //     if method_name == "map" do method_name = "_map"
+    //     os.write_string(fd, fmt.tprintf("  me.%s = %s\n", method_name, method_name))
+    //   }
+    // }
+    // if "indexing_return_type" in builtin_api {
+    //   os.write_string(fd, fmt.tprintf("  me.set_idx = set_idx\n"))
+    //   os.write_string(fd, fmt.tprintf("  me.get_idx = get_idx\n"))
+    // }
+    // os.write_string(fd, fmt.tprintf("}}\n"))
     
     // if "methods" in class_api {
     //   for method in class_api["methods"].(json.Array) {
@@ -2053,7 +2079,7 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
 
         method_signature := make_signature(class_name, method.(json.Object), g, true, false, true)
         os.write_string(fd, fmt.tprintf("%s\n", method_signature))
-        generate_engine_classes_method(method.(json.Object), class_name, fd, g)
+        generate_engine_classes_method(method.(json.Object), class_name, fd, g, used_classes)
       }
       for method in class_api["methods"].(json.Array) {
         if !method.(json.Object)["is_virtual"].(json.Boolean) do continue
@@ -2063,12 +2089,14 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
         // TODO gen virtual methods?
       }
     }
+
+	fmt.printf("classes used by {}: {}\n", class_name, used_classes)
   }
     
   // TODO: more "nice stuff" for engine classes
 }
 
-generate_engine_classes_method :: proc(method: json.Object, class_name: string, fd: os.Handle, g: ^Globals) {
+generate_engine_classes_method :: proc(method: json.Object, class_name: string, fd: os.Handle, g: ^Globals, used_classes: ^[dynamic]string=nil) {
   os.write_string(fd, "{\n")
   os.write_string(fd, "// engine class method\n")
 
@@ -2110,7 +2138,7 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
       
       tmp : string
       if type == "bool" {
-        tmp = fmt.tprintf("bval%d := %s ? gde.TRUE : gde.FALSE\n  call_args[%d] = cast(gde.GDExtensionConstTypePtr)&bval%d", i, escape_identifier(name), i, i)
+        tmp = fmt.tprintf("bval%d := %s?gde.TRUE:gde.FALSE; call_args[%d] = cast(gde.GDExtensionConstTypePtr)&bval%d", i, escape_identifier(name), i, i)
       // } else if strings.has_prefix(parameter, "^") {
       //   tmp = fmt.tprintf("val%d := %s%s; call_args[%d] = cast(gde.GDExtensionConstTypePtr)&val%d", i, escape_identifier(name), with_owner, i, i)
       } else {
@@ -2131,20 +2159,36 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
     for a in arguments {
       os.write_string(fd, fmt.tprintf("  %s\n", a))
     }
-
     
     if has_return {   // _ptrcall doesn't need arg_count, since it's not vararg
-        os.write_string(fd, fmt.tprintf("  ret : %s\n", rt))
-        os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, cast(^gde.GDExtensionConstTypePtr)&call_args[0], cast(gde.GDExtensionTypePtr)&ret)\n"))
-        os.write_string(fd, fmt.tprintf("  return ret\n"))
-      // if is_engine_class(return_type, g) {
-      //   os.write_string(fd, fmt.tprintf("  ret : %s\n", rt))
-      //   os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, cast(^gde.GDExtensionConstTypePtr)&call_args[0], cast(gde.GDExtensionTypePtr)ret)\n"))
-      //   os.write_string(fd, fmt.tprintf("  return ret\n"))
-      // } else {
-      // }
+		if is_engine_class(rt, g) {
+			if strings.has_prefix(rt, "[]") {// TODO: Array handling
+				elem_type := strings.trim_left(rt, "[]")
+				fmt.printf("return type: {} -> {}\n", rt, return_type)
+				os.write_string(fd, fmt.tprintf("  retary: godot.Array\n"))
+				os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, raw_data(call_args[:]), &retary)\n"))
+				os.write_string(fd, fmt.tprintf("  count := array.size(&retary)\n"))
+				os.write_string(fd, fmt.tprintf("  retslice := make([]%s, count, context.temp_allocator)\n", elem_type))
+				os.write_string(fd, fmt.tprintf("  for i in 0..<count {{\n"))
+				os.write_string(fd, fmt.tprintf("    obj := variant.to_Object(array.get_idx(&retary, i))\n"))
+				os.write_string(fd, fmt.tprintf("    retslice[i] = godot.as_%s(obj)\n", strings.trim_left(elem_type, "godot.")))
+				os.write_string(fd, fmt.tprintf("  }}\n"))
+				os.write_string(fd, fmt.tprintf("  return retslice\n"))
+				if used_classes != nil {
+					append(used_classes, "Array", strings.trim_left(elem_type, "godot."))
+				}
+			} else {
+				os.write_string(fd, fmt.tprintf("  ret : %s\n", rt))
+				os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, raw_data(call_args[:]), &ret)\n"))
+				os.write_string(fd, fmt.tprintf("  return godot.as_%s(transmute(godot.Object)ret)\n", strings.trim_left(rt, "godot.")))
+			}
+		} else {
+			os.write_string(fd, fmt.tprintf("  ret : %s\n", rt))
+			os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, raw_data(call_args[:]), &ret)\n"))
+			os.write_string(fd, fmt.tprintf("  return ret\n"))
+		}
     } else {
-      os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, cast(^gde.GDExtensionConstTypePtr)&call_args[0], nil)\n"))
+      os.write_string(fd, fmt.tprintf("  gde.object_method_bind_ptrcall(method, inst, raw_data(call_args[:]), nil)\n"))
     }
   } else { // is_varg
     
@@ -2657,3 +2701,5 @@ main :: proc() {
 
 	generate_bindings(root, true, "../godot")
 }
+
+// ** godin

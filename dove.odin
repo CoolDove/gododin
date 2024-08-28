@@ -11,8 +11,6 @@ import gstring "godot/string"
 import "godot/variant"
 import "godot/vector2"
 import "godot/sprite2d"
-import "godot/ref_counted"
-import "godot/texture2d"
 import utl "godot/utility_functions"
 import gde "gdextension"
 
@@ -56,11 +54,13 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 	Dove_process(cast(^Dove)p_instance, delta)
 }
 Dove_process :: proc (self: ^Dove, delta: f64) {
+	utl.print("process...")
 	self.time += delta
 	offset := vector2.constructor3(auto_cast math.sin(self.time), 0)
+	utl.print("cons offset")
 	sprite2d.set_offset(self, offset)
-	texture := sprite2d.get_texture(self); defer ref_counted.unreference(auto_cast &texture)
-	width := texture2d.get_width(&texture)
-	utl.print("Texture width: ", width, ", reference count: ", ref_counted.get_reference_count(auto_cast &texture))
-	
+	texture := sprite2d.get_texture(self); defer texture.unreference(auto_cast &texture)
+	utl.print("get texture")
+	width := texture->get_width()
+	utl.print("Texture width: ", width, ", reference count: ", texture.get_reference_count(auto_cast &texture))
 }
