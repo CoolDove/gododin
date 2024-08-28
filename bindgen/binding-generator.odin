@@ -964,7 +964,7 @@ correct_operator :: proc(op: string) -> string {
 }
 
 generate_builtin_classes :: proc(builtin_api: json.Object, target_dir: string, size: int, used_classes: ^[dynamic]string, fully_used_classes: ^[dynamic]string, sfd: os.Handle, g: ^Globals) {
-  generate_variant_class(target_dir, g)
+  // generate_variant_class(target_dir, g)
   
   class_name := fmt.tprintf("%s", builtin_api["name"])
   snake_class_name := camel_to_snake(class_name)
@@ -1670,6 +1670,7 @@ to_string :: proc(strn: ^godot.StringName, allocator:=context.allocator) -> stri
 }
 
 generate_builtin_bindings :: proc(root: json.Object, target_dir: string, build_config: string, g: ^Globals) {
+	if true do return
   file := filepath.join([]string{target_dir, "builtin_structures.odin"})
     fmt.printf("Generate builtin class\n")
   mode: int = 0
@@ -1900,7 +1901,7 @@ make_signature :: proc(class_name: string, function_data: json.Object, g: ^Globa
 }
 
 generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used_classes: ^[dynamic]string, fully_used_classes: ^[dynamic]string, sfd: os.Handle, g: ^Globals) {
-  generate_variant_class(target_dir, g)
+  // generate_variant_class(target_dir, g)
   
   class_name := fmt.tprintf("%s", class_api["name"])
   snake_class_name := camel_to_snake(class_name)
@@ -2075,17 +2076,18 @@ dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class
 	write_string(&sb_header, "package godot\n\n")
 	write_string(&sb_header, "import gde \"../gdextension\"\n\n")
 
-	dovegen_object_constructor(&sb_body, class_name)
+	dovegen_funcimpl_instance_constructor(&sb_body, class_name)
 
 	// Table
 	write_string(&sb_body, fmt.tprintf(`
 @private
 _%s_TABLE :: struct {{
-	using _ : ^_%s_TABLE
+	using _ : ^_%s_TABLE,
 `, class_name, parent_name))
 	if "methods" in class_api {
 		for method in class_api["methods"].(json.Array) {
 			method_name := method.(json.Object)["name"].(json.String)
+			if method_name[0] == '_' do continue
 			write_string(&sb_body, fmt.tprintf("\t%s : ", method_name))
 			dovegen_method_signature(&sb_body, method.(json.Object))
 			write_string(&sb_body, ",\n")
@@ -2115,7 +2117,37 @@ _%s_TABLE :: struct {{
 	}
 }
 
-dovegen_object_constructor :: proc(sb: ^strings.Builder, class_name: string) {
+dovegen_method_signature :: proc(sb: ^strings.Builder, method: json.Object) {
+	using strings
+	is_vararg := "is_vararg" in method && method["is_vararg"].(json.Boolean)
+	return_value := method["return_value"].(json.Object)["type"].(json.String) if "return_value" in method else ""
+	write_string(sb, "proc (")
+	if "arguments" in method {
+		args := method["arguments"].(json.Array)
+		for &arg, idx in args {
+			arg := arg.(json.Object)
+			arg_name := arg["name"].(json.String)
+			arg_type := arg["type"].(json.String)
+			write_string(sb, fmt.tprintf("%s: %s", arg_name, arg_type))
+			if idx < len(args)-1 do write_string(sb, ", ")
+		}
+	}
+	write_string(sb, ")")
+	if return_value != "" {
+		write_string(sb, " -> ")
+		write_string(sb, return_value)
+	}
+}
+
+dovegen_funcimpl_variant_constructor :: proc() {
+}
+dovegen_funcimpl_variant_to_type :: proc() {
+}
+dovegen_funcimpl_variant_method :: proc() {
+}
+dovegen_funcimpl_variant_utility_function :: proc() {
+}
+dovegen_funcimpl_instance_constructor :: proc(sb: ^strings.Builder, class_name: string) {
 	using strings
 	write_string(sb, "\n")
 	write_string(sb, fmt.tprintf(`
@@ -2136,14 +2168,10 @@ as_%s :: proc(obj: Object) -> %s {{// dove object converter
 	return {{ _obj = obj._obj, _table = &__%s_table }}
 }}
 `, class_name, class_name, class_name))
-
+}
+dovegen_funcimpl_instance_method :: proc() {
 }
 
-dovegen_method_signature :: proc(sb: ^strings.Builder, method: json.Object) {
-	is_vararg := "is_vararg" in method && method["is_vararg"].(json.Boolean)
-	strings.write_string(sb, "proc (")
-	strings.write_string(sb, ")")
-}
 
 
 generate_engine_classes_method :: proc(method: json.Object, class_name: string, fd: os.Handle, g: ^Globals, used_classes: ^[dynamic]string=nil) {
@@ -2284,40 +2312,28 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
 }
 
 generate_engine_classes_bindings :: proc(root: json.Object, target_dir: string, use_template_get_node: bool, g: ^Globals) {
-  file := filepath.join([]string{target_dir, "engine_structures.odin"})
-  fmt.printf("Generate engine classes\n")
-
-	do_open_file :: proc(file: string) -> os.Handle {
-		mode: int = 0
-		when os.OS == .Linux || os.OS == .Darwin {
-			mode = os.S_IRUSR | os.S_IWUSR | os.S_IRGRP | os.S_IROTH
-		}
-
-		os.remove(file)
-		sfd, err := os.open(file, os.O_WRONLY|os.O_CREATE, mode)
-		if err != os.ERROR_NONE {
-			fmt.println("ERROR: unable to open engine_structures.odin")
-			return sfd
-		}
-		os.write_string(sfd, "package godot\n\n")
-		os.write_string(sfd, "import gde \"../gdextension\"\n\n")
-
-		return sfd
-	}
-	sfd := do_open_file(file)
-	defer os.close(sfd)
-	
-	g.pck = "godot."
+	fmt.printf("Generate engine classes\n")
 	
 	sb_godotfile : strings.Builder
 	strings.builder_init(&sb_godotfile); strings.builder_destroy(&sb_godotfile)
 	strings.write_string(&sb_godotfile, "package godot\n")
 	strings.write_string(&sb_godotfile, "import gde \"../gdextension\"\n\n")
 
+	// Generate variants
+	sb_variantfile : strings.Builder
+	strings.builder_init(&sb_variantfile); strings.builder_destroy(&sb_variantfile)
+	strings.write_string(&sb_variantfile, "package godot\nimport gde \"../gdextension\"\n\n")
+	for variant_api in root["builtin_classes"].(json.Array) {
+		name := variant_api.(json.Object)["name"].(json.String)
+		strings.write_string(&sb_variantfile, fmt.tprintf("// %s\n", name))
+	}
+	os.write_entire_file(filepath.join([]string{ target_dir, "_variant.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_variantfile))
+
+	// Generate object classes
 	sb_classfile : strings.Builder
 	strings.builder_init(&sb_classfile); strings.builder_destroy(&sb_classfile)
 	for class_api in root["classes"].(json.Array) {
-		class_name := fmt.tprintf("%s", class_api.(json.Object)["name"])
+		class_name := class_api.(json.Object)["name"].(json.String)
 		if class_name == "ClassDB" do continue
 		if class_name == "OS" do continue
 		strings.builder_reset(&sb_classfile)
@@ -2482,8 +2498,6 @@ generate_engine_classes_bindings :: proc(root: json.Object, target_dir: string, 
 
     // generate_engine_classes(class_api.(json.Object), target_dir, &slim_used_classes, &slim_fully_used_classes, sfd, g)
 	// }
-  
-	g.pck = ""
 }
 
 get_gdextension_type :: proc(type_name: string) -> string {
