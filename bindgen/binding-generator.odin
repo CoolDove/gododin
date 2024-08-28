@@ -693,46 +693,46 @@ get_ptr_to_arg :: proc() -> (pta: map[string][2]string) {
   pta["f32"]  = {"FLOAT", "f64"}
   pta["f64"]  = {"FLOAT", "f64"} // TODO: is this all int, bool and float types?
 
-  pta["^godot.String"]  = {"STRING", "String"}
-  pta["^godot.StringName"]  = {"STRING_NAME", "StringName"}
+  pta["godot.String"]  = {"STRING", "String"}
+  pta["godot.StringName"]  = {"STRING_NAME", "StringName"}
   
-  pta["^godot.Vector2"] = {"VECTOR2", "Vector2"}
-  pta["^godot.Vector2i"]  = {"VECTOR2I", "Vector2i"}
-  pta["^godot.Rect2"] = {"RECT2", "Rect2"}
-  pta["^godot.Rect2i"]  = {"RECT2I", "Rect2i"}
-  pta["^godot.Vector3"] = {"VECTOR3", "Vector3"}
-  pta["^godot.Vector3i"]  = {"VECTOR3I", "Vector3i"}
-  pta["^godot.Transform2D"] = {"TRANSFORM2D", "Transform2D"}
-  pta["^godot.Vector4"] = {"VECTOR4", "Vector4"}
-  pta["^godot.Vector4i"]  = {"VECTOR4I", "Vector4i"}
-  pta["^godot.Plane"] = {"QUATERNION", "Plane"}
-  pta["^godot.Quaternion"]  = {"QUATERNION", "Quaternion"}
-  pta["^godot.AABB"]  = {"AABB", "AABB"}
-  pta["^godot.Basis"] = {"BASIS", "Basis"}
-  pta["^godot.Transform3D"] = {"TRANSFORM3D", "Transform3D"}  
-  pta["^godot.Projection"]  = {"PROJECTION", "Projection"}
+  pta["godot.Vector2"] = {"VECTOR2", "Vector2"}
+  pta["godot.Vector2i"]  = {"VECTOR2I", "Vector2i"}
+  pta["godot.Rect2"] = {"RECT2", "Rect2"}
+  pta["godot.Rect2i"]  = {"RECT2I", "Rect2i"}
+  pta["godot.Vector3"] = {"VECTOR3", "Vector3"}
+  pta["godot.Vector3i"]  = {"VECTOR3I", "Vector3i"}
+  pta["godot.Transform2D"] = {"TRANSFORM2D", "Transform2D"}
+  pta["godot.Vector4"] = {"VECTOR4", "Vector4"}
+  pta["godot.Vector4i"]  = {"VECTOR4I", "Vector4i"}
+  pta["godot.Plane"] = {"QUATERNION", "Plane"}
+  pta["godot.Quaternion"]  = {"QUATERNION", "Quaternion"}
+  pta["godot.AABB"]  = {"AABB", "AABB"}
+  pta["godot.Basis"] = {"BASIS", "Basis"}
+  pta["godot.Transform3D"] = {"TRANSFORM3D", "Transform3D"}  
+  pta["godot.Projection"]  = {"PROJECTION", "Projection"}
 
   /* misc types */
-  pta["^godot.Color"] = {"COLOR", "Color"}
-  pta["^godot.StringName"]  = {"STRING_NAME", "SringName"}
-  pta["^godot.NodePath"]  = {"NODE_PATH", "NodePath"}
-  pta["^godot.RID"] = {"RID", "RID"}
-  pta["^godot.Object"]  = {"OBJECT", "Object"}
-  pta["^godot.Callable"]  = {"CALLABLE", "Callable"}
-  pta["^godot.Signal"]  = {"SIGNAL", "Signal"}
-  pta["^godot.Dictionary"]  = {"DICTIONARY", "Dictionary"}
-  pta["^godot.Array"] = {"ARRAY", "Array"}  
+  pta["godot.Color"] = {"COLOR", "Color"}
+  pta["godot.StringName"]  = {"STRING_NAME", "SringName"}
+  pta["godot.NodePath"]  = {"NODE_PATH", "NodePath"}
+  pta["godot.RID"] = {"RID", "RID"}
+  pta["godot.Object"]  = {"OBJECT", "Object"}
+  pta["godot.Callable"]  = {"CALLABLE", "Callable"}
+  pta["godot.Signal"]  = {"SIGNAL", "Signal"}
+  pta["godot.Dictionary"]  = {"DICTIONARY", "Dictionary"}
+  pta["godot.Array"] = {"ARRAY", "Array"}  
 
   /* typed arrays */
-  pta["^godot.PackedByteArray"] = {"PACKED_BYTE_ARRAY", "PackedByteArray"}    
-  pta["^godot.PackedInt32Array"]  = {"PACKED_INT32_ARRAY", "PackedInt32Array"}
-  pta["^godot.PackedInt64Array"]  = {"PACKED_INT64_ARRAY", "PackedInt64Array"}
-  pta["^godot.PackedFloat32Array"]  = {"PACKED_FLOAT32_ARRAY", "PackedFloat32Array"}
-  pta["^godot.PackedFloat64Array"]  = {"PACKED_FLOAT64_ARRAY", "PackedFloat64Array"}
-  pta["^godot.PackedStringArray"] = {"PACKED_STRING_ARRAY", "PackedStringArray"}
-  pta["^godot.PackedVector2Array"]  = {"PACKED_VECTOR2_ARRAY", "PackedVector2Array"}
-  pta["^godot.PackedVector3Array"]  = {"PACKED_VECTOR3_ARRAY", "PackedVector3Array"}
-  pta["^godot.PackedColorArray"]  = {"PACKED_COLOR_ARRAY", "PackedColorArray"}
+  pta["godot.PackedByteArray"] = {"PACKED_BYTE_ARRAY", "PackedByteArray"}    
+  pta["godot.PackedInt32Array"]  = {"PACKED_INT32_ARRAY", "PackedInt32Array"}
+  pta["godot.PackedInt64Array"]  = {"PACKED_INT64_ARRAY", "PackedInt64Array"}
+  pta["godot.PackedFloat32Array"]  = {"PACKED_FLOAT32_ARRAY", "PackedFloat32Array"}
+  pta["godot.PackedFloat64Array"]  = {"PACKED_FLOAT64_ARRAY", "PackedFloat64Array"}
+  pta["godot.PackedStringArray"] = {"PACKED_STRING_ARRAY", "PackedStringArray"}
+  pta["godot.PackedVector2Array"]  = {"PACKED_VECTOR2_ARRAY", "PackedVector2Array"}
+  pta["godot.PackedVector3Array"]  = {"PACKED_VECTOR3_ARRAY", "PackedVector3Array"}
+  pta["godot.PackedColorArray"]  = {"PACKED_COLOR_ARRAY", "PackedColorArray"}
   
   return
 }
@@ -800,73 +800,47 @@ destroy :: proc(me: ^godot.Variant) {
     ptr_to_arg := get_ptr_to_arg()
 
     idx := 0
-    for k, v in ptr_to_arg {
-      if v[0] == "BOOL" || v[0] == "INT" || v[0] == "FLOAT" {
-        os.write_string(fd, fmt.tprintf(`
+	for k, v in ptr_to_arg {
+		os.write_string(fd, fmt.tprintf(`
 constructor%d :: proc(val: %s) -> godot.Variant {{
 	@static _constructor : gde.GDExtensionVariantFromTypeConstructorFunc
-	if _constructor == nil do _constructor = gde.get_variant_from_type_constructor(.%s)
+	if _constructor == nil do _constructor = gde.get_variant_from_type_constructor(.GDEXTENSION_VARIANT_TYPE_%s)
 	lval := cast(%s)val
 	me: godot.Variant
 	_constructor(cast(gde.GDExtensionVariantPtr)&me, cast(gde.GDExtensionTypePtr)&lval)
 	return me
-}}`, idx, v[1], v[1], v[1]))
+}}`, idx, k, v[0], k))
         os.write_string(fd, fmt.tprintf(`
-to_type%d :: proc(me: ^godot.Variant, ret: ^%s) {{
-  @static _to_type : [godot.Variant_Type.VARIANT_MAX]gde.GDExtensionTypeFromVariantConstructorFunc
-  lval : %s
-  to_type_constructor(.%s)(cast(gde.GDExtensionTypePtr)&lval, cast(gde.GDExtensionVariantPtr)me)
-  ret^ = lval
+to_%s :: proc(me: ^godot.Variant) -> %s {{
+	@static _to_type : gde.GDExtensionTypeFromVariantConstructorFunc
+	if _to_type == nil do _to_type = gde.get_variant_to_type_constructor(.GDEXTENSION_VARIANT_TYPE_%s)
+	to : %s
+	_to_type(cast(gde.GDExtensionTypePtr)&to, cast(gde.GDExtensionVariantPtr)me)
+	return to
 }}
-`, idx, k, k, v[0]))
-        
-      } else if v[0] == "OBJECT" {
-        os.write_string(fd, fmt.tprintf(`
-constructor%d :: proc(me: ^godot.Variant, val: %s) {{
-  if val != nil {{
-    from_type_constructor(.%s)(cast(gde.GDExtensionVariantPtr)me, cast(gde.GDExtensionTypePtr)val)
-  }} else {{
-    nullobj : godot.GodotObject = nil
-    from_type_constructor(.%s)(cast(gde.GDExtensionVariantPtr)me, cast(gde.GDExtensionTypePtr)&nullobj)
-  }}
-}}
-to_type%d :: proc(me: ^godot.Variant, ret: %s) {{
-  to_type_constructor(.%s)(cast(gde.GDExtensionTypePtr)ret, cast(gde.GDExtensionVariantPtr)me)
-}}
-`, idx, k, v[0], v[0], idx, k, v[0]))
-        
-      }else {
-        os.write_string(fd, fmt.tprintf(`
-constructor%d :: proc(me: ^godot.Variant, val: %s) {{
-  from_type_constructor(.%s)(cast(gde.GDExtensionVariantPtr)me, cast(gde.GDExtensionTypePtr)&val)
-}}
-to_type%d :: proc(me: ^godot.Variant, ret: %s) {{
-  to_type_constructor(.%s)(cast(gde.GDExtensionTypePtr)&ret, cast(gde.GDExtensionVariantPtr)me)
-}}
-`, idx, k, v[0], idx, k, v[0]))
-        
-      }
-      idx += 1
-    }
+`, strings.trim_left(k, "godot."), k, v[0], k))
+		idx += 1
+	}
 
     // special string constructor ------------------------------
     os.write_string(fd, fmt.tprintf(`
-constructor_string :: proc(me: ^godot.Variant, str: string) {{
-  val := new(godot.String); defer free(val)
-      
-  str := strings.clone_to_cstring(str)
-  gde.string_new_with_latin1_chars(cast(gde.GDExtensionStringPtr)&val, str)
-  delete(str)
-
-  from_type_constructor(.STRING)(cast(gde.GDExtensionVariantPtr)me, cast(gde.GDExtensionTypePtr)&val)
+constructor_string :: proc(str: string) -> godot.Variant {{
+	gstr : godot.String
+	str := strings.clone_to_cstring(str); defer delete(str)
+	gde.string_new_with_latin1_chars(cast(gde.GDExtensionStringPtr)&gstr, str)
+	@static _constructor : gde.GDExtensionVariantFromTypeConstructorFunc
+	if _constructor == nil do _constructor = gde.get_variant_from_type_constructor(.GDEXTENSION_VARIANT_TYPE_STRING)
+	me : godot.Variant
+	_constructor(cast(gde.GDExtensionVariantPtr)&me, cast(gde.GDExtensionTypePtr)&gstr)
+	return me
 }}
-to_type_string :: proc(me: ^godot.Variant, ret: ^string) {{
-  s := new(godot.String); defer free(s)
-  to_type(me, s)
-  length := gde.string_to_latin1_chars(cast(gde.GDExtensionConstStringPtr)s, nil, 0)
-  cstr := make([]byte, length)
-  gde.string_to_latin1_chars(cast(gde.GDExtensionConstStringPtr)s, cstring(&cstr[0]), length)
-  ret^ = string(cstr)
+to_string :: proc(me: ^godot.Variant, allocator:=context.allocator) -> string {{
+	context.allocator = allocator
+	s := to_String(me)
+	length := gde.string_to_utf8_chars(cast(gde.GDExtensionConstStringPtr)&s, nil, 0)
+	cstr := make([]u8, length)
+	gde.string_to_utf8_chars(cast(gde.GDExtensionConstStringPtr)&s, cast(cstring)raw_data(cstr), length)
+	return transmute(string)cstr
 }}
 `))
     // ------------------------------
@@ -879,24 +853,20 @@ to_type_string :: proc(me: ^godot.Variant, ret: ^string) {{
     }
     os.write_string(fd, fmt.tprintf("constructor_string"))
     os.write_string(fd, "}\n")
-    os.write_string(fd, "to_type :: proc{")
-    idx = 0
-    for _, _ in ptr_to_arg {
-      os.write_string(fd, fmt.tprintf("to_type%d%s", idx, idx!=len(ptr_to_arg)-1 ? ", " : ""))
-      idx += 1
-    }
-    os.write_string(fd, "}\n")
+    // os.write_string(fd, "to_type :: proc{")
+    // idx = 0
+    // for _, _ in ptr_to_arg {
+    //   os.write_string(fd, fmt.tprintf("to_type%d%s", idx, idx!=len(ptr_to_arg)-1 ? ", " : ""))
+    //   idx += 1
+    // }
+    // os.write_string(fd, "}\n")
 
     // special converting  any <-> Variant  stuff ---
     os.write_string(fd, "\n\n")
-    os.write_string(fd, "convert_variant :: proc(v: ^godot.Variant) -> any {\n")
-    os.write_string(fd, "  a : any\n")
+    os.write_string(fd, "convert_variant :: proc(v: ^godot.Variant, allocator:=context.allocator) -> any {\n")
     os.write_string(fd, "  vtype := gde.variant_get_type(cast(gde.GDExtensionConstVariantPtr)v)\n")
-
     os.write_string(fd, "  if vtype == gde.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_STRING {\n")
-    os.write_string(fd, "    str := new(string)\n")
-    os.write_string(fd, "    to_type_string(v, str)\n")
-    os.write_string(fd, "    a = str^\n")
+    os.write_string(fd, "    return to_string(v, allocator)\n")
     os.write_string(fd, "  }\n")
     vtoa : map[string]string
     for k, v in ptr_to_arg { // reverse map look up
@@ -905,29 +875,26 @@ to_type_string :: proc(me: ^godot.Variant, ret: ^string) {{
       }
     }
     for k, v in vtoa {
-      if k == "STRING" do continue
-      os.write_string(fd, fmt.tprintf("  if vtype == gde.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_%s {{\n", k))
-      if strings.has_prefix(v, "^") {
-        os.write_string(fd, fmt.tprintf("    to_type(v, a.(%s))\n", v))
-      } else {
-        os.write_string(fd, fmt.tprintf("    to_type(v, a.(^%s))\n", v))
-      }
-      os.write_string(fd, fmt.tprintf("  }}\n"))
+		if k == "STRING" do continue
+		os.write_string(fd, fmt.tprintf("  if vtype == gde.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_%s {{\n", k))
+		os.write_string(fd, fmt.tprintf("    return to_%s(v)\n", strings.trim_left(v, "godot.")))
+		os.write_string(fd, fmt.tprintf("  }}\n"))
     }
-    os.write_string(fd, "  return a\n")
+    os.write_string(fd, "  return nil\n")
     os.write_string(fd, "}\n")
     
-    os.write_string(fd, "convert_any :: proc(a: any) -> ^godot.Variant {\n")
-    os.write_string(fd, "  arg := new(godot.Variant)\n")
+    os.write_string(fd, "convert_any :: proc(a: any) -> godot.Variant {\n")
     os.write_string(fd, "  if a.id == string {\n")
-    os.write_string(fd, "    constructor(arg, a.(string))\n")
+    os.write_string(fd, "    return constructor(a.(string))\n")
     os.write_string(fd, "  }\n")
+	idx = 0
     for k, _ in ptr_to_arg {
       os.write_string(fd, fmt.tprintf("  if a.id == %s {{\n", k))
-      os.write_string(fd, fmt.tprintf("    constructor(arg, a.(%s))\n", k))
+      os.write_string(fd, fmt.tprintf("    return constructor%d(a.(%s))\n", idx, k))
       os.write_string(fd, fmt.tprintf("  }}\n"))
+	  idx += 1
     }
-    os.write_string(fd, "  return arg\n")   
+    os.write_string(fd, "  return new_nil()\n")   
     os.write_string(fd, "}\n")
     // ------------------------------
     
@@ -1347,6 +1314,11 @@ constructor_string :: proc(str: cstring) -> godot.StringName {
 	gde.string_name_new_with_utf8_chars(&strn, str)
 	return strn
 }
+to_string :: proc(strn: ^godot.StringName, allocator:=context.allocator) -> string {
+	context.allocator = allocator
+	var := variant.constructor(strn^); defer variant.destroy(&var)
+	return variant.to_string(&var, allocator)
+}
 `)
       }
       
@@ -1412,11 +1384,11 @@ constructor_string :: proc(str: cstring) -> godot.StringName {
         os.write_string(fd, "// builtin class method\n")
 
         os.write_string(fd, fmt.tprintf("  @static name : godot.StringName\n"))        
-        os.write_string(fd, fmt.tprintf("  @static method : gde.GDExtensionPtrBuiltInMethod\n"))
-        os.write_string(fd, fmt.tprintf("  if method == nil {{\n"))
+        os.write_string(fd, fmt.tprintf("  @static _method : gde.GDExtensionPtrBuiltInMethod\n"))
+        os.write_string(fd, fmt.tprintf("  if _method == nil {{\n"))
         // os.write_string(fd, fmt.tprintf("    name = new(godot.StringName); %s_to_string_name(name, \"%s\")\n", class_name!="String"?"gstring.":"", method_name))
         os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&name, \"%s\")\n", method_name))
-        os.write_string(fd, fmt.tprintf("    method = gde.variant_get_ptr_builtin_method(gde.GDExtensionVariantType.%s, &name, %d)\n", enum_type_name, hash))
+        os.write_string(fd, fmt.tprintf("    _method = gde.variant_get_ptr_builtin_method(gde.GDExtensionVariantType.%s, &name, %d)\n", enum_type_name, hash))
         os.write_string(fd, fmt.tprintf("  }}\n"))
 
         arguments : [dynamic]string; defer delete(arguments)
@@ -1455,7 +1427,7 @@ constructor_string :: proc(str: cstring) -> godot.StringName {
           }
 
           os.write_string(fd, fmt.tprintf("  ret : %s\n", crt))
-          os.write_string(fd, fmt.tprintf("  method(cast(gde.GDExtensionTypePtr)me, raw_data(call_args[:]), cast(gde.GDExtensionTypePtr)&ret, %d)\n", len(arguments)))
+          os.write_string(fd, fmt.tprintf("  _method(cast(gde.GDExtensionTypePtr)me, raw_data(call_args[:]), cast(gde.GDExtensionTypePtr)&ret, %d)\n", len(arguments)))
           // if ptr == "^" {
           //   os.write_string(fd, fmt.tprintf("  ret := new(%s)\n", crt))
           //   os.write_string(fd, fmt.tprintf("  method(cast(gde.GDExtensionTypePtr)&me, cast(^gde.GDExtensionConstTypePtr)&call_args[0], cast(gde.GDExtensionTypePtr)ret, %d)\n", len(arguments)))
@@ -1466,7 +1438,7 @@ constructor_string :: proc(str: cstring) -> godot.StringName {
           // 
           os.write_string(fd, fmt.tprintf("  return ret\n"))
         } else {
-          os.write_string(fd, fmt.tprintf("  method(cast(gde.GDExtensionTypePtr)&me, cast(^gde.GDExtensionConstTypePtr)&call_args[0], nil, %d)\n", len(arguments)))
+          os.write_string(fd, fmt.tprintf("  _method(cast(gde.GDExtensionTypePtr)me, cast(^gde.GDExtensionConstTypePtr)&call_args[0], nil, %d)\n", len(arguments)))
         }
         os.write_string(fd, "}\n")
       }
@@ -1540,7 +1512,7 @@ constructor_string :: proc(str: cstring) -> godot.StringName {
         os.write_string(fd, fmt.tprintf("  oob : gde.GDExtensionBool\n"))
         os.write_string(fd, fmt.tprintf("  ret := new(%s)\n", ctype))
         os.write_string(fd, fmt.tprintf("  gde.variant_get_indexed(self, cast(gde.GDExtensionInt)idx, cast(gde.GDExtensionVariantPtr)ret, &valid, &oob)\n"))
-        os.write_string(fd, fmt.tprintf("  return ret"))
+        os.write_string(fd, fmt.tprintf("  return ret\n"))
         os.write_string(fd, fmt.tprintf("}}\n"))
       }
     }
@@ -1553,134 +1525,135 @@ constructor_string :: proc(str: cstring) -> godot.StringName {
       os.write_string(fd, fmt.tprintf("}}\n"))
     }
 
-    if "is_keyed" in builtin_api && builtin_api["is_keyed"].(json.Boolean) {
-      // any variant can be key
-      //pta["uint"] = {"INT", "i64"}
-      pta := get_ptr_to_arg()
-      vtoa : map[string]string
-      for k, v in pta { // reverse map look up
-        if !(v[0] in vtoa) {
-          vtoa[v[0]] = k
-        }
-      }
-      
-      for k, v in vtoa {
-        os.write_string(fd, fmt.tprintf("set_key_%s :: proc(me: ^godot.Dictionary, pk: %s, v: ^godot.Variant) {{\n", k, v))
-        os.write_string(fd, fmt.tprintf("  self := cast(gde.GDExtensionTypePtr)me\n"))
-        os.write_string(fd, fmt.tprintf("  k := new(godot.Variant)\n"))
-        os.write_string(fd, fmt.tprintf("  variant.constructor(k, pk)\n"))
-        os.write_string(fd, fmt.tprintf("  (cast(^godot.Variant)gde.dictionary_operator_index(self, cast(gde.GDExtensionConstVariantPtr)k))^ = v^\n"))
-        os.write_string(fd, fmt.tprintf("}}\n"))
-        os.write_string(fd, fmt.tprintf("get_key_%s :: proc(me: ^godot.Dictionary, pk: %s) -> ^godot.Variant {{\n", k, v))
-        os.write_string(fd, fmt.tprintf("  self := cast(gde.GDExtensionTypePtr)me\n"))
-        os.write_string(fd, fmt.tprintf("  k := new(godot.Variant)\n"))
-        os.write_string(fd, fmt.tprintf("  variant.constructor(k, pk)\n"))
-        os.write_string(fd, fmt.tprintf("  return cast(^godot.Variant)gde.dictionary_operator_index(self, cast(gde.GDExtensionConstVariantPtr)k)\n"))
-        os.write_string(fd, fmt.tprintf("}}\n"))
-      }
-      os.write_string(fd, fmt.tprintf("set_key_str :: proc(me: ^godot.Dictionary, pk: string, pv: string) {{\n"))
-      os.write_string(fd, fmt.tprintf("  self := cast(gde.GDExtensionTypePtr)me\n"))
-      os.write_string(fd, fmt.tprintf("  k := new(godot.Variant); defer free(k)\n"))
-      os.write_string(fd, fmt.tprintf("  variant.constructor(k, pk)\n"))
-      os.write_string(fd, fmt.tprintf("  v := new(godot.Variant); defer free(v)\n"))
-      os.write_string(fd, fmt.tprintf("  variant.constructor(v, pv)\n"))
-      os.write_string(fd, fmt.tprintf("  (cast(^godot.Variant)gde.dictionary_operator_index(self, cast(gde.GDExtensionConstVariantPtr)k))^ = v^\n"))
-      os.write_string(fd, fmt.tprintf("}}\n"))      
-      os.write_string(fd, fmt.tprintf("get_key_str :: proc(me: ^godot.Dictionary, pk: string) -> ^godot.Variant {{\n"))
-      os.write_string(fd, fmt.tprintf("  self := cast(gde.GDExtensionTypePtr)me\n"))
-      os.write_string(fd, fmt.tprintf("  k := new(godot.Variant)\n"))
-      os.write_string(fd, fmt.tprintf("  variant.constructor(k, pk)\n"))
-      os.write_string(fd, fmt.tprintf("  return cast(^godot.Variant)gde.dictionary_operator_index(self, cast(gde.GDExtensionConstVariantPtr)k)\n"))
-      os.write_string(fd, fmt.tprintf("}}\n"))      
-      
-      os.write_string(fd, fmt.tprintf("set_key :: proc{{\n"))
-      for k, v in vtoa {
-        os.write_string(fd, fmt.tprintf("set_key_%s,", k))
-      }
-      os.write_string(fd, fmt.tprintf("set_key_str"))
-      os.write_string(fd, fmt.tprintf("}}\n"))
-      os.write_string(fd, fmt.tprintf("get_key :: proc{{\n"))
-      for k, v in vtoa {
-        os.write_string(fd, fmt.tprintf("get_key_%s,", k))
-      }
-      os.write_string(fd, fmt.tprintf("get_key_str"))
-      os.write_string(fd, fmt.tprintf("}}\n"))      
-      //os.write_string(fd, fmt.tprintf("is_key :: proc{{}}\n")) // TODO
-    }
+    // if "is_keyed" in builtin_api && builtin_api["is_keyed"].(json.Boolean) {
+    //   // any variant can be key
+    //   //pta["uint"] = {"INT", "i64"}
+    //   pta := get_ptr_to_arg()
+    //   vtoa : map[string]string
+    //   for k, v in pta { // reverse map look up
+    //     if !(v[0] in vtoa) {
+    //       vtoa[v[0]] = k
+    //     }
+    //   }
+    //   
+    //   for k, v in vtoa {
+    //     os.write_string(fd, fmt.tprintf("set_key_%s :: proc(me: ^godot.Dictionary, pk: %s, v: ^godot.Variant) {{\n", k, v))
+    //     os.write_string(fd, fmt.tprintf("  self := cast(gde.GDExtensionTypePtr)me\n"))
+    //     os.write_string(fd, fmt.tprintf("  k := new(godot.Variant)\n"))
+    //     os.write_string(fd, fmt.tprintf("  variant.constructor(k, pk)\n"))
+    //     os.write_string(fd, fmt.tprintf("  (cast(^godot.Variant)gde.dictionary_operator_index(self, cast(gde.GDExtensionConstVariantPtr)k))^ = v^\n"))
+    //     os.write_string(fd, fmt.tprintf("}}\n"))
+    //     os.write_string(fd, fmt.tprintf("get_key_%s :: proc(me: ^godot.Dictionary, pk: %s) -> ^godot.Variant {{\n", k, v))
+    //     os.write_string(fd, fmt.tprintf("  self := cast(gde.GDExtensionTypePtr)me\n"))
+    //     os.write_string(fd, fmt.tprintf("  k := new(godot.Variant)\n"))
+    //     os.write_string(fd, fmt.tprintf("  variant.constructor(k, pk)\n"))
+    //     os.write_string(fd, fmt.tprintf("  return cast(^godot.Variant)gde.dictionary_operator_index(self, cast(gde.GDExtensionConstVariantPtr)k)\n"))
+    //     os.write_string(fd, fmt.tprintf("}}\n"))
+    //   }
+    //   os.write_string(fd, fmt.tprintf("set_key_str :: proc(me: ^godot.Dictionary, pk: string, pv: string) {{\n"))
+    //   os.write_string(fd, fmt.tprintf("  self := cast(gde.GDExtensionTypePtr)me\n"))
+    //   os.write_string(fd, fmt.tprintf("  k := new(godot.Variant); defer free(k)\n"))
+    //   os.write_string(fd, fmt.tprintf("  variant.constructor(k, pk)\n"))
+    //   os.write_string(fd, fmt.tprintf("  v := new(godot.Variant); defer free(v)\n"))
+    //   os.write_string(fd, fmt.tprintf("  variant.constructor(v, pv)\n"))
+    //   os.write_string(fd, fmt.tprintf("  (cast(^godot.Variant)gde.dictionary_operator_index(self, cast(gde.GDExtensionConstVariantPtr)k))^ = v^\n"))
+    //   os.write_string(fd, fmt.tprintf("}}\n"))      
+    //   os.write_string(fd, fmt.tprintf("get_key_str :: proc(me: ^godot.Dictionary, pk: string) -> ^godot.Variant {{\n"))
+    //   os.write_string(fd, fmt.tprintf("  self := cast(gde.GDExtensionTypePtr)me\n"))
+    //   os.write_string(fd, fmt.tprintf("  k := new(godot.Variant)\n"))
+    //   os.write_string(fd, fmt.tprintf("  variant.constructor(k, pk)\n"))
+    //   os.write_string(fd, fmt.tprintf("  return cast(^godot.Variant)gde.dictionary_operator_index(self, cast(gde.GDExtensionConstVariantPtr)k)\n"))
+    //   os.write_string(fd, fmt.tprintf("}}\n"))      
+    //   
+    //   os.write_string(fd, fmt.tprintf("set_key :: proc{{\n"))
+    //   for k, v in vtoa {
+    //     os.write_string(fd, fmt.tprintf("set_key_%s,", k))
+    //   }
+    //   os.write_string(fd, fmt.tprintf("set_key_str"))
+    //   os.write_string(fd, fmt.tprintf("}}\n"))
+    //   os.write_string(fd, fmt.tprintf("get_key :: proc{{\n"))
+    //   for k, v in vtoa {
+    //     os.write_string(fd, fmt.tprintf("get_key_%s,", k))
+    //   }
+    //   os.write_string(fd, fmt.tprintf("get_key_str"))
+    //   os.write_string(fd, fmt.tprintf("}}\n"))      
+    //   //os.write_string(fd, fmt.tprintf("is_key :: proc{{}}\n")) // TODO
+    // }
 
     operators_map : map[string]int
-    if "operators" in builtin_api {
-      for operator in builtin_api["operators"].(json.Array) {
-        operator_name := fmt.tprintf("%s", operator.(json.Object)["name"])
-        right_type := fmt.tprintf("%s", operator.(json.Object)["right_type"])
-        return_type := fmt.tprintf("%s", operator.(json.Object)["return_type"])
-        is_unary := strings.contains(operator_name, "unary")
-        non_unary_name, _ := strings.replace_all(operator_name, "unary", "")
-        cop := correct_operator(operator_name)
-        pta := get_ptr_to_arg()
-        crt := correct_type(return_type, "", g)
-        ptr := "^"
-        if crt in pta {
-          ptr = ""
-        }
+    // if "operators" in builtin_api {
+    //   for operator in builtin_api["operators"].(json.Array) {
+    //     operator_name := fmt.tprintf("%s", operator.(json.Object)["name"])
+    //     right_type := fmt.tprintf("%s", operator.(json.Object)["right_type"])
+    //     return_type := fmt.tprintf("%s", operator.(json.Object)["return_type"])
+    //     is_unary := strings.contains(operator_name, "unary")
+    //     non_unary_name, _ := strings.replace_all(operator_name, "unary", "")
+    //     cop := correct_operator(operator_name)
+    //     pta := get_ptr_to_arg()
+    //     crt := correct_type(return_type, "", g)
+    //     ptr := "^"
+    //     if crt in pta {
+    //       ptr = ""
+    //     }
 
-		if correct_operator(operator_name) == "OP_NOT" do continue
-        
-        if "right_type" in operator.(json.Object) {
-          if !(cop in operators_map) {
-            operators_map[cop] = 0
-          }
-          os.write_string(fd, fmt.tprintf("operator_%s%d :: proc(me: ^%s, other: %s) -> %s%s ", cop, operators_map[cop], correct_type(class_name, "", g), type_for_parameter(right_type, "", g), ptr, crt))
-          operators_map[correct_operator(operator_name)] += 1
-        } else {
-          cop := correct_operator(non_unary_name)
-          if !(cop in operators_map) {
-            operators_map[cop] = 0
-          }
-          os.write_string(fd, fmt.tprintf("operator_%s :: proc(me: ^%s) -> %s%s ", cop, correct_type(class_name, "", g), ptr, crt))
-        }
+	// 	if correct_operator(operator_name) == "OP_NOT" do continue
+    //     
+    //     if "right_type" in operator.(json.Object) {
+    //       if !(cop in operators_map) {
+    //         operators_map[cop] = 0
+    //       }
+    //       os.write_string(fd, fmt.tprintf("operator_%s%d :: proc(me: ^%s, other: %s) -> %s%s ", cop, operators_map[cop], correct_type(class_name, "", g), type_for_parameter(right_type, "", g), ptr, crt))
+    //       operators_map[correct_operator(operator_name)] += 1
+    //     } else {
+    //       cop := correct_operator(non_unary_name)
+    //       if !(cop in operators_map) {
+    //         operators_map[cop] = 0
+    //       }
+    //       os.write_string(fd, fmt.tprintf("operator_%s :: proc(me: ^%s) -> %s%s ", cop, correct_type(class_name, "", g), ptr, crt))
+    //     }
 
-        os.write_string(fd, fmt.tprintf("{{\n"))
-        enum_type_name := fmt.tprintf("GDEXTENSION_VARIANT_TYPE_%s", strings.to_upper(snake_class_name))
-        os.write_string(fd, fmt.tprintf("  @static name : godot.String\n"))
-        os.write_string(fd, fmt.tprintf("  @static operator : gde.GDExtensionPtrOperatorEvaluator\n"))
-        os.write_string(fd, fmt.tprintf("  if operator == nil {{\n"))
-        os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&name, \"%s\")\n", operator_name))
-        if right_type == "Variant" do right_type = "nil"
-        snake_right_type := camel_to_snake(right_type)
-        rt := fmt.tprintf("GDEXTENSION_VARIANT_TYPE_%s", strings.to_upper(snake_right_type))
-        os.write_string(fd, fmt.tprintf("    operator = gde.variant_get_ptr_operator_evaluator(gde.GDExtensionVariantOperator.GDEXTENSION_VARIANT_%s, gde.GDExtensionVariantType.%s, gde.GDExtensionVariantType.%s)\n", cop, enum_type_name, rt))
-        os.write_string(fd, fmt.tprintf("  }}\n"))
+    //     os.write_string(fd, fmt.tprintf("{{\n"))
+    //     enum_type_name := fmt.tprintf("GDEXTENSION_VARIANT_TYPE_%s", strings.to_upper(snake_class_name))
+    //     os.write_string(fd, fmt.tprintf("  @static name : godot.String\n"))
+    //     os.write_string(fd, fmt.tprintf("  @static operator : gde.GDExtensionPtrOperatorEvaluator\n"))
+    //     os.write_string(fd, fmt.tprintf("  if operator == nil {{\n"))
+    //     os.write_string(fd, fmt.tprintf("    gde.string_name_new_with_utf8_chars(&name, \"%s\")\n", operator_name))
+    //     if right_type == "Variant" do right_type = "nil"
+    //     snake_right_type := camel_to_snake(right_type)
+    //     rt := fmt.tprintf("GDEXTENSION_VARIANT_TYPE_%s", strings.to_upper(snake_right_type))
+    //     os.write_string(fd, fmt.tprintf("    operator = gde.variant_get_ptr_operator_evaluator(gde.GDExtensionVariantOperator.GDEXTENSION_VARIANT_%s, gde.GDExtensionVariantType.%s, gde.GDExtensionVariantType.%s)\n", cop, enum_type_name, rt))
+    //     os.write_string(fd, fmt.tprintf("  }}\n"))
 
-        if correct_type(return_type, "", g) == "bool" {
-          os.write_string(fd, fmt.tprintf("  ret := new(int)\n"))
-        } else {
-          os.write_string(fd, fmt.tprintf("  ret := new(%s)\n", correct_type(return_type, "", g)))
-        }
-        if !is_unary {
-          if type_for_parameter(right_type, "", g) == "bool" {
-            os.write_string(fd, "  lother : int = other ? 1 : 0\n") // local other
-          } else {
-            os.write_string(fd, fmt.tprintf("  lother : %s = other\n", type_for_parameter(right_type, "", g)))
-          }
-          if strings.has_prefix(type_for_parameter(right_type, "", g), "^") {
-            os.write_string(fd, fmt.tprintf("  operator(cast(gde.GDExtensionConstTypePtr)me, cast(gde.GDExtensionConstTypePtr)lother, cast(gde.GDExtensionTypePtr)ret)\n"))
-          } else {
-            os.write_string(fd, fmt.tprintf("  operator(cast(gde.GDExtensionConstTypePtr)me, cast(gde.GDExtensionConstTypePtr)&lother, cast(gde.GDExtensionTypePtr)ret)\n"))
-          }
-        } else {
-          os.write_string(fd, fmt.tprintf("  operator(cast(gde.GDExtensionConstTypePtr)me, cast(gde.GDExtensionConstTypePtr)nil, cast(gde.GDExtensionTypePtr)ret)\n"))         
-        }
-        
-        if correct_type(return_type, "", g) == "bool" {
-          os.write_string(fd, "  return ret^ == 0 ? false : true")
-        } else {
-          os.write_string(fd, "  return ret")
-        }
-        os.write_string(fd, "\n}\n")
-        
-      }
-    }
+    //     if correct_type(return_type, "", g) == "bool" {
+    //       os.write_string(fd, fmt.tprintf("  ret := new(int)\n"))
+    //     } else {
+    //       os.write_string(fd, fmt.tprintf("  ret := new(%s)\n", correct_type(return_type, "", g)))
+    //       os.write_string(fd, fmt.tprintf("  ret := new(%s)\n", correct_type(return_type, "", g)))
+    //     }
+    //     if !is_unary {
+    //       if type_for_parameter(right_type, "", g) == "bool" {
+    //         os.write_string(fd, "  lother : int = other ? 1 : 0\n") // local other
+    //       } else {
+    //         os.write_string(fd, fmt.tprintf("  lother : %s = other\n", type_for_parameter(right_type, "", g)))
+    //       }
+    //       if strings.has_prefix(type_for_parameter(right_type, "", g), "^") {
+    //         os.write_string(fd, fmt.tprintf("  operator(cast(gde.GDExtensionConstTypePtr)me, cast(gde.GDExtensionConstTypePtr)lother, cast(gde.GDExtensionTypePtr)ret)\n"))
+    //       } else {
+    //         os.write_string(fd, fmt.tprintf("  operator(cast(gde.GDExtensionConstTypePtr)me, cast(gde.GDExtensionConstTypePtr)&lother, cast(gde.GDExtensionTypePtr)ret)\n"))
+    //       }
+    //     } else {
+    //       os.write_string(fd, fmt.tprintf("  operator(cast(gde.GDExtensionConstTypePtr)me, cast(gde.GDExtensionConstTypePtr)nil, cast(gde.GDExtensionTypePtr)ret)\n"))         
+    //     }
+    //     
+    //     if correct_type(return_type, "", g) == "bool" {
+    //       os.write_string(fd, "  return ret^ == 0 ? false : true")
+    //     } else {
+    //       os.write_string(fd, "  return ret")
+    //     }
+    //     os.write_string(fd, "\n}\n")
+    //     
+    //   }
+    // }
     for op_k, op_v in operators_map {
       if op_v == 0 do continue
       os.write_string(fd, fmt.tprintf("%s :: proc{{", op_k))
@@ -2197,21 +2170,17 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
     } else {
       os.write_string(fd, fmt.tprintf("%s :: proc(me: ^%s, args: ..any) {{\n", method_name, correct_type(class_name, "", g)))
     }
-    os.write_string(fd, fmt.tprintf("  gargs := make([]^godot.Variant, len(args)); defer delete(gargs)\n"))
-    os.write_string(fd, fmt.tprintf("  for a, idx in args {{\n"))
-    os.write_string(fd, fmt.tprintf("    gargs[idx] = variant.convert_any(a)\n"))
-    os.write_string(fd, fmt.tprintf("  }}\n"))
-    os.write_string(fd, fmt.tprintf("  clean_up :: proc(gargs: []^godot.Variant) {{\n"))
-    os.write_string(fd, fmt.tprintf("    for a in gargs {{\n"))
-    os.write_string(fd, fmt.tprintf("      free(a)\n"))
-    os.write_string(fd, fmt.tprintf("    }}\n"))
-    os.write_string(fd, fmt.tprintf("  }}\n"))
-    os.write_string(fd, fmt.tprintf("  defer clean_up(gargs)\n"))
-    
+      os.write_string(fd, fmt.tprintf("  gargs := make([]godot.Variant, len(args)); defer delete(gargs)\n"))
+      os.write_string(fd, fmt.tprintf("  pargs := make([]^godot.Variant, len(args)); defer delete(pargs)\n"))
+      os.write_string(fd, fmt.tprintf("  for &a, idx in args {{\n"))
+      os.write_string(fd, fmt.tprintf("    gargs[idx] = variant.convert_any(a)\n"))
+      os.write_string(fd, fmt.tprintf("    pargs[idx] = &gargs[idx]\n"))
+      os.write_string(fd, fmt.tprintf("  }}\n"))
+      os.write_string(fd, "  defer for &a in gargs do variant.destroy(&a)\n")
     if has_return {
-      os.write_string(fd, fmt.tprintf("  return %s(me, &gargs[0], len(gargs))\n", fmt.tprintf("%s_internal", method_name)))
+      os.write_string(fd, fmt.tprintf("  return %s(me, &pargs[0], len(pargs))\n", fmt.tprintf("%s_internal", method_name)))
     } else {
-      os.write_string(fd, fmt.tprintf("  %s(me, &gargs[0], len(gargs))\n", fmt.tprintf("%s_internal", method_name)))
+      os.write_string(fd, fmt.tprintf("  %s(me, &pargs[0], len(pargs))\n", fmt.tprintf("%s_internal", method_name)))
     }
     
   }
@@ -2426,19 +2395,19 @@ get_gdextension_type :: proc(type_name: string) -> string {
   return type_name
 }
 
-get_encoded_arg :: proc(arg_name: string, type_name: string, type_meta: string, g: ^Globals) -> (result: string, name: string) {
-  name = escape_identifier(arg_name)
-  arg_type := correct_type(type_name, "", g)
-  if is_pod_type(arg_type) {
-    result = fmt.tprintf("%s_encoded := cast(%s)%s", name, get_gdextension_type(arg_type), name)
-    name = fmt.tprintf("&%s_encoded", name)
-  } else if is_engine_class(type_name, g) {
-    name = fmt.tprintf("((%s != nil) ? %s : nil)", name, name)
-  } else {
-    name = fmt.tprintf("%s", name)
-  }
-  return
-}
+// get_encoded_arg :: proc(arg_name: string, type_name: string, type_meta: string, g: ^Globals) -> (result: string, name: string) {
+//   name = escape_identifier(arg_name)
+//   arg_type := correct_type(type_name, "", g)
+//   if is_pod_type(arg_type) {
+//     result = fmt.tprintf("%s_encoded := cast(%s)%s", name, get_gdextension_type(arg_type), name)
+//     name = fmt.tprintf("&%s_encoded", name)
+//   } else if is_engine_class(type_name, g) {
+//     name = fmt.tprintf("((%s != nil) ? %s : nil)", name, name)
+//   } else {
+//     name = fmt.tprintf("%s", name)
+//   }
+//   return
+// }
 
 generate_utility_functions :: proc(root: json.Object, target_dir: string, g: ^Globals) {
   target_dir2 := filepath.join([]string{ target_dir, "utility_functions" })
@@ -2476,12 +2445,13 @@ generate_utility_functions :: proc(root: json.Object, target_dir: string, g: ^Gl
     function_signature := make_signature("UtilityFunctions", function.(json.Object), g)
     os.write_string(fd, fmt.tprintf("%s {{\n", function_signature))
     // function body
-    os.write_string(fd, fmt.tprintf("  @static __function_name : godot.StringName\n"))
-    os.write_string(fd, fmt.tprintf("  @static __function : gde.GDExtensionPtrUtilityFunction\n"))   
-    os.write_string(fd, fmt.tprintf("  if __function == nil {{\n"))
-    os.write_string(fd, fmt.tprintf("    __function_name = string_name.constructor(\"%s\")\n", func_name))
-    os.write_string(fd, fmt.tprintf("    __function = gde.variant_get_ptr_utility_function(cast(gde.GDExtensionConstStringNamePtr)&__function_name, %s)\n", hash))
-    os.write_string(fd, fmt.tprintf("  }}\n"))
+    os.write_string(fd, "	using godot\n")
+    os.write_string(fd, fmt.tprintf("\t@static __function_name : godot.StringName\n"))
+    os.write_string(fd, fmt.tprintf("\t@static __function : gde.GDExtensionPtrUtilityFunction\n"))   
+    os.write_string(fd, fmt.tprintf("\tif __function == nil {{\n"))
+    os.write_string(fd, fmt.tprintf("\t\t__function_name = string_name.constructor(\"%s\")\n", func_name))
+    os.write_string(fd, fmt.tprintf("\t\t__function = gde.variant_get_ptr_utility_function(cast(gde.GDExtensionConstStringNamePtr)&__function_name, %s)\n", hash))
+    os.write_string(fd, fmt.tprintf("\t}}\n"))
 
     return_type := ""
     has_return := "return_type" in function.(json.Object)
@@ -2490,17 +2460,23 @@ generate_utility_functions :: proc(root: json.Object, target_dir: string, g: ^Gl
       has_return = (return_type != "void")
     }
     
-    arguments : [dynamic]string
+	Arg :: struct { name, type : string }
+
+    arguments : [dynamic]Arg
     if "arguments" in function.(json.Object) {
       for argument in function.(json.Object)["arguments"].(json.Array) {
         meta := ""
         if "meta" in argument.(json.Object) do meta = fmt.tprintf("%s", argument.(json.Object)["meta"])
-        encode, arg_name := get_encoded_arg(
-          fmt.tprintf("%s", argument.(json.Object)["name"]),
-          fmt.tprintf("%s", argument.(json.Object)["type"]),
-          meta, g)
-        os.write_string(fd, fmt.tprintf("  %s\n", encode))
-        append(&arguments, arg_name)
+        // encode, arg_name := get_encoded_arg(
+        //   fmt.tprintf("%s", argument.(json.Object)["name"]),
+        //   fmt.tprintf("%s", argument.(json.Object)["type"]),
+        //   meta, g)
+        // os.write_string(fd, fmt.tprintf("  %s\n", encode))
+        // append(&arguments, arg_name)
+        append(&arguments, Arg{
+			name = fmt.tprintf("%s", argument.(json.Object)["name"]),
+			type = fmt.tprintf("%s", correct_type(argument.(json.Object)["type"].(json.String), "", g)),
+		})
       }
     }
         
@@ -2508,23 +2484,23 @@ generate_utility_functions :: proc(root: json.Object, target_dir: string, g: ^Gl
       // os.write_string(fd, fmt.tprintf("  args := make([]gde.GDExtensionConstTypePtr, %d)\n", len(arguments)))
       os.write_string(fd, fmt.tprintf("  args : [%d]gde.GDExtensionConstTypePtr\n", len(arguments)))
       for a, idx in arguments {
-        os.write_string(fd, fmt.tprintf(" args[%d] = cast(gde.GDExtensionConstTypePtr)%s\n", idx, a))
+        os.write_string(fd, fmt.tprintf(" val%d := cast(%s)%s; args[%d] = cast(gde.GDExtensionConstTypePtr)&val%d\n", idx, get_gdextension_type(a.type), a.name, idx, idx))
       }
 
       if has_return {
         if return_type == "Object" {
           //fmt.printf("%s - %s\n", return_type, function_signature) TODO instance_from_id()
-          os.write_string(fd, "  ret : rawptr = nil\n")
-          os.write_string(fd, "  __function(cast(gde.GDExtensionTypePtr)&ret, &args[0], len(args))\n")
+          os.write_string(fd, "  ret : godot.Object\n")
+          os.write_string(fd, "  __function(cast(gde.GDExtensionTypePtr)&ret, raw_data(args[:]), len(args))\n")
           //os.write_string(fd, "  return gde.object_get_instance_binding(ret, token, Object::__bindingcallbacks)\n") TODO
-          os.write_string(fd, "  return nil\n")
+          os.write_string(fd, "  return ret\n")
         } else {
           os.write_string(fd, fmt.tprintf("  ret : %s\n", get_gdextension_type(correct_type(return_type, "", g))))
           os.write_string(fd, "  __function(cast(gde.GDExtensionTypePtr)&ret, raw_data(args[:]), len(args))\n")
           os.write_string(fd, fmt.tprintf("  return cast(%s)ret\n", correct_type(return_type, "", g)))
         }
       } else {
-        os.write_string(fd, "  __function(nil, &args[0], len(args))\n")
+        os.write_string(fd, "  __function(nil, raw_data(args[:]), len(args))\n")
       }
       
     } else { // is_vararg
@@ -2542,21 +2518,18 @@ generate_utility_functions :: proc(root: json.Object, target_dir: string, g: ^Gl
       } else {
         os.write_string(fd, fmt.tprintf("%s :: proc(args: ..any) {{\n", func_name))
       }
-      os.write_string(fd, fmt.tprintf("  gargs := make([]^godot.Variant, len(args)); defer delete(gargs)\n"))
-      os.write_string(fd, fmt.tprintf("  for a, idx in args {{\n"))
+      os.write_string(fd, fmt.tprintf("  gargs := make([]godot.Variant, len(args)); defer delete(gargs)\n"))
+      os.write_string(fd, fmt.tprintf("  pargs := make([]^godot.Variant, len(args)); defer delete(pargs)\n"))
+      os.write_string(fd, fmt.tprintf("  for &a, idx in args {{\n"))
       os.write_string(fd, fmt.tprintf("    gargs[idx] = variant.convert_any(a)\n"))
+      os.write_string(fd, fmt.tprintf("    pargs[idx] = &gargs[idx]\n"))
       os.write_string(fd, fmt.tprintf("  }}\n"))
-      os.write_string(fd, fmt.tprintf("  clean_up :: proc(gargs: []^godot.Variant) {{\n"))
-      os.write_string(fd, fmt.tprintf("    for a in gargs {{\n"))
-      os.write_string(fd, fmt.tprintf("      free(a)\n"))
-      os.write_string(fd, fmt.tprintf("    }}\n"))
-      os.write_string(fd, fmt.tprintf("  }}\n"))
-      os.write_string(fd, fmt.tprintf("  defer clean_up(gargs)\n"))
+      os.write_string(fd, "  defer for &a in gargs do variant.destroy(&a)\n")
       
       if has_return {
-        os.write_string(fd, fmt.tprintf("  return %s(&gargs[0], len(gargs))\n", fmt.tprintf("%s_internal", func_name)))
+        os.write_string(fd, fmt.tprintf("  return %s(&pargs[0], len(pargs))\n", fmt.tprintf("%s_internal", func_name)))
       } else {
-        os.write_string(fd, fmt.tprintf("  %s(&gargs[0], len(gargs))\n", fmt.tprintf("%s_internal", func_name)))
+        os.write_string(fd, fmt.tprintf("  %s(&pargs[0], len(pargs))\n", fmt.tprintf("%s_internal", func_name)))
       }
     }
     

@@ -8,6 +8,7 @@ import "godot"
 import "godot/node"
 import "godot/string_name"
 import gstring "godot/string"
+import "godot/variant"
 import "godot/vector2"
 import "godot/sprite2d"
 import utl "godot/utility_functions"
@@ -40,8 +41,7 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 	get_virtual_func = proc "c" (p_class_userdata: rawptr, p_name: gde.GDExtensionConstStringNamePtr) -> gde.GDExtensionClassCallVirtual {
 		context = runtime.default_context()
 		strn_process : godot.String
-		gde.string_new_with_utf8_chars(&strn_process, "_process"); defer gstring.destructor(&strn_process)
-		if string_name.operator_OP_EQUAL1(auto_cast p_name, strn_process) {
+		if string_name.to_string(auto_cast p_name) == "_process" {
 			return Dove_process_gcall
 		}
 		return nil
