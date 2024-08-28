@@ -1719,6 +1719,7 @@ generate_builtin_bindings :: proc(root: json.Object, target_dir: string, build_c
     //os.write_string(fd, fmt.tprintf("  plist : ^gde.GDExtensionPropertyInfo,\n"))
     //os.write_string(fd, fmt.tprintf("  plist_size : u32,\n"))
     os.write_string(fd, fmt.tprintf("  _owner : rawptr, // GodotObject ptr\n"))
+    os.write_string(fd, fmt.tprintf("  _table : rawptr, // vtable\n"))
     os.write_string(fd, fmt.tprintf("}}\n\n"))
 
     os.write_string(fd, fmt.tprintf("Ref :: struct {{\n"))
@@ -1976,39 +1977,40 @@ generate_engine_classes :: proc(class_api: json.Object, target_dir: string, used
     //   //os.write_string(sfd, "  reference : rawptr,\n")
     // }
 
+    os.write_string(sfd, fmt.tprintf("%s_VTABLE :: struct {{\n", class_name))
     // struct proc pointers
     // it's the constructor that currently sets up these proc pointers to non-nil values, so don't include this for now
-    // os.write_string(sfd, fmt.tprintf("constructor : proc(me: ^godot.%s),\n", class_name))
-    // if "methods" in class_api {
-    //   for method in class_api["methods"].(json.Array) {
-    //     method_signature := make_signature(class_name, method.(json.Object), g, true, false, true)
-    //     if strings.has_prefix(method_signature, "_") do continue
-    //     method_signature, _ = strings.replace_all(method_signature, "::", ":")
-    //     is_vararg := method.(json.Object)["is_vararg"].(json.Boolean)
-    //     if is_vararg {
-    //       end := strings.index(method_signature, ":")
-    //       method_signature = method_signature[0:end-1]
-    //       return_type := get_return_type(method.(json.Object), g)
-    //       rt := correct_type(return_type, "", g) // TODO return meta?
-    //       has_return := return_type != ""
-    //       
-    //       if has_return {
-    //         method_signature = fmt.tprintf("%s : proc(me: ^%s, args: ..any) -> %s", method_signature, correct_type(class_name, "", g), correct_type(return_type, "", g))
-    //       } else {
-    //         method_signature = fmt.tprintf("%s : proc(me: ^%s, args: ..any)", method_signature, correct_type(class_name, "", g))
-    //       }
+    os.write_string(sfd, fmt.tprintf("  using _ : ^%s_VTABLE,\n", parent))
+    if "methods" in class_api {
+      for method in class_api["methods"].(json.Array) {
+        method_signature := make_signature(class_name, method.(json.Object), g, true, false, true)
+        if strings.has_prefix(method_signature, "_") do continue
+        method_signature, _ = strings.replace_all(method_signature, "::", ":")
+        is_vararg := method.(json.Object)["is_vararg"].(json.Boolean)
+        if is_vararg {
+          end := strings.index(method_signature, ":")
+          method_signature = method_signature[0:end-1]
+          return_type := get_return_type(method.(json.Object), g)
+          rt := correct_type(return_type, "", g) // TODO return meta?
+          has_return := return_type != ""
+          
+          if has_return {
+            method_signature = fmt.tprintf("%s : proc(me: ^%s, args: ..any) -> %s", method_signature, correct_type(class_name, "", g), correct_type(return_type, "", g))
+          } else {
+            method_signature = fmt.tprintf("%s : proc(me: ^%s, args: ..any)", method_signature, correct_type(class_name, "", g))
+          }
 
-    //       method_signature, _ = strings.replace_all(method_signature, "_internal", "")
-    //     }
-    //     os.write_string(sfd, fmt.tprintf("  %s,\n", method_signature))
-    //   }
-    // }
+          method_signature, _ = strings.replace_all(method_signature, "_internal", "")
+        }
+        os.write_string(sfd, fmt.tprintf("  %s,\n", method_signature))
+      }
+    }
     
     // is_singleton := slice.contains(g.singletons[:], class_name)
     // if is_singleton {
     //   // anything TODO here? for singletons?
     // }   
-    // os.write_string(sfd, "}\n") // end struct {
+    os.write_string(sfd, "}\n\n") // end struct {
 
     g.pck = tmp
 
