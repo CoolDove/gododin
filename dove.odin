@@ -18,8 +18,8 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		using godot
 		context = runtime.default_context()
 		strn_class, strn_parent : StringName
-		gde.string_name_new_with_utf8_chars(&strn_class, "Dove")// ; defer variant_destroy(auto_cast &strn_class)
-		gde.string_name_new_with_utf8_chars(&strn_parent, "Sprite2D")// ; defer variant_destroy(auto_cast &strn_parent)
+		gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer string_name_destroy(&strn_class)
+		gde.string_name_new_with_utf8_chars(&strn_parent, "Sprite2D"); defer string_name_destroy(&strn_parent)
 		obj := gde.classdb_construct_object(&strn_parent)
 		instance := new(Dove)
 		gde.object_set_instance(obj, &strn_class, instance)
