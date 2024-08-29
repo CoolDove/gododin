@@ -2063,6 +2063,15 @@ __%s_table : %s_VTABLE
   // TODO: more "nice stuff" for engine classes
 }
 
+dovegen_variant_file :: proc(sb_variantfile: ^strings.Builder, root: json.Object) {
+	using strings
+	write_string(sb_variantfile, "package godot\nimport gde \"../gdextension\"\n\n")
+	for variant_api in root["builtin_classes"].(json.Array) {
+		name := variant_api.(json.Object)["name"].(json.String)
+		write_string(sb_variantfile, fmt.tprintf("// %s\n", name))
+	}
+}
+
 dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class_api: json.Object) {
 	using strings
 	sb_header, sb_body : Builder
@@ -2322,11 +2331,7 @@ generate_engine_classes_bindings :: proc(root: json.Object, target_dir: string, 
 	// Generate variants
 	sb_variantfile : strings.Builder
 	strings.builder_init(&sb_variantfile); strings.builder_destroy(&sb_variantfile)
-	strings.write_string(&sb_variantfile, "package godot\nimport gde \"../gdextension\"\n\n")
-	for variant_api in root["builtin_classes"].(json.Array) {
-		name := variant_api.(json.Object)["name"].(json.String)
-		strings.write_string(&sb_variantfile, fmt.tprintf("// %s\n", name))
-	}
+	dovegen_variant_file(&sb_variantfile, root)
 	os.write_entire_file(filepath.join([]string{ target_dir, "_variant.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_variantfile))
 
 	// Generate object classes
