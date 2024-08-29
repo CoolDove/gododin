@@ -4,7 +4,7 @@ import gde "gdextension"
 import "core:fmt"
 import "base:runtime"
 // import utl "godot/utility_functions"
-// import godot "godot"
+import godot "godot"
 
 
 God :: struct {
@@ -36,23 +36,16 @@ _initialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	if (l != .GDEXTENSION_INITIALIZATION_SCENE) do return
 	// utl.print("Odin extension initialized\n")
 
-	// strn_class, strn_parent : godot.StringName
+	strn_class, strn_parent : godot.StringName
+	gde.string_name_new_with_utf8_chars(&strn_class, "Dove")
+	gde.string_name_new_with_utf8_chars(&strn_parent, "Sprite2D")
+	fmt.printf("to register Dove\n")
 
-	// gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer string_name.destructor(&strn_class)
-	// gde.string_name_new_with_utf8_chars(&strn_parent, "Sprite2D"); defer string_name.destructor(&strn_parent)
-
-	// gde.classdb_register_extension_class2(god.library, &strn_class, &strn_parent, &DoveRegister)
-
+	gde.classdb_register_extension_class2(god.library, &strn_class, &strn_parent, &DoveRegister)
+	fmt.printf("Dove registered\n")
 }
 _deinitialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	if (l != .GDEXTENSION_INITIALIZATION_SCENE) do return
 	context = runtime.default_context()
 	// utl.print("Odin extension uninitialized\n")
 }
-
-
-// string_name_to_string :: proc(strn: godot.StringName, allocator:=context.allocator) -> string {
-// 	context.allocator = allocator
-// 	str := gstring.constructor2(strn)
-// 	return gstring.to_string(&str)
-// }

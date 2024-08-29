@@ -2074,6 +2074,22 @@ build_conf_int_defines :: [?]string { "i32", "i64", "i32", "i64", }
 
 current_build_configuration_idx :: 1 // float_64
 
+FileWriter :: struct {
+	sb : strings.Builder,
+	path : string,
+}
+
+file_writer_make :: proc(path: string, allocator:=context.allocator) -> FileWriter {
+	context.allocator = allocator
+	fw : FileWriter
+	strings.builder_init(&fw.sb)
+	fw.path = path
+	return fw
+}
+file_writer_write :: proc(using fw: ^FileWriter) {// and destroy
+	os.write_entire_file(path, transmute([]u8)strings.to_string(sb))
+	strings.builder_destroy(&sb)
+}
 
 dovegen :: proc(root: json.Object, target_dir: string) {
 	os.make_directory(target_dir)
@@ -2083,11 +2099,15 @@ dovegen :: proc(root: json.Object, target_dir: string) {
 	strings.write_string(&sb_godotfile, "package godot\n")
 	strings.write_string(&sb_godotfile, "import gde \"../gdextension\"\n\n")
 
-	// Generate variants
-	sb_variantfile : strings.Builder
-	strings.builder_init(&sb_variantfile); strings.builder_destroy(&sb_variantfile)
-	dovegen_variant_file(&sb_variantfile, root)
-	os.write_entire_file(filepath.join([]string{ target_dir, "define_builtin_classes.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_variantfile))
+	// Generate builtin classes
+	fw_builtin_classes := file_writer_make(filepath.join([]string{ target_dir, "define_builtin_classes.odin" }))
+	dovegen_builtin_classes(&fw_builtin_classes.sb, root)
+	file_writer_write(&fw_builtin_classes)
+
+	// Generate variant stuff
+	fw_variant := file_writer_make(filepath.join([]string{ target_dir, "variant.odin" }, context.temp_allocator))
+	dovegen_variant(&fw_variant.sb, root)
+	file_writer_write(&fw_variant)
 
 	// Generate object classes
 	sb_classfile : strings.Builder
@@ -2105,26 +2125,21 @@ dovegen :: proc(root: json.Object, target_dir: string) {
 	os.write_entire_file(filepath.join([]string{ target_dir, "godot.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_godotfile))
 }
 
-dove_configuration_type :: proc() -> string {
-	return "float_64"
-}
-
-dovegen_variant_file :: proc(sb_variantfile: ^strings.Builder, root: json.Object) {
+dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, root: json.Object) {
 	using strings
-	write_string(sb_variantfile, "package godot\nimport gde \"../gdextension\"\n\n")
+	write_string(sb_classesfile, "package godot\nimport gde \"../gdextension\"\n\n")
 	sizes := root["builtin_class_sizes"].(json.Array)[current_build_configuration_idx].(json.Object)["sizes"].(json.Array)
 	_offsets := root["builtin_class_member_offsets"].(json.Array)[current_build_configuration_idx].(json.Object)["classes"].(json.Array)
 	offsets := make(map[string]json.Array, len(_offsets)); defer delete(offsets)
 	for o in _offsets do offsets[o.(json.Object)["name"].(json.String)] = o.(json.Object)["members"].(json.Array)
 
 	for class, idx in root["builtin_classes"].(json.Array) {
-		if idx == 0 do continue // Nil
 		name := class.(json.Object)["name"].(json.String)
 		size :int= cast(int)sizes[idx].(json.Object)["size"].(json.Float)
 
-		write_string(sb_variantfile, fmt.tprintf("// %s\n", name)) // builtin class define
+		write_string(sb_classesfile, fmt.tprintf("// %s\n", name)) // builtin class define
 		if offset, ok := offsets[name]; ok {// with members
-			write_string(sb_variantfile, fmt.tprintf("%s :: struct {{ // [%d]u8\n", name, size))
+			write_string(sb_classesfile, fmt.tprintf("%s :: struct {{ // [%d]u8\n", name, size))
 			for m in offset {
 				m := m.(json.Object)
 				member_name := m["member"].(json.String)
@@ -2132,16 +2147,48 @@ dovegen_variant_file :: proc(sb_variantfile: ^strings.Builder, root: json.Object
 				// float and int in builtin classes are all 4 bytes.
 				if member_type == "float" do member_type = "f32"
 				if member_type == "int32" do member_type = "i32"
-				write_string(sb_variantfile, fmt.tprintf("\t%s : %s,\n", member_name, member_type))
+				write_string(sb_classesfile, fmt.tprintf("\t%s : %s,\n", member_name, member_type))
 			}
-			write_string(sb_variantfile, "}\n\n")
+			write_string(sb_classesfile, "}\n\n")
 		} else {// no members
 			if name == "bool" do continue
-			else if name == "float" do write_string(sb_variantfile, fmt.tprintf("%s :: %s\n\n", name, build_conf_float_defines[current_build_configuration_idx]))
-			else if name == "int" do write_string(sb_variantfile, fmt.tprintf("%s :: %s\n\n", name, build_conf_int_defines[current_build_configuration_idx]))
-			else do write_string(sb_variantfile, fmt.tprintf("%s :: distinct [%d]u8\n\n", name, size))
+			else if name == "float" do write_string(sb_classesfile, fmt.tprintf("%s :: %s\n\n", name, build_conf_float_defines[current_build_configuration_idx]))
+			else if name == "int" do write_string(sb_classesfile, fmt.tprintf("%s :: %s\n\n", name, build_conf_int_defines[current_build_configuration_idx]))
+			else do write_string(sb_classesfile, fmt.tprintf("%s :: distinct [%d]u8\n\n", name, size))
 		}
 	}
+}
+dovegen_variant :: proc(sb: ^strings.Builder, root: json.Object) {
+	using strings
+	write_string(sb, "package godot\nimport gde \"../gdextension\"\n\n")
+	sizes := root["builtin_class_sizes"].(json.Array)[current_build_configuration_idx].(json.Object)["sizes"].(json.Array)
+	assert(sizes[len(sizes)-1].(json.Object)["name"].(json.String)=="Variant", "Failed to get size of builtin class Variant, the last one is not Variant anymore.")
+	write_string(sb, fmt.tprintf("Variant :: distinct [%d]u8\n\n", cast(int)sizes[len(sizes)-1].(json.Object)["size"].(json.Float)))
+	write_string(sb, "variant_destroy :: proc (v: ^Variant) { gde.variant_destroy(auto_cast v) } \n")
+
+	for class, idx in root["builtin_classes"].(json.Array) {
+		// variant constructor
+		v_class_name := class.(json.Object)["name"].(json.String)
+		write_string(sb, fmt.tprintf(`
+variant_from_%s :: proc(p: %s) -> Variant {{
+	@static variant_cons : gde.GDExtensionVariantFromTypeConstructorFunc
+	if variant_cons == nil {{
+		variant_cons = gde.get_variant_from_type_constructor(.%s)
+	}}
+	p : %s
+	ret : Variant
+	variant_cons(&ret, &p)
+	return ret
+}}
+`, v_class_name, v_class_name, dove_builtin_class_name_to_variant_type_enum_name(v_class_name, context.temp_allocator), v_class_name))
+	}
+}
+
+dove_builtin_class_name_to_variant_type_enum_name :: proc(class_name: string, allocator:=context.allocator) -> string {
+	context.allocator = allocator
+	if class_name == "Array" do return "GDEXTENSION_VARIANT_TYPE_ARRAY"
+	ints, was_allocation := strings.replace(class_name, "Array", "_Array", 1); defer if was_allocation do delete(ints)
+	return fmt.aprintf("GDEXTENSION_VARIANT_TYPE_%s", strings.to_upper_snake_case(ints))
 }
 
 dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class_api: json.Object) {
@@ -2222,10 +2269,10 @@ dovegen_method_signature :: proc(sb: ^strings.Builder, method: json.Object) {
 	}
 }
 
-dovegen_funcimpl_variant_constructor :: proc() {
-}
-dovegen_funcimpl_variant_to_type :: proc() {
-}
+// dovegen_funcimpl_variant_constructor :: proc() {
+// }
+// dovegen_funcimpl_variant_to_type :: proc() {
+// }
 dovegen_funcimpl_variant_method :: proc() {
 }
 dovegen_funcimpl_variant_utility_function :: proc() {
