@@ -2063,12 +2063,53 @@ __%s_table : %s_VTABLE
   // TODO: more "nice stuff" for engine classes
 }
 
+build_configurations :: [?]string {
+	"float_32",
+	"float_64",
+	"double_32",
+	"double_64",
+}
+build_conf_float_defines :: [?]string { "f32", "f64", "f32", "f64", }
+build_conf_int_defines :: [?]string { "i32", "i64", "i32", "i64", }
+
+current_build_configuration_idx :: 1 // float_64
+
+dove_configuration_type :: proc() -> string {
+	return "float_64"
+}
+
 dovegen_variant_file :: proc(sb_variantfile: ^strings.Builder, root: json.Object) {
 	using strings
 	write_string(sb_variantfile, "package godot\nimport gde \"../gdextension\"\n\n")
-	for variant_api in root["builtin_classes"].(json.Array) {
-		name := variant_api.(json.Object)["name"].(json.String)
-		write_string(sb_variantfile, fmt.tprintf("// %s\n", name))
+	sizes := root["builtin_class_sizes"].(json.Array)[current_build_configuration_idx].(json.Object)["sizes"].(json.Array)
+	_offsets := root["builtin_class_member_offsets"].(json.Array)[current_build_configuration_idx].(json.Object)["classes"].(json.Array)
+	offsets := make(map[string]json.Array, len(_offsets)); defer delete(offsets)
+	for o in _offsets do offsets[o.(json.Object)["name"].(json.String)] = o.(json.Object)["members"].(json.Array)
+
+	for class, idx in root["builtin_classes"].(json.Array) {
+		if idx == 0 do continue // Nil
+		name := class.(json.Object)["name"].(json.String)
+		size :int= cast(int)sizes[idx].(json.Object)["size"].(json.Float)
+
+		write_string(sb_variantfile, fmt.tprintf("// %s\n", name)) // builtin class define
+		if offset, ok := offsets[name]; ok {// with members
+			write_string(sb_variantfile, fmt.tprintf("%s :: struct {{ // [%d]u8\n", name, size))
+			for m in offset {
+				m := m.(json.Object)
+				member_name := m["member"].(json.String)
+				member_type := m["meta"].(json.String)
+				// float and int in builtin classes are all 4 bytes.
+				if member_type == "float" do member_type = "f32"
+				if member_type == "int" do member_type = "i32"
+				write_string(sb_variantfile, fmt.tprintf("\t%s : %s,\n", member_name, member_type))
+			}
+			write_string(sb_variantfile, "}\n\n")
+		} else {// no members
+			if name == "bool" do continue
+			else if name == "float" do write_string(sb_variantfile, fmt.tprintf("%s :: %s\n\n", name, build_conf_float_defines[current_build_configuration_idx]))
+			else if name == "int" do write_string(sb_variantfile, fmt.tprintf("%s :: %s\n\n", name, build_conf_int_defines[current_build_configuration_idx]))
+			else do write_string(sb_variantfile, fmt.tprintf("%s :: distinct [%d]u8\n\n", name, size))
+		}
 	}
 }
 
@@ -2332,7 +2373,7 @@ generate_engine_classes_bindings :: proc(root: json.Object, target_dir: string, 
 	sb_variantfile : strings.Builder
 	strings.builder_init(&sb_variantfile); strings.builder_destroy(&sb_variantfile)
 	dovegen_variant_file(&sb_variantfile, root)
-	os.write_entire_file(filepath.join([]string{ target_dir, "_variant.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_variantfile))
+	os.write_entire_file(filepath.join([]string{ target_dir, "variant.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_variantfile))
 
 	// Generate object classes
 	sb_classfile : strings.Builder
@@ -2347,7 +2388,7 @@ generate_engine_classes_bindings :: proc(root: json.Object, target_dir: string, 
 		os.write_entire_file(path, transmute([]u8)strings.to_string(sb_classfile))
 	}
 
-	os.write_entire_file(filepath.join([]string{ target_dir, "_godot.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_godotfile))
+	os.write_entire_file(filepath.join([]string{ target_dir, "godot.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_godotfile))
 	// if true do continue
 
     // used_classes : [dynamic]string

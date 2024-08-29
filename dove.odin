@@ -4,7 +4,7 @@ import "base:runtime"
 import "core:math"
 import "core:math/linalg"
 import "core:fmt"
-// import "godot"
+import "godot"
 import gde "gdextension"
 
 Dove :: struct {
@@ -49,6 +49,7 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 Dove_process :: proc (self: ^Dove, delta: f64) {
 	spike : ObjSpike
 	spike->do_foo(32)
+
 	// utl.print("process...")
 	// self.time += delta
 	// offset := vector2.constructor3(auto_cast math.sin(self.time), 0)
