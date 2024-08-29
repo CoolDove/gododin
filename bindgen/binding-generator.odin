@@ -2074,6 +2074,37 @@ build_conf_int_defines :: [?]string { "i32", "i64", "i32", "i64", }
 
 current_build_configuration_idx :: 1 // float_64
 
+
+dovegen :: proc(root: json.Object, target_dir: string) {
+	os.make_directory(target_dir)
+
+	sb_godotfile : strings.Builder
+	strings.builder_init(&sb_godotfile); strings.builder_destroy(&sb_godotfile)
+	strings.write_string(&sb_godotfile, "package godot\n")
+	strings.write_string(&sb_godotfile, "import gde \"../gdextension\"\n\n")
+
+	// Generate variants
+	sb_variantfile : strings.Builder
+	strings.builder_init(&sb_variantfile); strings.builder_destroy(&sb_variantfile)
+	dovegen_variant_file(&sb_variantfile, root)
+	os.write_entire_file(filepath.join([]string{ target_dir, "define_builtin_classes.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_variantfile))
+
+	// Generate object classes
+	sb_classfile : strings.Builder
+	strings.builder_init(&sb_classfile); strings.builder_destroy(&sb_classfile)
+	for class_api in root["classes"].(json.Array) {
+		class_name := class_api.(json.Object)["name"].(json.String)
+		if class_name == "ClassDB" do continue
+		if class_name == "OS" do continue
+		strings.builder_reset(&sb_classfile)
+		dovegen_engine_class(&sb_godotfile, &sb_classfile, class_api.(json.Object))
+		path := filepath.join([]string{ target_dir, fmt.tprintf("%s.odin", camel_to_snake(class_name)) }, context.temp_allocator)
+		os.write_entire_file(path, transmute([]u8)strings.to_string(sb_classfile))
+	}
+
+	os.write_entire_file(filepath.join([]string{ target_dir, "godot.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_godotfile))
+}
+
 dove_configuration_type :: proc() -> string {
 	return "float_64"
 }
@@ -2100,7 +2131,7 @@ dovegen_variant_file :: proc(sb_variantfile: ^strings.Builder, root: json.Object
 				member_type := m["meta"].(json.String)
 				// float and int in builtin classes are all 4 bytes.
 				if member_type == "float" do member_type = "f32"
-				if member_type == "int" do member_type = "i32"
+				if member_type == "int32" do member_type = "i32"
 				write_string(sb_variantfile, fmt.tprintf("\t%s : %s,\n", member_name, member_type))
 			}
 			write_string(sb_variantfile, "}\n\n")
@@ -2130,17 +2161,19 @@ dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class
 
 	// Table
 	write_string(&sb_body, fmt.tprintf(`
+__%s_table : _%s_TABLE
 @private
 _%s_TABLE :: struct {{
-	using _ : ^_%s_TABLE,
-`, class_name, parent_name))
+`, class_name, class_name, class_name))
+	if parent_name != "" do write_string(&sb_body, fmt.tprintf("\tusing _ : ^_%s_TABLE,\n", parent_name))
 	if "methods" in class_api {
 		for method in class_api["methods"].(json.Array) {
 			method_name := method.(json.Object)["name"].(json.String)
 			if method_name[0] == '_' do continue
-			write_string(&sb_body, fmt.tprintf("\t%s : ", method_name))
-			dovegen_method_signature(&sb_body, method.(json.Object))
-			write_string(&sb_body, ",\n")
+			// @TEMPORARY: Disabled to test variant bindings at first.
+			// write_string(&sb_body, fmt.tprintf("\t%s : ", method_name))
+			// dovegen_method_signature(&sb_body, method.(json.Object))
+			// write_string(&sb_body, ",\n")
 		}
 	}
 	write_string(&sb_body, "}\n")
@@ -2210,7 +2243,6 @@ create_%s :: proc() -> %s {{// dove object constructor
 	}}
 	o := gde.classdb_construct_object(cast(gde.GDExtensionConstStringNamePtr)&class_name)
 	return {{ _obj = o, _table = &__%s_table }}
-	return me
 }}
 `, class_name, class_name, class_name, class_name))
 	write_string(sb, fmt.tprintf(`
@@ -2364,31 +2396,6 @@ generate_engine_classes_method :: proc(method: json.Object, class_name: string, 
 generate_engine_classes_bindings :: proc(root: json.Object, target_dir: string, use_template_get_node: bool, g: ^Globals) {
 	fmt.printf("Generate engine classes\n")
 	
-	sb_godotfile : strings.Builder
-	strings.builder_init(&sb_godotfile); strings.builder_destroy(&sb_godotfile)
-	strings.write_string(&sb_godotfile, "package godot\n")
-	strings.write_string(&sb_godotfile, "import gde \"../gdextension\"\n\n")
-
-	// Generate variants
-	sb_variantfile : strings.Builder
-	strings.builder_init(&sb_variantfile); strings.builder_destroy(&sb_variantfile)
-	dovegen_variant_file(&sb_variantfile, root)
-	os.write_entire_file(filepath.join([]string{ target_dir, "variant.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_variantfile))
-
-	// Generate object classes
-	sb_classfile : strings.Builder
-	strings.builder_init(&sb_classfile); strings.builder_destroy(&sb_classfile)
-	for class_api in root["classes"].(json.Array) {
-		class_name := class_api.(json.Object)["name"].(json.String)
-		if class_name == "ClassDB" do continue
-		if class_name == "OS" do continue
-		strings.builder_reset(&sb_classfile)
-		dovegen_engine_class(&sb_godotfile, &sb_classfile, class_api.(json.Object))
-		path := filepath.join([]string{ target_dir, fmt.tprintf("%s.odin", camel_to_snake(class_name)) }, context.temp_allocator)
-		os.write_entire_file(path, transmute([]u8)strings.to_string(sb_classfile))
-	}
-
-	os.write_entire_file(filepath.join([]string{ target_dir, "godot.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_godotfile))
 	// if true do continue
 
     // used_classes : [dynamic]string
@@ -2792,11 +2799,11 @@ generate_bindings :: proc(root: json.Object, use_template_get_node: bool, target
 		append(&globals.singletons, strings.clone(name))
 	}
 
-	generate_global_constants(root, target_dir, &globals)
-	generate_builtin_bindings(root, target_dir, fmt.tprintf("%s_%s", real_t, bits), &globals)
-	generate_engine_classes_bindings(root, target_dir, use_template_get_node, &globals)
-	generate_utility_functions(root, target_dir, &globals)
-	generate_native_structures(root, target_dir, &globals)
+	// generate_global_constants(root, target_dir, &globals)
+	// generate_builtin_bindings(root, target_dir, fmt.tprintf("%s_%s", real_t, bits), &globals)
+	// generate_engine_classes_bindings(root, target_dir, use_template_get_node, &globals)
+	// generate_utility_functions(root, target_dir, &globals)
+	// generate_native_structures(root, target_dir, &globals)
 }
 
 main :: proc() {
@@ -2824,7 +2831,8 @@ main :: proc() {
 	header := root["header"].(json.Object)
 	fmt.println("Version", header["version_full_name"])
 
-	generate_bindings(root, true, "../godot")
+	dovegen(root, "../godot")
+	// generate_bindings(root, true, "../godot")
 }
 
 // ** godin

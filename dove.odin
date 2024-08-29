@@ -47,9 +47,6 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 	Dove_process(cast(^Dove)p_instance, delta)
 }
 Dove_process :: proc (self: ^Dove, delta: f64) {
-	spike : ObjSpike
-	spike->do_foo(32)
-
 	// utl.print("process...")
 	// self.time += delta
 	// offset := vector2.constructor3(auto_cast math.sin(self.time), 0)
@@ -59,27 +56,4 @@ Dove_process :: proc (self: ^Dove, delta: f64) {
 	// utl.print("get texture")
 	// width := texture->get_width()
 	// utl.print("Texture width: ", width, ", reference count: ", texture.get_reference_count(auto_cast &texture))
-}
-
-Obj :: struct #raw_union {
-	dove : ObjDove,
-	spike : ObjSpike
-}
-
-ObjDove :: struct {
-	ptr: rawptr,
-	using _table : ^ObjDove_TABLE,
-}
-ObjDove_TABLE :: struct {
-	do_foo : proc(rawptr, f64),
-	do_bar : proc(rawptr, f64),
-}
-ObjSpike :: struct {
-	ptr: rawptr,
-	using _table : ^ObjSpike_TABLE,
-}
-ObjSpike_TABLE :: struct {
-	using _ : ^ObjDove_TABLE,
-	do_foos : proc(rawptr, i64),
-	do_bars : proc(rawptr, i64),
 }
