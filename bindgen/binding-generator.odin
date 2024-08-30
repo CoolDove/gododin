@@ -2121,8 +2121,12 @@ dovegen :: proc(root: json.Object, target_dir: string) {
 		path := filepath.join([]string{ target_dir, fmt.tprintf("%s.odin", camel_to_snake(class_name)) }, context.temp_allocator)
 		os.write_entire_file(path, transmute([]u8)strings.to_string(sb_classfile))
 	}
-
 	os.write_entire_file(filepath.join([]string{ target_dir, "godot.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_godotfile))
+
+	// Generate utility functions
+	fw_utility := file_writer_make(filepath.join([]string{ target_dir, "utility_functions.odin" }, context.temp_allocator))
+	dovegen_utility_functions(&fw_utility.sb, root)
+	file_writer_write(&fw_utility)
 }
 
 dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, root: json.Object) {
@@ -2283,6 +2287,30 @@ _%s_TABLE :: struct {{
 }}
 `, class_name, parent_name, class_name))
 	}
+}
+
+dovegen_utility_functions :: proc(sb: ^strings.Builder, root: json.Object) {
+	using strings
+	write_string(sb, `package godot
+import "core:fmt"
+import gde "../gdextension"
+
+printfr :: proc(fmter: string, args: ..any) {
+	str := fmt.caprintf(fmter, ..args); defer delete(str)
+	@static __function_name : StringName
+	@static __function : gde.GDExtensionPtrUtilityFunction
+	if __function == nil {
+		gde.string_name_new_with_utf8_chars(&__function_name, "print_rich")
+		__function = gde.variant_get_ptr_utility_function(cast(gde.GDExtensionConstStringNamePtr)&__function_name, 2648703342)
+	}
+	gstr : String
+	gde.string_new_with_utf8_chars(&gstr, auto_cast str)
+	vstr := variant_from_String(gstr)
+	wrapped_string := &vstr
+	ret : Variant
+	__function(&ret, auto_cast &wrapped_string, 1)
+}
+`)
 }
 
 dovegen_method_signature :: proc(sb: ^strings.Builder, method: json.Object) {

@@ -26,9 +26,10 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 
 		d :float= 12.0
 		v := variant_from_any(Vector2{6,6}); defer variant_destroy(&v)
-		fmt.printf("vector: {}\n", v)
+		fmt.printf("vector variant: {}\n", v)
 		the_vector := variant_to_Vector2(v)
-		fmt.printf("vector2 from the variant: {}\n", the_vector)
+		// fmt.printf("vector2 from the variant: {}\n", the_vector)
+		printfr("vector2 from the variant: [url][u][b]{}[/u][/b][/url]", the_vector)
 		return obj
 	},
 	free_instance_func = proc "c" (uptr: rawptr, instance: gde.GDExtensionClassInstancePtr) {
