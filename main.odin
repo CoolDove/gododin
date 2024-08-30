@@ -48,12 +48,12 @@ _initialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 
 
 	// for e in gde.
-	values := reflect.enum_field_values(gde.GDExtensionVariantType)
-	names := reflect.enum_field_names(gde.GDExtensionVariantType)
-	for v, idx in values {
-		_destructor := gde.variant_get_ptr_destructor(auto_cast v)
-		printfr("[b]{}[/b]'s destructor: {}", names[idx], _destructor)
-	}
+	// values := reflect.enum_field_values(gde.GDExtensionVariantType)
+	// names := reflect.enum_field_names(gde.GDExtensionVariantType)
+	// for v, idx in values {
+	// 	_destructor := gde.variant_get_ptr_destructor(auto_cast v)
+	// 	printfr("[b]{}[/b]'s destructor: {}", names[idx], _destructor)
+	// }
 }
 _deinitialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	if (l != .GDEXTENSION_INITIALIZATION_SCENE) do return
