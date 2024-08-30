@@ -2169,18 +2169,31 @@ dovegen_variant :: proc(sb: ^strings.Builder, root: json.Object) {
 	for class, idx in root["builtin_classes"].(json.Array) {
 		// variant constructor
 		v_class_name := class.(json.Object)["name"].(json.String)
+		variant_type_enum_name := dove_builtin_class_name_to_variant_type_enum_name(v_class_name, context.temp_allocator)
 		write_string(sb, fmt.tprintf(`
 variant_from_%s :: proc(p: %s) -> Variant {{
 	@static variant_cons : gde.GDExtensionVariantFromTypeConstructorFunc
 	if variant_cons == nil {{
 		variant_cons = gde.get_variant_from_type_constructor(.%s)
 	}}
-	p : %s
+	p := p
 	ret : Variant
 	variant_cons(&ret, &p)
 	return ret
 }}
-`, v_class_name, v_class_name, dove_builtin_class_name_to_variant_type_enum_name(v_class_name, context.temp_allocator), v_class_name))
+`, v_class_name, v_class_name, variant_type_enum_name))
+		write_string(sb, fmt.tprintf(
+`variant_to_%s :: proc(v: Variant) -> %s {{
+	@static variant_to : gde.GDExtensionTypeFromVariantConstructorFunc
+	if variant_to == nil {{
+		variant_to = gde.get_variant_to_type_constructor(.%s)
+	}}
+	v := v
+	ret : %s
+	variant_to(&ret, &v)
+	return ret
+}}
+`, v_class_name, v_class_name, variant_type_enum_name, v_class_name))
 	}
 }
 

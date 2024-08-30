@@ -27,6 +27,8 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		d :float= 12.0
 		v := variant_from_Vector2(Vector2{6,6}); defer variant_destroy(&v)
 		fmt.printf("vector: {}\n", v)
+		the_vector := variant_to_Vector2(&v)
+		fmt.printf("vector2 from the variant: {}\n", the_vector)
 		return obj
 	},
 	free_instance_func = proc "c" (uptr: rawptr, instance: gde.GDExtensionClassInstancePtr) {
@@ -52,7 +54,6 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 Dove_process :: proc (self: ^Dove, delta: f64) {
 	using godot
 	d :float= 12.0
-	v := variant_from_Vector2(Vector2{6,6}); defer variant_destroy(&v)
 
 	// utl.print("process...")
 	// self.time += delta
