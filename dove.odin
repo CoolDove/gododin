@@ -38,11 +38,13 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		free(cast(^Dove)instance)
 	},
 	get_virtual_func = proc "c" (p_class_userdata: rawptr, p_name: gde.GDExtensionConstStringNamePtr) -> gde.GDExtensionClassCallVirtual {
-		// context = runtime.default_context()
-		// strn_process : godot.String
-		// if string_name.to_string(auto_cast p_name) == "_process" {
-		// 	return Dove_process_gcall
-		// }
+		context = runtime.default_context()
+		using godot
+		strn := p_name
+		str := string_make_from_string_name(auto_cast p_name); defer string_destroy(&str)
+		if string_to(&str, context.temp_allocator) == "_process" {
+			return Dove_process_gcall
+		}
 		return nil
 	},
 }
@@ -54,9 +56,6 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 }
 Dove_process :: proc (self: ^Dove, delta: f64) {
 	using godot
-	d :float= 12.0
-
-	// utl.print("process...")
 	// self.time += delta
 	// offset := vector2.constructor3(auto_cast math.sin(self.time), 0)
 	// utl.print("cons offset")
