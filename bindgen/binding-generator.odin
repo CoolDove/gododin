@@ -2166,6 +2166,31 @@ dovegen_variant :: proc(sb: ^strings.Builder, root: json.Object) {
 	write_string(sb, fmt.tprintf("Variant :: distinct [%d]u8\n\n", cast(int)sizes[len(sizes)-1].(json.Object)["size"].(json.Float)))
 	write_string(sb, "variant_destroy :: proc (v: ^Variant) { gde.variant_destroy(auto_cast v) } \n")
 
+
+	write_string(sb, `
+variant_from_any :: proc(p: any) -> Variant {
+	if p.id == u8 do return variant_from_int(cast(int)p.(u8))
+	if p.id == u16 do return variant_from_int(cast(int)p.(u16))
+	if p.id == u32 do return variant_from_int(cast(int)p.(u32))
+	if p.id == i8 do return variant_from_int(cast(int)p.(i8))
+	if p.id == i16 do return variant_from_int(cast(int)p.(i16))
+	if p.id == i32 do return variant_from_int(cast(int)p.(i32))
+	if p.id == f32 do return variant_from_float(cast(float)p.(float))
+	if p.id == f64 do return variant_from_float(cast(float)p.(float))
+`)
+	for class, idx in root["builtin_classes"].(json.Array) {
+		v_class_name := class.(json.Object)["name"].(json.String)
+		if v_class_name == "Nil" do continue
+		write_string(sb, fmt.tprintf("\tif p.id == %s do return variant_from_%s(p.(%s))\n", v_class_name, v_class_name, v_class_name))
+	}
+
+	write_string(sb, `
+	nilv : Variant; gde.variant_new_nil(&nilv)
+	return nilv
+}
+`)
+
+
 	for class, idx in root["builtin_classes"].(json.Array) {
 		// variant constructor
 		v_class_name := class.(json.Object)["name"].(json.String)
@@ -2313,8 +2338,6 @@ as_%s :: proc(obj: Object) -> %s {{// dove object converter
 }
 dovegen_funcimpl_instance_method :: proc() {
 }
-
-
 
 generate_engine_classes_method :: proc(method: json.Object, class_name: string, fd: os.Handle, g: ^Globals, used_classes: ^[dynamic]string=nil) {
   os.write_string(fd, "{\n")

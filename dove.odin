@@ -25,9 +25,9 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		gde.object_set_instance(obj, &strn_class, instance)
 
 		d :float= 12.0
-		v := variant_from_Vector2(Vector2{6,6}); defer variant_destroy(&v)
+		v := variant_from_any(Vector2{6,6}); defer variant_destroy(&v)
 		fmt.printf("vector: {}\n", v)
-		the_vector := variant_to_Vector2(&v)
+		the_vector := variant_to_Vector2(v)
 		fmt.printf("vector2 from the variant: {}\n", the_vector)
 		return obj
 	},
