@@ -11,7 +11,7 @@ import gde "gdextension"
 dove_instance : int
 
 Dove :: struct {
-	using gobj : godot.Object,
+	using gobj : godot.Sprite2D,
 	id : int,
 	hp: int,
 	time : f64,
@@ -101,6 +101,11 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 }
 Dove_process :: proc (self: ^Dove, delta: f64) {
 	using godot
+
+	// @Test
+	// self->set_position(Vector2{5,5})
+	__Node2D_table.set_position(self, Vector2{2,1})
+
 	// printfr("hello, vector: {}, variant: {}, vector: {}", v, var, vv)
 	// printfr("Hello, odin!")
 

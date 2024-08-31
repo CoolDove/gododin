@@ -2426,23 +2426,89 @@ dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class
 	}
 
 	// Table
-	write_string(&sb_body, fmt.tprintf(`
-__%s_table : _%s_TABLE
-@private
-_%s_TABLE :: struct {{
-`, class_name, class_name, class_name))
-	if parent_name != "" do write_string(&sb_body, fmt.tprintf("\tusing _ : ^_%s_TABLE,\n", parent_name))
-	
+	sb_table_declare, sb_table_assign, sb_method_defines : strings.Builder
+	builder_init(&sb_table_declare); defer builder_destroy(&sb_table_declare)
+	builder_init(&sb_table_assign); defer builder_destroy(&sb_table_assign)
+	builder_init(&sb_method_defines); defer builder_destroy(&sb_method_defines)
+
+	if parent_name != "" {
+		// @Temporary:
+		// write_string(&sb_table_assign, fmt.tprintf("\t_parent_%s = &_%s_TABLE,\n", camel_to_snake(parent_name), parent_name))
+	}
+
 	if "methods" in class_api {
 		for method in class_api["methods"].(json.Array) {
-			method_name := method.(json.Object)["name"].(json.String)
+			method := method.(json.Object)
+			method_name := method["name"].(json.String)
+			is_static := method["is_static"].(json.Boolean)
+			is_vararg := method["is_vararg"].(json.Boolean)
+			return_type := method["return_value"].(json.Object)["type"].(json.String) if "return_value" in method else ""
+			arguments := method["arguments"].(json.Array) if "arguments" in method else {}
 			if method_name[0] == '_' do continue
-			write_string(&sb_body, fmt.tprintf("\t%s : ", method_name))
-			dovegen_method_signature(&sb_body, method.(json.Object), "self: rawptr, ")
-			write_string(&sb_body, ",\n")
+
+			sigprefix := ("self: rawptr, " if len(arguments)>0 else "self: rawptr") if !is_static else ""
+			// decl
+			write_string(&sb_table_declare, fmt.tprintf("\t%s : ", method_name))
+			dovegen_method_signature(&sb_table_declare, method, sigprefix)
+			write_string(&sb_table_declare, ",\n")
+
+			// assign
+			write_string(&sb_table_assign, fmt.tprintf("\t%s = %s,\n", method_name, method_name))
+
+			// define
+			write_string(&sb_method_defines, "@(private=\"file\")\n")
+			write_string(&sb_method_defines, fmt.tprintf("%s :: ", method_name))
+			dovegen_method_signature(&sb_method_defines, method, sigprefix)
+			write_string(&sb_method_defines, fmt.tprintf(`{{
+	@static _method : gde.GDExtensionInterfaceClassdbGetMethodBind
+	if _method == nil {{
+		strn_class, strn_method : StringName;
+		gde.string_name_new_with_utf8_chars(&strn_class, "%s"); defer StringName_destruct(strn_class)
+		gde.string_name_new_with_utf8_chars(&strn_method, "%s"); defer StringName_destruct(strn_method)
+		_method = auto_cast gde.classdb_get_method_bind(&strn_class, &strn_method, %d)
+	}}
+`, class_name, method_name, cast(int)method["hash"].(json.Float)))
+			if is_static do write_string(&sb_method_defines, "	instance :rawptr= nil\n")
+			else do write_string(&sb_method_defines, "	instance :rawptr= (cast(^Object)self)._obj\n")
+			if is_vararg {
+				write_string(&sb_method_defines, "\n\tpanic(\"vargs not implemented\")\n")
+			} else {
+				write_string(&sb_method_defines, fmt.tprintf("\targs : [%d]rawptr\n", len(arguments)))
+				for arg, idx in arguments {
+					arg := arg.(json.Object)
+					write_string(&sb_method_defines, fmt.tprintf("\targ%d := %s; args[%d] = &arg%d\n", idx, fmt.tprintf("v%s", arg["name"]), idx, idx))
+				}
+
+				if has_prefix(return_type, "enum::") {
+					return_type, _ = replace(trim_left(return_type, "enum::"), ".", "_", 1, context.temp_allocator)
+				} else if has_prefix(return_type, "typedarray::") {
+					return_type = "TodoClass"
+				} else if has_prefix(return_type, "bitfield::") {
+					return_type, _ = replace(trim_left(return_type, "bitfield::"), ".", "_", 1, context.temp_allocator)
+				} else {
+				}
+
+				if return_type != "" do write_string(&sb_method_defines, fmt.tprintf("\tret : %s\n", return_type))
+				write_string(&sb_method_defines, fmt.tprintf("\tgde.object_method_bind_ptrcall(auto_cast _method, instance, raw_data(args[:]), %s)\n", "&ret" if return_type != "" else "nil"))
+				if return_type != "" do write_string(&sb_method_defines, "\treturn ret\n")
+			}
+			write_string(&sb_method_defines, "}\n")
 		}
 	}
+
+	write_string(&sb_body, fmt.tprintf(`
+_%s_TABLE :: struct {{
+`, class_name))
+	if parent_name != "" do write_string(&sb_body, fmt.tprintf("\tusing _parent_%s : ^_%s_TABLE,\n", camel_to_snake(parent_name), parent_name))
+	write_string(&sb_body, to_string(sb_table_declare))
 	write_string(&sb_body, "}\n")
+	write_string(&sb_body, fmt.tprintf("__%s_table : _%s_TABLE = {{\n", class_name, class_name))
+	write_string(&sb_body, to_string(sb_table_assign))
+	write_string(&sb_body, "}\n")
+
+	write_string(&sb_body, "\n// Method defines\n")
+	write_string(&sb_body, to_string(sb_method_defines))
+
 
 	// Submit
 	write_string(sb_classfile, to_string(sb_header))
@@ -2460,7 +2526,7 @@ _%s_TABLE :: struct {{
 		write_string(sb_godotfile, fmt.tprintf(`
 %s :: struct {{ // : %s
 	_obj : rawptr,
-	_table : ^_%s_TABLE,
+	using _table : ^_%s_TABLE,
 }}
 `, class_name, parent_name, class_name))
 	}
