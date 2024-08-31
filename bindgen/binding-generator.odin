@@ -2175,66 +2175,10 @@ dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, target_dir: st
 			else do write_string(sb_classesfile, fmt.tprintf("%s :: distinct [%d]u8\n\n", class_name, size))
 		}
 
-		// Builtin class enums
+		// Builtin class
 		fw_class := file_writer_make(filepath.join({target_dir, fmt.tprintf("builtin_%s.odin", camel_to_snake(class_name))}))
 		sbclass := &fw_class.sb
 		dovegen_builtin_class(sbclass, class.(json.Object))
-
-		// Builtin class constructor and destructor
-		constructors := class.(json.Object)["constructors"].(json.Array)
-		has_destructor := class.(json.Object)["has_destructor"].(json.Boolean)
-		variant_type_enum := dove_builtin_class_name_to_variant_type_enum_name(class_name, context.temp_allocator)
-		for cons in constructors {
-			cons := cons.(json.Object)
-			cons_index := cast(int)cons["index"].(json.Float)
-			arguments := cons["arguments"].(json.Array) if "arguments" in cons else {}
-			arguments_string : []string
-			if len(arguments) > 0 {
-				arguments_string = make([]string, len(arguments)); defer delete(arguments_string)
-				for arg, idx in arguments {
-					arg := arg.(json.Object)
-					arguments_string[idx] = fmt.tprintf("%s: %s", arg["name"], arg["type"])
-				}
-			}
-			write_string(sbclass, fmt.tprintf(`
-%s_construct%d :: proc(%s) -> %s {{
-`, class_name, cons_index, strings.join(arguments_string, ", ", context.temp_allocator), class_name))
-			write_string(sbclass, fmt.tprintf(
-`	@static _constructor : gde.GDExtensionPtrConstructor
-	if _constructor == nil do _constructor = gde.variant_get_ptr_constructor(.%s, %d)
-	ret : %s
-`, variant_type_enum, cons_index, class_name))
-			if len(arguments) == 0 {
-				write_string(sbclass, "\t_constructor(&ret, nil)\n")
-			} else {
-				write_string(sbclass, fmt.tprintf("\targs : [%d]rawptr\n", len(arguments)))
-				for arg, idx in arguments {
-					arg := arg.(json.Object)
-					write_string(sbclass, fmt.tprintf("\targ%d := %s; args[%d] = &arg%d\n", idx, arg["name"], idx, idx))
-				}
-				write_string(sbclass, "\t_constructor(&ret, raw_data(args[:]))\n")
-			}
-			write_string(sbclass, "\treturn ret\n}\n")
-		}
-
-		write_rune(sbclass, '\n')
-		write_string(sbclass, fmt.tprintf("%s_construct :: proc {{ ", class_name))
-		for i in 0..<len(constructors) {
-			write_string(sbclass, fmt.tprintf("%s_construct%d%s", class_name, i, ", " if i < len(constructors)-1 else " }\n"))
-		}
-
-		if has_destructor {
-			write_string(sbclass, fmt.tprintf(`
-%s_destruct :: proc(self: %s) {{
-	@static _destructor : gde.GDExtensionPtrDestructor
-	if _destructor == nil do _destructor = gde.variant_get_ptr_destructor(.%s)
-	self := self
-	_destructor(auto_cast &self)
-}}
-`, class_name, class_name, variant_type_enum))
-		}
-		// Builtin class methods
-
 
 		file_writer_write(&fw_class)
 	}
@@ -2253,6 +2197,62 @@ import gde "../gdextension"
 	if "enums" in class do for e in class["enums"].(json.Array) {
 		dovegen_enum_def(sb_classfile, e.(json.Object), enum_name_prefix)
 	}
+
+	// Builtin class constructor and destructor
+	constructors := class["constructors"].(json.Array)
+	has_destructor := class["has_destructor"].(json.Boolean)
+	variant_type_enum := dove_builtin_class_name_to_variant_type_enum_name(class_name, context.temp_allocator)
+	for cons in constructors {
+		cons := cons.(json.Object)
+		cons_index := cast(int)cons["index"].(json.Float)
+		arguments := cons["arguments"].(json.Array) if "arguments" in cons else {}
+		arguments_string : []string
+		if len(arguments) > 0 {
+			arguments_string = make([]string, len(arguments)); defer delete(arguments_string)
+			for arg, idx in arguments {
+				arg := arg.(json.Object)
+				arguments_string[idx] = fmt.tprintf("%s: %s", arg["name"], arg["type"])
+			}
+		}
+		write_string(sb_classfile, fmt.tprintf(`
+%s_construct%d :: proc(%s) -> %s {{
+`, class_name, cons_index, strings.join(arguments_string, ", ", context.temp_allocator), class_name))
+		write_string(sb_classfile, fmt.tprintf(
+`	@static _constructor : gde.GDExtensionPtrConstructor
+	if _constructor == nil do _constructor = gde.variant_get_ptr_constructor(.%s, %d)
+	ret : %s
+`, variant_type_enum, cons_index, class_name))
+		if len(arguments) == 0 {
+			write_string(sb_classfile, "\t_constructor(&ret, nil)\n")
+		} else {
+			write_string(sb_classfile, fmt.tprintf("\targs : [%d]rawptr\n", len(arguments)))
+			for arg, idx in arguments {
+				arg := arg.(json.Object)
+				write_string(sb_classfile, fmt.tprintf("\targ%d := %s; args[%d] = &arg%d\n", idx, arg["name"], idx, idx))
+			}
+			write_string(sb_classfile, "\t_constructor(&ret, raw_data(args[:]))\n")
+		}
+		write_string(sb_classfile, "\treturn ret\n}\n")
+	}
+
+	write_rune(sb_classfile, '\n')
+	write_string(sb_classfile, fmt.tprintf("%s_construct :: proc {{ ", class_name))
+	for i in 0..<len(constructors) {
+		write_string(sb_classfile, fmt.tprintf("%s_construct%d%s", class_name, i, ", " if i < len(constructors)-1 else " }\n"))
+	}
+
+	if has_destructor {
+		write_string(sb_classfile, fmt.tprintf(`
+%s_destruct :: proc(self: %s) {{
+	@static _destructor : gde.GDExtensionPtrDestructor
+	if _destructor == nil do _destructor = gde.variant_get_ptr_destructor(.%s)
+	self := self
+	_destructor(auto_cast &self)
+}}
+`, class_name, class_name, variant_type_enum))
+	}
+	// Builtin class methods
+
 }
 
 dovegen_variant :: proc(sb: ^strings.Builder, root: json.Object) {
@@ -2261,23 +2261,23 @@ dovegen_variant :: proc(sb: ^strings.Builder, root: json.Object) {
 	sizes := root["builtin_class_sizes"].(json.Array)[current_build_configuration_idx].(json.Object)["sizes"].(json.Array)
 	assert(sizes[len(sizes)-1].(json.Object)["name"].(json.String)=="Variant", "Failed to get size of builtin class Variant, the last one is not Variant anymore.")
 	write_string(sb, fmt.tprintf("Variant :: distinct [%d]u8\n\n", cast(int)sizes[len(sizes)-1].(json.Object)["size"].(json.Float)))
-	write_string(sb, "variant_destroy :: proc (v: ^Variant) { gde.variant_destroy(auto_cast v) } \n")
+	write_string(sb, "Variant_destroy :: proc (v: ^Variant) { gde.variant_destroy(auto_cast v) } \n")
 
 	write_string(sb, `
-variant_from_any :: proc(p: any) -> Variant {
-	if p.id == u8 do return variant_from_int(cast(int)p.(u8))
-	if p.id == u16 do return variant_from_int(cast(int)p.(u16))
-	if p.id == u32 do return variant_from_int(cast(int)p.(u32))
-	if p.id == i8 do return variant_from_int(cast(int)p.(i8))
-	if p.id == i16 do return variant_from_int(cast(int)p.(i16))
-	if p.id == i32 do return variant_from_int(cast(int)p.(i32))
-	if p.id == f32 do return variant_from_float(cast(float)p.(float))
-	if p.id == f64 do return variant_from_float(cast(float)p.(float))
+Variant_from_any :: proc(p: any) -> Variant {
+	if p.id == u8 do return Variant_from_int(cast(int)p.(u8))
+	if p.id == u16 do return Variant_from_int(cast(int)p.(u16))
+	if p.id == u32 do return Variant_from_int(cast(int)p.(u32))
+	if p.id == i8 do return Variant_from_int(cast(int)p.(i8))
+	if p.id == i16 do return Variant_from_int(cast(int)p.(i16))
+	if p.id == i32 do return Variant_from_int(cast(int)p.(i32))
+	if p.id == f32 do return Variant_from_float(cast(float)p.(float))
+	if p.id == f64 do return Variant_from_float(cast(float)p.(float))
 `)
 	for class, idx in root["builtin_classes"].(json.Array) {
 		v_class_name := class.(json.Object)["name"].(json.String)
 		if v_class_name == "Nil" do continue
-		write_string(sb, fmt.tprintf("\tif p.id == %s do return variant_from_%s(p.(%s))\n", v_class_name, v_class_name, v_class_name))
+		write_string(sb, fmt.tprintf("\tif p.id == %s do return Variant_from_%s(p.(%s))\n", v_class_name, v_class_name, v_class_name))
 	}
 
 	write_string(sb, `
@@ -2292,7 +2292,7 @@ variant_from_any :: proc(p: any) -> Variant {
 		v_class_name := class.(json.Object)["name"].(json.String)
 		variant_type_enum_name := dove_builtin_class_name_to_variant_type_enum_name(v_class_name, context.temp_allocator)
 		write_string(sb, fmt.tprintf(`
-variant_from_%s :: proc(p: %s) -> Variant {{
+Variant_from_%s :: proc(p: %s) -> Variant {{
 	@static variant_cons : gde.GDExtensionVariantFromTypeConstructorFunc
 	if variant_cons == nil {{
 		variant_cons = gde.get_variant_from_type_constructor(.%s)
@@ -2407,7 +2407,7 @@ printfr :: proc(fmter: string, args: ..any) {
 	}
 	gstr : String
 	gde.string_new_with_utf8_chars(&gstr, auto_cast str)
-	vstr := variant_from_String(gstr)
+	vstr := Variant_from_String(gstr); defer Variant_destroy()
 	wrapped_string := &vstr
 	ret : Variant
 	__function(&ret, auto_cast &wrapped_string, 1)
