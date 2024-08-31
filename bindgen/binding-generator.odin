@@ -2251,8 +2251,51 @@ import gde "../gdextension"
 }}
 `, class_name, class_name, variant_type_enum))
 	}
-	// Builtin class methods
+	write_string(sb_classfile, "\n\n")
 
+	// Builtin class methods
+	method_arguments_prefix_normal := fmt.tprintf("self: ^%s, ", class_name)
+	method_arguments_prefix_normal_noargs := fmt.tprintf("self: ^%s", class_name)
+	method_arguments_prefix_static := ""
+	if "methods" in class do for method in class["methods"].(json.Array) {
+		method := method.(json.Object)
+		method_name := method["name"].(json.String)
+		is_static := method["is_static"].(json.Boolean)
+		is_vararg := method["is_vararg"].(json.Boolean)
+		return_type := method["return_type"].(json.String) if "return_type" in method else ""
+		arguments := method["arguments"].(json.Array) if "arguments" in method else {}
+		write_string(sb_classfile, fmt.tprintf("%s_%s :: ", class_name, method["name"]))
+		methodsig_param_prefix := (method_arguments_prefix_normal_noargs if len(arguments) == 0 else method_arguments_prefix_normal) if !is_static else method_arguments_prefix_static
+		methodsig_param_suffix := ", vargs: ..[]any" if is_vararg else ""
+		dovegen_method_signature(sb_classfile, method, methodsig_param_prefix)
+		write_string(sb_classfile, " {")
+		if is_static do write_string(sb_classfile, "\n\tself : rawptr")
+
+		write_string(sb_classfile, fmt.tprintf(`
+	@static _method : gde.GDExtensionPtrBuiltInMethod
+	if _method == nil {{
+		strn : StringName
+		gde.string_name_new_with_utf8_chars(&strn, "%s"); defer StringName_destruct(strn)
+		_method = gde.variant_get_ptr_builtin_method(.%s, &strn, %d)
+	}}
+`, method_name, variant_type_enum, cast(int)method["hash"].(json.Float)))
+		if is_vararg do fmt.printf("TODO: vararg func: {}.{}\n", class_name, method_name)
+
+		if return_type != "" do write_string(sb_classfile, fmt.tprintf("\tret : %s\n", return_type))
+		if is_vararg {
+			write_string(sb_classfile, "\tpanic(\"vargs function not implemented\")\n")
+			// if return_type != "" do write_string(sb_classfile, "\treturn ret\n")
+		} else {
+			write_string(sb_classfile, fmt.tprintf("\targs : [%d]rawptr\n", len(arguments)))
+			for arg, idx in arguments {
+				arg := arg.(json.Object)
+				write_string(sb_classfile, fmt.tprintf("\targ%d := %s; args[%d] = &arg%d\n", idx, fmt.tprintf("v%s", arg["name"]), idx, idx))
+			}
+			write_string(sb_classfile, fmt.tprintf("\t_method(self, raw_data(args[:]), %s, %d)\n", "&ret" if return_type != "" else "nil", len(arguments)))
+			if return_type != "" do write_string(sb_classfile, "\treturn ret\n")
+		}
+		write_string(sb_classfile, "}\n")
+	}
 }
 
 dovegen_variant :: proc(sb: ^strings.Builder, root: json.Object) {
@@ -2304,7 +2347,7 @@ Variant_from_%s :: proc(p: %s) -> Variant {{
 }}
 `, v_class_name, v_class_name, variant_type_enum_name))
 		write_string(sb, fmt.tprintf(
-`variant_to_%s :: proc(v: Variant) -> %s {{
+`Variant_to_%s :: proc(v: Variant) -> %s {{
 	@static variant_to : gde.GDExtensionTypeFromVariantConstructorFunc
 	if variant_to == nil {{
 		variant_to = gde.get_variant_to_type_constructor(.%s)
@@ -2407,7 +2450,7 @@ printfr :: proc(fmter: string, args: ..any) {
 	}
 	gstr : String
 	gde.string_new_with_utf8_chars(&gstr, auto_cast str)
-	vstr := Variant_from_String(gstr); defer Variant_destroy()
+	vstr := Variant_from_String(gstr); defer Variant_destroy(&vstr)
 	wrapped_string := &vstr
 	ret : Variant
 	__function(&ret, auto_cast &wrapped_string, 1)
@@ -2450,17 +2493,22 @@ dovegen_enum_def :: proc(sb: ^strings.Builder, e : json.Object, prefix_name:="")
 	write_string(sb, "}\n")
 }
 
-dovegen_method_signature :: proc(sb: ^strings.Builder, method: json.Object, prefix_param:="", subfix_param:="") {
+// foo :: [proc(a: int, b: float, c: string) -> u8]
+dovegen_method_signature :: proc(sb: ^strings.Builder, method: json.Object, prefix_param:="", subfix_param:="", argname_prefix:="v") {
 	using strings
 	is_vararg := "is_vararg" in method && method["is_vararg"].(json.Boolean)
-	return_value := method["return_value"].(json.Object)["type"].(json.String) if "return_value" in method else ""
+
+	return_value : string
+	if "return_value" in method do return_value = method["return_value"].(json.Object)["type"].(json.String) // for engine classes
+	else if "return_type" in method do return_value = method["return_type"].(json.String) // for builtin classes
+
 	write_string(sb, "proc (")
 	write_string(sb, prefix_param)
 	if "arguments" in method {
 		args := method["arguments"].(json.Array)
 		for &arg, idx in args {
 			arg := arg.(json.Object)
-			arg_name := fmt.tprintf("v%s", arg["name"].(json.String))
+			arg_name := fmt.tprintf("%s%s", argname_prefix, arg["name"].(json.String))
 			arg_type := arg["type"].(json.String)
 			if arg_type == "const void*" do arg_type = "rawptr" // special case handle
 

@@ -8,6 +8,6 @@ clean:
 
 bg:
 	pushd bindgen && \
-	odin run . -out:g.exe && \
+	odin run . -out:g.exe -debug && \
 	rm g.exe && \
 	popd
