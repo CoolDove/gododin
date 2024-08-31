@@ -45,6 +45,7 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		strn_class : StringName
 		gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer StringName_destruct(strn_class)
 		instance := new(Dove)
+		instance._obj = p_object
 		gde.object_set_instance(p_object, &strn_class, instance)
 		return instance
 	},
@@ -100,6 +101,7 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 }
 Dove_process :: proc (self: ^Dove, delta: f64) {
 	using godot
+	// printfr("hello, vector: {}, variant: {}, vector: {}", v, var, vv)
 	// printfr("Hello, odin!")
 
 	// self.time += delta
