@@ -2308,13 +2308,14 @@ dovegen_variant :: proc(sb: ^strings.Builder, root: json.Object) {
 
 	write_string(sb, `
 Variant_from_any :: proc(p: any) -> Variant {
+	if p.id == Object do return Variant_from_Object(p.(Object))
 	if p.id == u8 do return Variant_from_int(cast(int)p.(u8))
 	if p.id == u16 do return Variant_from_int(cast(int)p.(u16))
 	if p.id == u32 do return Variant_from_int(cast(int)p.(u32))
 	if p.id == i8 do return Variant_from_int(cast(int)p.(i8))
 	if p.id == i16 do return Variant_from_int(cast(int)p.(i16))
 	if p.id == i32 do return Variant_from_int(cast(int)p.(i32))
-	if p.id == f32 do return Variant_from_float(cast(float)p.(float))
+	if p.id == f32 do return Variant_from_float(cast(float)p.(f32))
 	if p.id == f64 do return Variant_from_float(cast(float)p.(float))
 `)
 	for class, idx in root["builtin_classes"].(json.Array) {
@@ -2328,11 +2329,42 @@ Variant_from_any :: proc(p: any) -> Variant {
 	return nilv
 }
 `)
-
+	write_string(sb, `
+Variant_from_Object :: proc(p: Object) -> Variant {
+	@static variant_cons : gde.GDExtensionVariantFromTypeConstructorFunc
+	if variant_cons == nil {{
+		variant_cons = gde.get_variant_from_type_constructor(.GDEXTENSION_VARIANT_TYPE_OBJECT)
+	}}
+	p := p
+	ret : Variant
+	variant_cons(&ret, &p)
+	return ret
+}
+Variant_to_Object :: proc(v: Variant) -> Object {
+	@static variant_to : gde.GDExtensionTypeFromVariantConstructorFunc
+	if variant_to == nil {{
+		variant_to = gde.get_variant_to_type_constructor(.GDEXTENSION_VARIANT_TYPE_OBJECT)
+	}}
+	v := v
+	ret : Object
+	variant_to(&ret, &v)
+	return ret
+}
+`)
 
 	for class, idx in root["builtin_classes"].(json.Array) {
 		// variant constructor
 		v_class_name := class.(json.Object)["name"].(json.String)
+		if idx == 0 && v_class_name == "Nil" { // manually handle
+			write_string(sb, `
+Variant_from_Nil :: proc() -> Variant {
+	v : Variant
+	gde.variant_new_nil(&v)
+	return v
+}
+`)
+			continue
+		}
 		variant_type_enum_name := dove_builtin_class_name_to_variant_type_enum_name(v_class_name, context.temp_allocator)
 		write_string(sb, fmt.tprintf(`
 Variant_from_%s :: proc(p: %s) -> Variant {{
