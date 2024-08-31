@@ -2151,12 +2151,13 @@ dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, target_dir: st
 	for o in _offsets do offsets[o.(json.Object)["name"].(json.String)] = o.(json.Object)["members"].(json.Array)
 
 	for class, idx in root["builtin_classes"].(json.Array) {
-		name := class.(json.Object)["name"].(json.String)
+		class_name := class.(json.Object)["name"].(json.String)
 		size :int= cast(int)sizes[idx].(json.Object)["size"].(json.Float)
 
-		write_string(sb_classesfile, fmt.tprintf("// %s\n", name)) // builtin class define
-		if offset, ok := offsets[name]; ok {// with members
-			write_string(sb_classesfile, fmt.tprintf("%s :: struct {{ // [%d]u8\n", name, size))
+		// Builtin class struct member definitions
+		write_string(sb_classesfile, fmt.tprintf("// %s\n", class_name)) // builtin class define
+		if offset, ok := offsets[class_name]; ok {// with members
+			write_string(sb_classesfile, fmt.tprintf("%s :: struct {{ // [%d]u8\n", class_name, size))
 			for m in offset {
 				m := m.(json.Object)
 				member_name := m["member"].(json.String)
@@ -2167,15 +2168,63 @@ dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, target_dir: st
 				write_string(sb_classesfile, fmt.tprintf("\t%s : %s,\n", member_name, member_type))
 			}
 			write_string(sb_classesfile, "}\n\n")
-			fw_class := file_writer_make(filepath.join({target_dir, fmt.tprintf("builtin_%s.odin", camel_to_snake(name))}))
-			dovegen_builtin_class(&fw_class.sb, class.(json.Object))
-			file_writer_write(&fw_class)
 		} else {// no members
-			if name == "bool" do continue
-			else if name == "float" do write_string(sb_classesfile, fmt.tprintf("%s :: %s\n\n", name, build_conf_float_defines[current_build_configuration_idx]))
-			else if name == "int" do write_string(sb_classesfile, fmt.tprintf("%s :: %s\n\n", name, build_conf_int_defines[current_build_configuration_idx]))
-			else do write_string(sb_classesfile, fmt.tprintf("%s :: distinct [%d]u8\n\n", name, size))
+			if class_name == "bool" do continue
+			else if class_name == "float" do write_string(sb_classesfile, fmt.tprintf("%s :: %s\n\n", class_name, build_conf_float_defines[current_build_configuration_idx]))
+			else if class_name == "int" do write_string(sb_classesfile, fmt.tprintf("%s :: %s\n\n", class_name, build_conf_int_defines[current_build_configuration_idx]))
+			else do write_string(sb_classesfile, fmt.tprintf("%s :: distinct [%d]u8\n\n", class_name, size))
 		}
+
+		// Builtin class enums
+		fw_class := file_writer_make(filepath.join({target_dir, fmt.tprintf("builtin_%s.odin", camel_to_snake(class_name))}))
+		sbclass := &fw_class.sb
+		dovegen_builtin_class(sbclass, class.(json.Object))
+
+		// Builtin class constructor and destructor
+		constructors := class.(json.Object)["constructors"].(json.Array)
+		has_destructor := class.(json.Object)["has_destructor"].(json.Boolean)
+		for cons in constructors {
+			cons := cons.(json.Object)
+			cons_index := cast(int)cons["index"].(json.Float)
+			arguments := cons["arguments"].(json.Array) if "arguments" in cons else {}
+			arguments_string : []string
+			if len(arguments) > 0 {
+				arguments_string = make([]string, len(arguments)); defer delete(arguments_string)
+				for arg, idx in arguments {
+					arg := arg.(json.Object)
+					arguments_string[idx] = fmt.tprintf("%s: %s", arg["name"], arg["type"])
+				}
+			}
+			write_string(sbclass, fmt.tprintf(`
+%s_construct%d :: proc(%s) -> %s {{
+`, class_name, cons_index, strings.join(arguments_string, ", ", context.temp_allocator), class_name))
+			write_string(sbclass, fmt.tprintf(
+`	@static _constructor : gde.GDExtensionPtrConstructor
+	if _constructor == nil do _constructor = gde.variant_get_ptr_constructor(.%s, %d)
+	ret : %s
+`, dove_builtin_class_name_to_variant_type_enum_name(class_name, context.temp_allocator), cons_index, class_name))
+			if len(arguments) == 0 {
+				write_string(sbclass, "\t_constructor(&ret, nil)\n")
+			} else {
+				write_string(sbclass, fmt.tprintf("\targs : [%d]rawptr\n", len(arguments)))
+				for arg, idx in arguments {
+					arg := arg.(json.Object)
+					write_string(sbclass, fmt.tprintf("\targ%d := %s; args[%d] = &arg%d\n", idx, arg["name"], idx, idx))
+				}
+				write_string(sbclass, "\t_constructor(&ret, raw_data(args[:]))\n")
+			}
+			write_string(sbclass, "\treturn ret\n}\n")
+		}
+
+		write_rune(sbclass, '\n')
+		write_string(sbclass, fmt.tprintf("%s_construct :: proc {{ ", class_name))
+		for i in 0..<len(constructors) {
+			write_string(sbclass, fmt.tprintf("%s_construct%d%s", class_name, i, ", " if i < len(constructors)-1 else " }\n"))
+		}
+		// Builtin class methods
+
+
+		file_writer_write(&fw_class)
 	}
 }
 
