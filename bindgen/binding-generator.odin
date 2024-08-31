@@ -2183,6 +2183,7 @@ dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, target_dir: st
 		// Builtin class constructor and destructor
 		constructors := class.(json.Object)["constructors"].(json.Array)
 		has_destructor := class.(json.Object)["has_destructor"].(json.Boolean)
+		variant_type_enum := dove_builtin_class_name_to_variant_type_enum_name(class_name, context.temp_allocator)
 		for cons in constructors {
 			cons := cons.(json.Object)
 			cons_index := cast(int)cons["index"].(json.Float)
@@ -2202,7 +2203,7 @@ dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, target_dir: st
 `	@static _constructor : gde.GDExtensionPtrConstructor
 	if _constructor == nil do _constructor = gde.variant_get_ptr_constructor(.%s, %d)
 	ret : %s
-`, dove_builtin_class_name_to_variant_type_enum_name(class_name, context.temp_allocator), cons_index, class_name))
+`, variant_type_enum, cons_index, class_name))
 			if len(arguments) == 0 {
 				write_string(sbclass, "\t_constructor(&ret, nil)\n")
 			} else {
@@ -2220,6 +2221,16 @@ dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, target_dir: st
 		write_string(sbclass, fmt.tprintf("%s_construct :: proc {{ ", class_name))
 		for i in 0..<len(constructors) {
 			write_string(sbclass, fmt.tprintf("%s_construct%d%s", class_name, i, ", " if i < len(constructors)-1 else " }\n"))
+		}
+
+		if has_destructor {
+			write_string(sbclass, fmt.tprintf(`
+%s_destruct :: proc(self: ^%s) {{
+	@static _destructor : gde.GDExtensionPtrDestructor
+	if _destructor == nil do _destructor = gde.variant_get_ptr_destructor(.%s)
+	_destructor(auto_cast self)
+}}
+`, class_name, class_name, variant_type_enum))
 		}
 		// Builtin class methods
 
