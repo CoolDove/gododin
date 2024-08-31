@@ -2225,10 +2225,11 @@ dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, target_dir: st
 
 		if has_destructor {
 			write_string(sbclass, fmt.tprintf(`
-%s_destruct :: proc(self: ^%s) {{
+%s_destruct :: proc(self: %s) {{
 	@static _destructor : gde.GDExtensionPtrDestructor
 	if _destructor == nil do _destructor = gde.variant_get_ptr_destructor(.%s)
-	_destructor(auto_cast self)
+	self := self
+	_destructor(auto_cast &self)
 }}
 `, class_name, class_name, variant_type_enum))
 		}
