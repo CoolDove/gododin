@@ -5,6 +5,7 @@ import "core:fmt"
 import "core:slice"
 import "core:strings"
 import "core:strconv"
+import "core:text/regex"
 import "core:unicode"
 import "core:path/filepath"
 import "core:encoding/json"
@@ -2099,9 +2100,11 @@ dovegen :: proc(root: json.Object, target_dir: string) {
 	strings.write_string(&sb_godotfile, "package godot\n")
 	strings.write_string(&sb_godotfile, "import gde \"../gdextension\"\n\n")
 
+	strings.write_string(&sb_godotfile, "TodoClass :: distinct rawptr")
+
 	// Generate builtin classes
 	fw_builtin_classes := file_writer_make(filepath.join([]string{ target_dir, "define_builtin_classes.odin" }))
-	dovegen_builtin_classes(&fw_builtin_classes.sb, root)
+	dovegen_builtin_classes(&fw_builtin_classes.sb, target_dir, root)
 	file_writer_write(&fw_builtin_classes)
 
 	// Generate variant stuff
@@ -2121,6 +2124,16 @@ dovegen :: proc(root: json.Object, target_dir: string) {
 		path := filepath.join([]string{ target_dir, fmt.tprintf("%s.odin", camel_to_snake(class_name)) }, context.temp_allocator)
 		os.write_entire_file(path, transmute([]u8)strings.to_string(sb_classfile))
 	}
+
+	// Generate global enums
+	if "global_enums" in root {
+		using strings
+		write_rune(&sb_godotfile, '\n')
+		for e in root["global_enums"].(json.Array) {
+			dovegen_enum_def(&sb_godotfile, e.(json.Object))
+		}
+	}
+
 	os.write_entire_file(filepath.join([]string{ target_dir, "godot.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_godotfile))
 
 	// Generate utility functions
@@ -2129,7 +2142,7 @@ dovegen :: proc(root: json.Object, target_dir: string) {
 	file_writer_write(&fw_utility)
 }
 
-dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, root: json.Object) {
+dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, target_dir: string, root: json.Object) {
 	using strings
 	write_string(sb_classesfile, "package godot\nimport gde \"../gdextension\"\n\n")
 	sizes := root["builtin_class_sizes"].(json.Array)[current_build_configuration_idx].(json.Object)["sizes"].(json.Array)
@@ -2154,6 +2167,9 @@ dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, root: json.Obj
 				write_string(sb_classesfile, fmt.tprintf("\t%s : %s,\n", member_name, member_type))
 			}
 			write_string(sb_classesfile, "}\n\n")
+			fw_class := file_writer_make(filepath.join({target_dir, fmt.tprintf("builtin_%s.odin", camel_to_snake(name))}))
+			dovegen_builtin_class(&fw_class.sb, class.(json.Object))
+			file_writer_write(&fw_class)
 		} else {// no members
 			if name == "bool" do continue
 			else if name == "float" do write_string(sb_classesfile, fmt.tprintf("%s :: %s\n\n", name, build_conf_float_defines[current_build_configuration_idx]))
@@ -2162,6 +2178,22 @@ dovegen_builtin_classes :: proc(sb_classesfile: ^strings.Builder, root: json.Obj
 		}
 	}
 }
+
+dovegen_builtin_class :: proc(sb_classfile: ^strings.Builder, class: json.Object) {
+	using strings
+	class_name := class["name"].(json.String)
+	write_string(sb_classfile, fmt.tprintf(
+`package godot
+import gde "../gdextension"
+
+// %s
+`, class_name))
+	enum_name_prefix := fmt.tprintf("%s_", class_name)
+	if "enums" in class do for e in class["enums"].(json.Array) {
+		dovegen_enum_def(sb_classfile, e.(json.Object), enum_name_prefix)
+	}
+}
+
 dovegen_variant :: proc(sb: ^strings.Builder, root: json.Object) {
 	using strings
 	write_string(sb, "package godot\nimport gde \"../gdextension\"\n\n")
@@ -2169,7 +2201,6 @@ dovegen_variant :: proc(sb: ^strings.Builder, root: json.Object) {
 	assert(sizes[len(sizes)-1].(json.Object)["name"].(json.String)=="Variant", "Failed to get size of builtin class Variant, the last one is not Variant anymore.")
 	write_string(sb, fmt.tprintf("Variant :: distinct [%d]u8\n\n", cast(int)sizes[len(sizes)-1].(json.Object)["size"].(json.Float)))
 	write_string(sb, "variant_destroy :: proc (v: ^Variant) { gde.variant_destroy(auto_cast v) } \n")
-
 
 	write_string(sb, `
 variant_from_any :: proc(p: any) -> Variant {
@@ -2248,6 +2279,16 @@ dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class
 
 	dovegen_funcimpl_instance_constructor(&sb_body, class_name)
 
+	// Class enums
+	if "enums" in class_api {
+		write_rune(&sb_body, '\n')
+		enum_name_prefix := fmt.tprintf("%s_", class_name)
+		for e in class_api["enums"].(json.Array) {
+			dovegen_enum_def(&sb_body, e.(json.Object), enum_name_prefix)
+			enum_name := e.(json.Object)["name"].(json.String)
+		}
+	}
+
 	// Table
 	write_string(&sb_body, fmt.tprintf(`
 __%s_table : _%s_TABLE
@@ -2255,14 +2296,14 @@ __%s_table : _%s_TABLE
 _%s_TABLE :: struct {{
 `, class_name, class_name, class_name))
 	if parent_name != "" do write_string(&sb_body, fmt.tprintf("\tusing _ : ^_%s_TABLE,\n", parent_name))
+	
 	if "methods" in class_api {
 		for method in class_api["methods"].(json.Array) {
 			method_name := method.(json.Object)["name"].(json.String)
 			if method_name[0] == '_' do continue
-			// @TEMPORARY: Disabled to test variant bindings at first.
-			// write_string(&sb_body, fmt.tprintf("\t%s : ", method_name))
-			// dovegen_method_signature(&sb_body, method.(json.Object))
-			// write_string(&sb_body, ",\n")
+			write_string(&sb_body, fmt.tprintf("\t%s : ", method_name))
+			dovegen_method_signature(&sb_body, method.(json.Object), "self: rawptr, ")
+			write_string(&sb_body, ",\n")
 		}
 	}
 	write_string(&sb_body, "}\n")
@@ -2359,32 +2400,72 @@ string_name_destroy :: proc(gstrn: ^StringName) {
 `)
 }
 
-dovegen_method_signature :: proc(sb: ^strings.Builder, method: json.Object) {
+dovegen_enum_def :: proc(sb: ^strings.Builder, e : json.Object, prefix_name:="") {
+	using strings
+	enum_name := e["name"].(json.String)
+	enum_name, _ = strings.replace(enum_name, ".", "_", 1, context.temp_allocator)
+	is_bitfield := e["is_bitfield"].(json.Boolean) if "is_bitfield" in e else false
+	values := e["values"].(json.Array)
+	write_string(sb, fmt.tprintf("%s%s :: enum {{ %s\n", prefix_name, enum_name, "// bitfield" if is_bitfield else ""))
+	for v in values {
+		vname := v.(json.Object)["name"].(json.String)
+		vvalue := cast(int)v.(json.Object)["value"].(json.Float)
+		write_string(sb, fmt.tprintf("\t{} = {},\n", vname, vvalue))
+	}
+	write_string(sb, "}\n")
+}
+
+dovegen_method_signature :: proc(sb: ^strings.Builder, method: json.Object, prefix_param:="", subfix_param:="") {
 	using strings
 	is_vararg := "is_vararg" in method && method["is_vararg"].(json.Boolean)
 	return_value := method["return_value"].(json.Object)["type"].(json.String) if "return_value" in method else ""
 	write_string(sb, "proc (")
+	write_string(sb, prefix_param)
 	if "arguments" in method {
 		args := method["arguments"].(json.Array)
 		for &arg, idx in args {
 			arg := arg.(json.Object)
-			arg_name := arg["name"].(json.String)
+			arg_name := fmt.tprintf("v%s", arg["name"].(json.String))
 			arg_type := arg["type"].(json.String)
-			write_string(sb, fmt.tprintf("%s: %s", arg_name, arg_type))
+			if arg_type == "const void*" do arg_type = "rawptr" // special case handle
+
+			write_string(sb, arg_name)
+			write_string(sb, ": ")
+			if has_prefix(arg_type, "enum::") {
+				enum_type_name, _ := replace(trim_left(arg_type, "enum::"), ".", "_", 1, context.temp_allocator)
+				write_string(sb, enum_type_name)
+			} else if has_prefix(arg_type, "typedarray::") {
+				write_string(sb, "TodoClass")
+				// fmt.printf(" Array in arg: {}, in {}\n", arg_type, method["name"].(json.String))
+			} else if has_prefix(arg_type, "bitfield::") {
+				enum_type_name, _ := replace(trim_left(arg_type, "bitfield::"), ".", "_", 1, context.temp_allocator)
+				write_string(sb, enum_type_name)
+			} else {
+				write_string(sb, arg_type)
+			}
 			if idx < len(args)-1 do write_string(sb, ", ")
 		}
 	}
+	write_string(sb, subfix_param)
 	write_string(sb, ")")
 	if return_value != "" {
 		write_string(sb, " -> ")
-		write_string(sb, return_value)
+
+		if has_prefix(return_value, "enum::") {
+			enum_type_name, _ := replace(trim_left(return_value, "enum::"), ".", "_", 1, context.temp_allocator)
+			write_string(sb, enum_type_name)
+		} else if has_prefix(return_value, "typedarray::") {
+			write_string(sb, "TodoClass")
+			// fmt.printf(" Array in return: {}, in {}\n", return_value, method["name"].(json.String))
+		} else if has_prefix(return_value, "bitfield::") {
+				enum_type_name, _ := replace(trim_left(return_value, "bitfield::"), ".", "_", 1, context.temp_allocator)
+				write_string(sb, enum_type_name)
+		} else {
+			write_string(sb, return_value)
+		}
 	}
 }
 
-// dovegen_funcimpl_variant_constructor :: proc() {
-// }
-// dovegen_funcimpl_variant_to_type :: proc() {
-// }
 dovegen_funcimpl_variant_method :: proc() {
 }
 dovegen_funcimpl_variant_utility_function :: proc() {

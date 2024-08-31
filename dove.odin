@@ -100,6 +100,8 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 }
 Dove_process :: proc (self: ^Dove, delta: f64) {
 	using godot
+	printfr("Hello, odin!")
+
 	// self.time += delta
 	// offset := vector2.constructor3(auto_cast math.sin(self.time), 0)
 	// printfr("updating...")
