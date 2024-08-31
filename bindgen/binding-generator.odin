@@ -2420,16 +2420,6 @@ string_make :: proc(str: cstring) -> String {
 	gde.string_new_with_utf8_chars(&gstr, str)
 	return gstr
 }
-string_make_from_string_name :: proc(str: ^StringName) -> String {
-	@static _constructor : gde.GDExtensionPtrConstructor
-	if _constructor == nil {
-		_constructor = gde.variant_get_ptr_constructor(.GDEXTENSION_VARIANT_TYPE_STRING, 2)
-	}
-	gstr : String
-	val0 := str
-	_constructor(&gstr, auto_cast val0)
-	return gstr
-}
 string_name_make :: proc(str: cstring) -> StringName {
 	gstrn : StringName
 	gde.string_name_new_with_utf8_chars(&gstrn, str)
@@ -2442,22 +2432,6 @@ string_to :: proc(gstr: ^String, allocator:=context.allocator) -> cstring {
 	gde.string_to_utf8_chars(gstr, cast(cstring)raw_data(cstr), length)
 	return cast(cstring)raw_data(cstr)
 }
-
-string_destroy :: proc(gstr: ^String) {
-	@static _destructor : gde.GDExtensionPtrDestructor
-	if _destructor == nil {
-		_destructor = gde.variant_get_ptr_destructor(.GDEXTENSION_VARIANT_TYPE_STRING)
-	}
-	_destructor(gstr)
-}
-string_name_destroy :: proc(gstrn: ^StringName) {
-	@static _destructor : gde.GDExtensionPtrDestructor
-	if _destructor == nil {
-		_destructor = gde.variant_get_ptr_destructor(.GDEXTENSION_VARIANT_TYPE_STRING_NAME)
-	}
-	_destructor(gstrn)
-}
-
 `)
 }
 

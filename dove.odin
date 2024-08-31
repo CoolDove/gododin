@@ -23,8 +23,8 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		using godot
 		context = runtime.default_context()
 		strn_class, strn_parent : StringName
-		gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer string_name_destroy(&strn_class)
-		gde.string_name_new_with_utf8_chars(&strn_parent, "Sprite2D"); defer string_name_destroy(&strn_parent)
+		gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer StringName_destruct(strn_class)
+		gde.string_name_new_with_utf8_chars(&strn_parent, "Sprite2D"); defer StringName_destruct(strn_parent)
 		obj := gde.classdb_construct_object(&strn_parent)
 		instance := new(Dove)
 		instance._obj = obj
@@ -43,7 +43,7 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		context = runtime.default_context()
 		printfr("[color=yellow]Dove[/color] recreate")
 		strn_class : StringName
-		gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer string_name_destroy(&strn_class)
+		gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer StringName_destruct(strn_class)
 		instance := new(Dove)
 		gde.object_set_instance(p_object, &strn_class, instance)
 		return instance
@@ -60,7 +60,7 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		context = runtime.default_context()
 		using godot
 		strn := p_name
-		str := string_make_from_string_name(auto_cast p_name); defer string_destroy(&str)
+		str := String_construct((cast(^StringName)p_name)^); defer String_destruct(str)
 		if string_to(&str, context.temp_allocator) == "_process" {
 			return Dove_process_gcall
 		}
@@ -100,7 +100,7 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 }
 Dove_process :: proc (self: ^Dove, delta: f64) {
 	using godot
-	printfr("Hello, odin!")
+	// printfr("Hello, odin!")
 
 	// self.time += delta
 	// offset := vector2.constructor3(auto_cast math.sin(self.time), 0)
