@@ -41,12 +41,9 @@ _initialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	strn_class, strn_parent : godot.StringName
 	gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer string_name_destroy(&strn_class)
 	gde.string_name_new_with_utf8_chars(&strn_parent, "Sprite2D"); defer string_name_destroy(&strn_parent)
-	fmt.printf("to register Dove\n")
 
 	gde.classdb_register_extension_class2(god.library, &strn_class, &strn_parent, &DoveRegister)
 	printfr("class [color=yellow]Dove[/color] registered.")
-
-
 	// for e in gde.
 	// values := reflect.enum_field_values(gde.GDExtensionVariantType)
 	// names := reflect.enum_field_names(gde.GDExtensionVariantType)
@@ -57,8 +54,16 @@ _initialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 }
 _deinitialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	if (l != .GDEXTENSION_INITIALIZATION_SCENE) do return
+	using godot
 	context = runtime.default_context()
-	// utl.print("Odin extension uninitialized\n")
+	fmt.printf("o uninitializing godin")
+	printfr("uninitializing godin")
+	strn_class : godot.StringName
+	gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer string_name_destroy(&strn_class)
+	// gde.string_name_new_with_utf8_chars(&strn_parent, "Sprite2D"); defer string_name_destroy(&strn_parent)
+	printfr("unregister classes")
+	gde.classdb_unregister_extension_class(god.library, &strn_class)
+	// printfr("[b]Odin[/b] extension uninitialized\n")
 }
 
 string_name_destroy :: proc(strn: ^godot.StringName) {
