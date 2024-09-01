@@ -111,7 +111,7 @@ Dove_process :: proc (self: ^Dove, delta: f64) {
 	if is_in_editor do return
 
 	// @Test
-	self->set_position(Vector2{rand.float32_range(0, 20), rand.float32_range(0, 20)})
+	// self->set_position(Vector2{rand.float32_range(0, 20), rand.float32_range(0, 20)})
 
 	self.time += delta
 	self.total_alive_time += delta
@@ -135,6 +135,23 @@ Dove_input :: proc(self: ^Dove, event: godot.InputEvent) {
 	if emouse, ok := is_InputEventMouseButton(event); ok {
 		if emouse->get_button_index() == .MOUSE_BUTTON_LEFT {
 			generate_child_sprite(as_Node2Df(self), self->get_texture(), emouse->get_position())
+		}
+	} else if ekey, ok := is_InputEventKey(event); ok {
+		if ekey->is_pressed() {
+			key := ekey->get_keycode()
+			position := self->get_global_position()
+			speed :f32= 20
+			if key == .KEY_A {
+				position.x += -speed
+			} else if key == .KEY_D {
+				position.x += speed
+			}
+			if key == .KEY_W {
+				position.y += -speed
+			} else if key == .KEY_S {
+				position.y += speed
+			}
+			self->set_global_position(position)
 		}
 	}
 }
