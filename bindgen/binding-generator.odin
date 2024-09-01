@@ -2092,7 +2092,15 @@ file_writer_write :: proc(using fw: ^FileWriter) {// and destroy
 	strings.builder_destroy(&sb)
 }
 
+BindingInfo :: struct {
+	engine_classes : map[string]json.Object,
+}
+
+binfo : BindingInfo
+
 dovegen :: proc(root: json.Object, target_dir: string) {
+	binfo.engine_classes = make(map[string]json.Object)
+
 	os.make_directory(target_dir)
 
 	sb_godotfile : strings.Builder
@@ -2115,6 +2123,11 @@ dovegen :: proc(root: json.Object, target_dir: string) {
 	// Generate object classes
 	sb_classfile : strings.Builder
 	strings.builder_init(&sb_classfile); strings.builder_destroy(&sb_classfile)
+	for class_api in root["classes"].(json.Array) {
+		class_obj := class_api.(json.Object)
+		class_name := class_obj["name"].(json.String)
+		binfo.engine_classes[class_name] = class_obj
+	}
 	for class_api in root["classes"].(json.Array) {
 		class_name := class_api.(json.Object)["name"].(json.String)
 		if class_name == "ClassDB" do continue
@@ -2411,6 +2424,7 @@ dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class
 	builder_init(&sb_body); defer builder_destroy(&sb_body)
 
 	write_string(&sb_header, "package godot\n\n")
+	write_string(&sb_header, "import \"base:runtime\"\n")
 	write_string(&sb_header, "import gde \"../gdextension\"\n\n")
 
 	dovegen_funcimpl_instance_constructor(&sb_body, class_name)
@@ -2495,9 +2509,14 @@ dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class
 				} else {
 				}
 
-				if return_type != "" do write_string(&sb_method_defines, fmt.tprintf("\tret : %s\n", return_type))
+				if return_type != "" {
+					write_string(&sb_method_defines, fmt.tprintf("\tret : %s\n", return_type))
+				}
 				write_string(&sb_method_defines, fmt.tprintf("\tgde.object_method_bind_ptrcall(auto_cast _method, instance, raw_data(args[:]), %s)\n", "&ret" if return_type != "" else "nil"))
-				if return_type != "" do write_string(&sb_method_defines, "\treturn ret\n")
+				is_engine_class := return_type in binfo.engine_classes
+				if return_type != "" {
+					 write_string(&sb_method_defines, fmt.tprintf("\treturn as_%s(transmute(Object)ret)\n", return_type) if is_engine_class else "\treturn ret\n")
+				}
 			}
 			write_string(&sb_method_defines, "}\n")
 		}
@@ -2543,6 +2562,7 @@ dovegen_utility_functions :: proc(sb: ^strings.Builder, root: json.Object) {
 	using strings
 	write_string(sb, `package godot
 import "core:fmt"
+import "base:runtime"
 import gde "../gdextension"
 
 printfr :: proc(fmter: string, args: ..any) {
@@ -2674,10 +2694,51 @@ create_%s :: proc() -> %s {{// dove object constructor
 }}
 `, class_name, class_name, class_name, class_name))
 	write_string(sb, fmt.tprintf(`
-as_%s :: proc(obj: Object) -> %s {{// dove object converter
+as_%s :: proc(obj: any, force:= false, loc:=#caller_location) -> %s {{
+	_obj := transmute(runtime.Raw_Any)obj
+	type := type_info_of(_obj.id)
+	obj : ^Object
+	if ptr, ok := type.variant.(runtime.Type_Info_Pointer); ok {{
+		assert(force || ptr.elem.size == size_of(Object), "You're giving an invalid object.", loc=loc)
+		obj = (cast(^^Object)_obj.data)^
+	}} else {{
+		assert(force || type.size == size_of(Object), "You're giving an invalid object.", loc=loc)
+		obj = cast(^Object)_obj.data
+	}}
 	return {{ _obj = obj._obj, _table = &__%s_table }}
-}}
+}} // dove object converter
 `, class_name, class_name, class_name))
+	write_string(sb, fmt.tprintf(`
+is_%s :: proc(obj: any, force:= false, loc:=#caller_location) -> (to: %s, ok: bool) {{
+	_obj := transmute(runtime.Raw_Any)obj
+	type := type_info_of(_obj.id)
+	obj : ^Object
+	if ptr, ok := type.variant.(runtime.Type_Info_Pointer); ok {{
+		assert(force || ptr.elem.size == size_of(Object), "You're giving an invalid object.", loc=loc)
+		obj = (cast(^^Object)_obj.data)^
+	}} else {{
+		assert(force || type.size == size_of(Object), "You're giving an invalid object.", loc=loc)
+		obj = cast(^Object)_obj.data
+	}}
+	// assert(force || type_info_of(obj.id).size == size_of(Object), "You're giving an invalid object, only classes drived from godot.Godot is acceptable.", loc=loc)
+	@static class_tag : rawptr
+	if class_tag == nil {{
+		strn_class_name : StringName
+		gde.string_name_new_with_utf8_chars(&strn_class_name, "%s"); defer StringName_destruct(strn_class_name)
+		class_tag = gde.classdb_get_class_tag(&strn_class_name)
+	}}
+	to_object := gde.object_cast_to(obj._obj, class_tag)
+	return {{ _obj = to_object, _table = &__%s_table }}, to_object != nil
+}} // dove object converter with type check
+`, class_name, class_name, class_name, class_name))
+	write_string(sb, fmt.tprintf(`
+as_%sf :: #force_inline proc(obj: any) -> %s {{
+	return as_%s(obj, true)
+}}
+is_%sf :: #force_inline proc(obj: any) -> (to: %s, ok: bool) {{
+	return is_%s(obj, true)
+}}
+`, class_name, class_name, class_name, class_name, class_name, class_name))
 }
 dovegen_funcimpl_instance_method :: proc() {
 }

@@ -95,7 +95,8 @@ Dove_binding_callback := gde.GDExtensionInstanceBindingCallbacks {
 get_engine :: proc() -> godot.Engine {
 	@static strn : godot.StringName
 	if strn == {} do gde.string_name_new_with_utf8_chars(&strn, "Engine")
-	return godot.as_Engine({gde.global_get_singleton(&strn), nil})
+	obj := godot.Object{gde.global_get_singleton(&strn), nil}
+	return godot.as_Engine(obj)
 }
 
 Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_args: [^]gde.GDExtensionConstTypePtr, r_ret: gde.GDExtensionTypePtr) {
@@ -114,27 +115,36 @@ Dove_process :: proc (self: ^Dove, delta: f64) {
 
 	self.time += delta
 	self.total_alive_time += delta
-	if self.time > 3.0 {
-		spr := create_Sprite2D()
-		self->add_child(transmute(Node)spr, true, .INTERNAL_MODE_DISABLED)
-		tex := godot.as_Texture2D(transmute(Object)self->get_texture()); defer tex->unreference()
-		spr->set_texture(tex)
-		spr->set_position(Vector2_construct(rand.float64_range(0, 100), rand.float64_range(0, 100)))
+	if self.time > 1 {
+		gen_pos := Vector2_construct(rand.float64_range(0, 100), rand.float64_range(0, 100))
+		generate_child_sprite(as_Node2Df(self), self->get_texture(), gen_pos)
 		self.time = 0
 	}
 }
 
 Dove_input_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_args: [^]gde.GDExtensionConstTypePtr, r_ret: gde.GDExtensionTypePtr) {
+	using godot
 	context = runtime.default_context()
-	event := godot.Object {p_args[0], nil}
+	object_classname : StringName
+	arg0 := (cast(^rawptr)p_args[0])^
+	event := godot.Object {arg0, nil}
 	Dove_input(cast(^Dove)p_instance, godot.as_InputEvent(event))
 }
 Dove_input :: proc(self: ^Dove, event: godot.InputEvent) {
-	event:=event
-	// event_string := event->as_text()
-	godot.printfr(" got event from device: {}", event->get_device())
-	
-	if event->is_pressed() {
-		godot.printfr("you pressed something")
+	using godot
+	if emouse, ok := is_InputEventMouseButton(event); ok {
+		if emouse->get_button_index() == .MOUSE_BUTTON_LEFT {
+			generate_child_sprite(as_Node2Df(self), self->get_texture(), emouse->get_position())
+		}
 	}
+}
+
+generate_child_sprite :: proc(parent: godot.Node2D, texture: godot.Texture2D, position: godot.Vector2) -> godot.Sprite2D {
+	using godot
+	parent := parent
+	spr := create_Sprite2D()
+	parent->add_child(as_Node(spr), true, .INTERNAL_MODE_DISABLED)
+	spr->set_texture(texture)
+	spr->set_position(position)
+	return spr
 }
