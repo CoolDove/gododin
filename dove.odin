@@ -3,6 +3,7 @@ package main
 import "base:runtime"
 import "core:math"
 import "core:math/linalg"
+import "core:math/rand"
 import "core:fmt"
 import "godot"
 import gde "gdextension"
@@ -15,6 +16,7 @@ Dove :: struct {
 	id : int,
 	hp: int,
 	time : f64,
+	total_alive_time : f64,
 }
 
 DoveRegister := gde.GDExtensionClassCreationInfo2 {
@@ -46,6 +48,7 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer StringName_destruct(strn_class)
 		instance := new(Dove)
 		instance._obj = p_object
+		instance._table = &godot.__Sprite2D_table
 		gde.object_set_instance(p_object, &strn_class, instance)
 		return instance
 	},
@@ -62,18 +65,13 @@ DoveRegister := gde.GDExtensionClassCreationInfo2 {
 		using godot
 		strn := p_name
 		str := String_construct((cast(^StringName)p_name)^); defer String_destruct(str)
-		if string_to(&str, context.temp_allocator) == "_process" {
+		virtual_func_name := string_to(&str, context.temp_allocator)
+		if virtual_func_name == "_process" {
 			return Dove_process_gcall
+		} else if virtual_func_name == "_input" {
+			return Dove_input_gcall
 		}
 		return nil
-	},
-	reference_func = proc "c" (p_instance: gde.GDExtensionClassInstancePtr) {
-		context = runtime.default_context()
-		godot.printfr("Dove got referenced.")
-	},
-	unreference_func = proc "c" (p_instance: gde.GDExtensionClassInstancePtr) {
-		context = runtime.default_context()
-		godot.printfr("Dove got unreferenced.")
 	}
 }
 
@@ -94,6 +92,12 @@ Dove_binding_callback := gde.GDExtensionInstanceBindingCallbacks {
 	}
 }
 
+get_engine :: proc() -> godot.Engine {
+	@static strn : godot.StringName
+	if strn == {} do gde.string_name_new_with_utf8_chars(&strn, "Engine")
+	return godot.as_Engine({gde.global_get_singleton(&strn), nil})
+}
+
 Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_args: [^]gde.GDExtensionConstTypePtr, r_ret: gde.GDExtensionTypePtr) {
 	context = runtime.default_context()
 	delta :f64= (cast(^f64)p_args[0])^
@@ -101,20 +105,36 @@ Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_a
 }
 Dove_process :: proc (self: ^Dove, delta: f64) {
 	using godot
+	engine := get_engine()
+	is_in_editor := engine->is_editor_hint()
+	if is_in_editor do return
 
 	// @Test
-	// self->set_position(Vector2{5,5})
-	__Node2D_table.set_position(self, Vector2{2,1})
+	self->set_position(Vector2{rand.float32_range(0, 20), rand.float32_range(0, 20)})
 
-	// printfr("hello, vector: {}, variant: {}, vector: {}", v, var, vv)
-	// printfr("Hello, odin!")
+	self.time += delta
+	self.total_alive_time += delta
+	if self.time > 3.0 {
+		spr := create_Sprite2D()
+		self->add_child(transmute(Node)spr, true, .INTERNAL_MODE_DISABLED)
+		tex := godot.as_Texture2D(transmute(Object)self->get_texture()); defer tex->unreference()
+		spr->set_texture(tex)
+		spr->set_position(Vector2_construct(rand.float64_range(0, 100), rand.float64_range(0, 100)))
+		self.time = 0
+	}
+}
 
-	// self.time += delta
-	// offset := vector2.constructor3(auto_cast math.sin(self.time), 0)
-	// printfr("updating...")
-	// sprite2d.set_offset(self, offset)
-	// texture := sprite2d.get_texture(self); defer texture.unreference(auto_cast &texture)
-	// utl.print("get texture")
-	// width := texture->get_width()
-	// utl.print("Texture width: ", width, ", reference count: ", texture.get_reference_count(auto_cast &texture))
+Dove_input_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_args: [^]gde.GDExtensionConstTypePtr, r_ret: gde.GDExtensionTypePtr) {
+	context = runtime.default_context()
+	event := godot.Object {p_args[0], nil}
+	Dove_input(cast(^Dove)p_instance, godot.as_InputEvent(event))
+}
+Dove_input :: proc(self: ^Dove, event: godot.InputEvent) {
+	event:=event
+	// event_string := event->as_text()
+	godot.printfr(" got event from device: {}", event->get_device())
+	
+	if event->is_pressed() {
+		godot.printfr("you pressed something")
+	}
 }

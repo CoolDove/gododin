@@ -2432,8 +2432,15 @@ dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class
 	builder_init(&sb_method_defines); defer builder_destroy(&sb_method_defines)
 
 	if parent_name != "" {
-		// @Temporary:
-		// write_string(&sb_table_assign, fmt.tprintf("\t_parent_%s = &_%s_TABLE,\n", camel_to_snake(parent_name), parent_name))
+		write_string(&sb_table_assign, fmt.tprintf("\t_parent_%s = &__%s_table,\n", camel_to_snake(parent_name), parent_name))
+	}
+
+	if "properties" in class_api {
+		for property in class_api["properties"].(json.Array) {
+			// property := property.(json.Object)
+			// write_string(&sb_table_declare, fmt.tprintf("\t%s : rawptr, // type: %s\n", property["name"], property["type"]))
+			// TODO:
+		}
 	}
 
 	if "methods" in class_api {
@@ -2658,7 +2665,7 @@ dovegen_funcimpl_instance_constructor :: proc(sb: ^strings.Builder, class_name: 
 create_%s :: proc() -> %s {{// dove object constructor
 	@static class_name : StringName
 	@static initialized : bool
-	if initialized {{
+	if !initialized {{
 		gde.string_name_new_with_utf8_chars(&class_name, "%s")
 		initialized = true
 	}}
