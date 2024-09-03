@@ -36,22 +36,28 @@ _initialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	context = runtime.default_context()
 	using godot
 	if (l != .GDEXTENSION_INITIALIZATION_SCENE) do return
-	gododin_initialize()
 
 	registered_classes = make(map[string]^ExtensionClass)
 	printfr("[color=yellow]Odin[/color] extension initialized")
 
+	// ** Register your class here **
+
 	register_class(Dove)
+	register_class(Spike)
 }
 _deinitialize :: proc "c" (u: rawptr, l: gde.GDExtensionInitializationLevel) {
 	if (l != .GDEXTENSION_INITIALIZATION_SCENE) do return
 	context = runtime.default_context()
 	using godot
-	delete(registered_classes)
-
 	unregister_classes()
+	delete(registered_classes)
+}
 
-	gododin_uninitialize()
+get_engine :: proc() -> godot.Engine {
+	@static strn : godot.StringName
+	if strn == {} do gde.string_name_new_with_utf8_chars(&strn, "Engine")
+	obj := godot.Object{gde.global_get_singleton(&strn), nil}
+	return godot.as_Engine(obj)
 }
 
 registered_classes : map[string]^ExtensionClass
@@ -165,16 +171,16 @@ _ClassRegister := gde.GDExtensionClassCreationInfo2 {
 _binding_callback := gde.GDExtensionInstanceBindingCallbacks {
 	create_callback = proc "c" (p_token: rawptr, p_instance: rawptr) -> rawptr {
 		context = runtime.default_context()
-		godot.printfr("[color=red] class create binding callback [/color]")
+		// godot.printfr("[color=red] class create binding callback [/color]")
 		return nil
 	},
 	free_callback = proc "c" (p_token: rawptr, p_instance: rawptr, p_binding: rawptr) {
 		context = runtime.default_context()
-		godot.printfr("[color=red] class free binding callback [/color]")
+		// godot.printfr("[color=red] class free binding callback [/color]")
 	},
 	reference_callback = proc "c" (p_token: rawptr, p_binding: rawptr, p_reference: gde.GDExtensionBool) -> gde.GDExtensionBool {
 		context = runtime.default_context()
-		godot.printfr("[color=red] class reference callback [/color]")
+		// godot.printfr("[color=red] class reference callback [/color]")
 		return gde.TRUE
 	}
 }

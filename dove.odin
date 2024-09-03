@@ -9,7 +9,9 @@ import "godot"
 import gde "gdextension"
 
 
-dove_instance : int
+Spike :: struct {
+	using gobj : godot.RigidBody2D,
+}
 
 Dove :: struct {
 	using gobj : godot.Sprite2D,
@@ -21,86 +23,6 @@ Dove :: struct {
 
 	_process : proc(self: ^Dove, delta: f64) `godot:"override"`,
 	_input : proc(self: ^Dove, event: godot.InputEvent) `godot:"override"`,
-}
-
-// DoveRegister := gde.GDExtensionClassCreationInfo2 {
-// 	is_exposed = gde.TRUE,
-// 	create_instance_func = proc "c" (uptr: rawptr) -> gde.GDExtensionObjectPtr {
-// 		using godot
-// 		context = runtime.default_context()
-// 		strn_class, strn_parent : StringName
-// 		gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer StringName_destruct(strn_class)
-// 		gde.string_name_new_with_utf8_chars(&strn_parent, "Sprite2D"); defer StringName_destruct(strn_parent)
-// 		obj := gde.classdb_construct_object(&strn_parent)
-// 		instance := new(Dove)
-// 		instance._obj = obj
-// 		instance._table = &godot.__Sprite2D_table
-// 
-// 		instance.id = dove_instance
-// 		dove_instance += 1
-// 		gde.object_free_instance_binding(obj, god.library)
-// 		gde.object_set_instance_binding(obj, god.library, instance, &Dove_binding_callback)
-// 		gde.object_set_instance(obj, &strn_class, instance)
-// 		printfr("[color=green]Dove[/color] {} instance created.", instance.id)
-// 		return obj
-// 	},
-// 	recreate_instance_func = proc "c" (uptr: rawptr, p_object: gde.GDExtensionObjectPtr) -> gde.GDExtensionClassInstancePtr {
-// 		using godot
-// 		context = runtime.default_context()
-// 		printfr("[color=yellow]Dove[/color] recreate")
-// 		strn_class : StringName
-// 		gde.string_name_new_with_utf8_chars(&strn_class, "Dove"); defer StringName_destruct(strn_class)
-// 		instance := new(Dove)
-// 		instance._obj = p_object
-// 		instance._table = &godot.__Sprite2D_table
-// 		gde.object_set_instance(p_object, &strn_class, instance)
-// 		return instance
-// 	},
-// 	free_instance_func = proc "c" (uptr: rawptr, instance: gde.GDExtensionClassInstancePtr) {
-// 		using godot
-// 		context = runtime.default_context()
-// 		instance := cast(^Dove)instance
-// 		if instance == nil do return
-// 		printfr("[color=red]Dove[/color] {} instance freed.", instance.id)
-// 		free(instance)
-// 	},
-// 	get_virtual_func = proc "c" (uptr: rawptr, p_name: gde.GDExtensionConstStringNamePtr) -> gde.GDExtensionClassCallVirtual {
-// 		context = runtime.default_context()
-// 		using godot
-// 		strn := p_name
-// 		str := String_construct((cast(^StringName)p_name)^); defer String_destruct(str)
-// 		virtual_func_name := string_to(&str, context.temp_allocator)
-// 		if virtual_func_name == "_process" {
-// 			return Dove_process_gcall
-// 		} else if virtual_func_name == "_input" {
-// 			return Dove_input_gcall
-// 		}
-// 		return nil
-// 	}
-// }
-// 
-// Dove_binding_callback := gde.GDExtensionInstanceBindingCallbacks {
-// 	create_callback = proc "c" (p_token: rawptr, p_instance: rawptr) -> rawptr {
-// 		context = runtime.default_context()
-// 		godot.printfr("[color=red] Dove create callback [/color]")
-// 		return nil
-// 	},
-// 	free_callback = proc "c" (p_token: rawptr, p_instance: rawptr, p_binding: rawptr) {
-// 		context = runtime.default_context()
-// 		godot.printfr("[color=red] Dove free callback [/color]")
-// 	},
-// 	reference_callback = proc "c" (p_token: rawptr, p_binding: rawptr, p_reference: gde.GDExtensionBool) -> gde.GDExtensionBool {
-// 		context = runtime.default_context()
-// 		godot.printfr("[color=red] Dove reference callback [/color]")
-// 		return gde.TRUE
-// 	}
-// }
-
-get_engine :: proc() -> godot.Engine {
-	@static strn : godot.StringName
-	if strn == {} do gde.string_name_new_with_utf8_chars(&strn, "Engine")
-	obj := godot.Object{gde.global_get_singleton(&strn), nil}
-	return godot.as_Engine(obj)
 }
 
 Dove_process_gcall :: proc "c" (p_instance: gde.GDExtensionClassInstancePtr, p_args: [^]gde.GDExtensionConstTypePtr, r_ret: gde.GDExtensionTypePtr) {

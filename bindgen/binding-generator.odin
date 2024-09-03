@@ -2112,13 +2112,8 @@ import gde "../gdextension"
 ClassDefine :: struct {
 	table : rawptr,
 }
-
-godot_classes : map[string]ClassDefine
-gododin_initialize :: proc() {
-	godot_classes := make(map[string]ClassDefine)
+godot_classes : map[string]ClassDefine = {
 `)
-	sb_gododin_initializer: strings.Builder
-	strings.builder_init(&sb_gododin_initializer); defer strings.builder_destroy(&sb_gododin_initializer)
 
 	sb_godotfile := &fw_godotfile.sb
 	strings.write_string(sb_godotfile, "package godot\n")
@@ -2148,7 +2143,7 @@ gododin_initialize :: proc() {
 		if class_name == "ClassDB" do continue
 		if class_name == "OS" do continue
 		strings.builder_reset(&sb_classfile)
-		dovegen_engine_class(sb_godotfile, &sb_classfile, &sb_gododin_initializer, class_api.(json.Object))
+		dovegen_engine_class(sb_godotfile, &sb_classfile, &fw_gododinfile.sb, class_api.(json.Object))
 		path := filepath.join([]string{ target_dir, fmt.tprintf("%s.odin", camel_to_snake(class_name)) }, context.temp_allocator)
 		os.write_entire_file(path, transmute([]u8)strings.to_string(sb_classfile))
 	}
@@ -2163,14 +2158,7 @@ gododin_initialize :: proc() {
 	}
 
 	file_writer_write(&fw_godotfile)
-
-	strings.write_string(&fw_gododinfile.sb, strings.to_string(sb_gododin_initializer))
-	strings.write_string(&fw_gododinfile.sb, "\n}\n")
-	strings.write_string(&fw_gododinfile.sb, `
-gododin_uninitialize :: proc() {
-	delete(godot_classes)
-}`)
-
+	strings.write_string(&fw_gododinfile.sb, "}\n")
 	file_writer_write(&fw_gododinfile)
 
 	// Generate utility functions
@@ -2437,7 +2425,7 @@ dove_builtin_class_name_to_variant_type_enum_name :: proc(class_name: string, al
 	return fmt.aprintf("GDEXTENSION_VARIANT_TYPE_%s", strings.to_upper_snake_case(ints))
 }
 
-dovegen_engine_class :: proc(sb_godotfile, sb_classfile, sb_gododin_initializer: ^strings.Builder, class_api: json.Object) {
+dovegen_engine_class :: proc(sb_godotfile, sb_classfile, sb_gododin: ^strings.Builder, class_api: json.Object) {
 	using strings
 	sb_header, sb_body : Builder
 
@@ -2463,7 +2451,7 @@ dovegen_engine_class :: proc(sb_godotfile, sb_classfile, sb_gododin_initializer:
 		}
 	}
 
-	write_string(sb_gododin_initializer, fmt.tprintf("\tgodot_classes[\"%s\"] = {{&__%s_table}}\n", class_name, class_name))
+	write_string(sb_gododin, fmt.tprintf("\t\"%s\" = {{&__%s_table}},\n", class_name, class_name))
 
 	// Table
 	sb_table_declare, sb_table_assign, sb_method_defines : strings.Builder
