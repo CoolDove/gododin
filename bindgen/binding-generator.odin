@@ -2103,12 +2103,27 @@ dovegen :: proc(root: json.Object, target_dir: string) {
 
 	os.make_directory(target_dir)
 
-	sb_godotfile : strings.Builder
-	strings.builder_init(&sb_godotfile); strings.builder_destroy(&sb_godotfile)
-	strings.write_string(&sb_godotfile, "package godot\n")
-	strings.write_string(&sb_godotfile, "import gde \"../gdextension\"\n\n")
+	fw_godotfile := file_writer_make(filepath.join([]string{target_dir, "godot.odin"}))
+	fw_gododinfile := file_writer_make(filepath.join([]string{target_dir, "gododin.odin"}))
+	
+	strings.write_string(&fw_gododinfile.sb, `package godot
+import gde "../gdextension"
 
-	strings.write_string(&sb_godotfile, "TodoClass :: distinct rawptr")
+ClassDefine :: struct {
+	table : rawptr,
+}
+
+godot_classes : map[string]ClassDefine
+gododin_initialize :: proc() {
+	godot_classes := make(map[string]ClassDefine)
+`)
+	sb_gododin_initializer: strings.Builder
+	strings.builder_init(&sb_gododin_initializer); defer strings.builder_destroy(&sb_gododin_initializer)
+
+	sb_godotfile := &fw_godotfile.sb
+	strings.write_string(sb_godotfile, "package godot\n")
+	strings.write_string(sb_godotfile, "import gde \"../gdextension\"\n\n")
+	strings.write_string(sb_godotfile, "TodoClass :: distinct rawptr")
 
 	// Generate builtin classes
 	fw_builtin_classes := file_writer_make(filepath.join([]string{ target_dir, "define_builtin_classes.odin" }))
@@ -2133,7 +2148,7 @@ dovegen :: proc(root: json.Object, target_dir: string) {
 		if class_name == "ClassDB" do continue
 		if class_name == "OS" do continue
 		strings.builder_reset(&sb_classfile)
-		dovegen_engine_class(&sb_godotfile, &sb_classfile, class_api.(json.Object))
+		dovegen_engine_class(sb_godotfile, &sb_classfile, &sb_gododin_initializer, class_api.(json.Object))
 		path := filepath.join([]string{ target_dir, fmt.tprintf("%s.odin", camel_to_snake(class_name)) }, context.temp_allocator)
 		os.write_entire_file(path, transmute([]u8)strings.to_string(sb_classfile))
 	}
@@ -2141,13 +2156,22 @@ dovegen :: proc(root: json.Object, target_dir: string) {
 	// Generate global enums
 	if "global_enums" in root {
 		using strings
-		write_rune(&sb_godotfile, '\n')
+		write_rune(sb_godotfile, '\n')
 		for e in root["global_enums"].(json.Array) {
-			dovegen_enum_def(&sb_godotfile, e.(json.Object))
+			dovegen_enum_def(sb_godotfile, e.(json.Object))
 		}
 	}
 
-	os.write_entire_file(filepath.join([]string{ target_dir, "godot.odin" }, context.temp_allocator), transmute([]u8)strings.to_string(sb_godotfile))
+	file_writer_write(&fw_godotfile)
+
+	strings.write_string(&fw_gododinfile.sb, strings.to_string(sb_gododin_initializer))
+	strings.write_string(&fw_gododinfile.sb, "\n}\n")
+	strings.write_string(&fw_gododinfile.sb, `
+gododin_uninitialize :: proc() {
+	delete(godot_classes)
+}`)
+
+	file_writer_write(&fw_gododinfile)
 
 	// Generate utility functions
 	fw_utility := file_writer_make(filepath.join([]string{ target_dir, "utility_functions.odin" }, context.temp_allocator))
@@ -2413,7 +2437,7 @@ dove_builtin_class_name_to_variant_type_enum_name :: proc(class_name: string, al
 	return fmt.aprintf("GDEXTENSION_VARIANT_TYPE_%s", strings.to_upper_snake_case(ints))
 }
 
-dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class_api: json.Object) {
+dovegen_engine_class :: proc(sb_godotfile, sb_classfile, sb_gododin_initializer: ^strings.Builder, class_api: json.Object) {
 	using strings
 	sb_header, sb_body : Builder
 
@@ -2438,6 +2462,8 @@ dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class
 			enum_name := e.(json.Object)["name"].(json.String)
 		}
 	}
+
+	write_string(sb_gododin_initializer, fmt.tprintf("\tgodot_classes[\"%s\"] = {{&__%s_table}}\n", class_name, class_name))
 
 	// Table
 	sb_table_declare, sb_table_assign, sb_method_defines : strings.Builder
@@ -2465,7 +2491,10 @@ dovegen_engine_class :: proc(sb_godotfile, sb_classfile: ^strings.Builder, class
 			is_vararg := method["is_vararg"].(json.Boolean)
 			return_type := method["return_value"].(json.Object)["type"].(json.String) if "return_value" in method else ""
 			arguments := method["arguments"].(json.Array) if "arguments" in method else {}
-			if method_name[0] == '_' do continue
+			if method_name[0] == '_' {
+				fmt.printf("TODO: ignored method {}.{}\n", class_name, method_name)
+				continue
+			}
 
 			sigprefix := ("self: rawptr, " if len(arguments)>0 else "self: rawptr") if !is_static else ""
 			// decl
